@@ -1,11 +1,15 @@
+import 'package:fixify_admin/screens/auth/map_screen.dart';
 import 'package:fixify_admin/screens/auth/set_password_screen.dart';
 import 'package:fixify_admin/screens/dashboard/home_screen.dart';
 import 'package:fixify_admin/screens/onboarding/location_permission_screen.dart';
+import 'package:fixify_admin/services/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:page_transition/page_transition.dart';
 import 'dart:async';
 import '../../providers/auth_provider.dart';
+import '../../providers/location_provider.dart' show userServiceProvider;
+import '../dashboard/dashboard_screen.dart';
 
 class OTPVerificationScreen extends ConsumerStatefulWidget {
   final isCreateAccount;
@@ -34,17 +38,39 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
     _startTimer();
 
     // Debug: Show received OTP
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       final authState = ref.read(authProvider);
       print('🔐 [OTPVerificationScreen] Screen initialized');
       print('📱 [OTPVerificationScreen] Phone: ${authState.phoneNumber}');
       print('🔢 [OTPVerificationScreen] Received OTP: ${authState.otp}');
       print('👤 [OTPVerificationScreen] User ID: ${authState.userId}');
+      print('🆕 [OTPVerificationScreen] Is Create Account: ${widget.isCreateAccount}');
 
       // Pre-fill OTP if available
       if (authState.otp != null && authState.otp!.isNotEmpty) {
         print('✅ [OTPVerificationScreen] Pre-filling OTP: ${authState.otp}');
         _prefillOTP(authState.otp!);
+      } else if (widget.isCreateAccount && authState.phoneNumber != null) {
+        // Send OTP automatically for create account flow
+        print('📤 [OTPVerificationScreen] Auto-sending OTP for create account flow');
+        final userService = ref.read(userServiceProvider);
+        final result = await userService.partnerSendOtp(
+          mobile: authState.phoneNumber!,
+        );
+        result.fold(
+          (failure) {
+            print('❌ [OTPVerificationScreen] Failed to send OTP: ${failure.message}');
+          },
+          (data) {
+            print('✅ [OTPVerificationScreen] OTP sent successfully');
+            if (data['otp'] != null) {
+              ref.read(authProvider.notifier).state = authState.copyWith(
+                otp: data['otp'].toString(),
+              );
+              _prefillOTP(data['otp'].toString());
+            }
+          },
+        );
       }
     });
   }
@@ -105,12 +131,111 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
 
   void _resendOTP() async {
     final authState = ref.read(authProvider);
-    if (authState.phoneNumber != null && authState.countryCode != null) {
-      await ref
-          .read(authProvider.notifier)
-          .sendOTP(authState.phoneNumber!, authState.countryCode!);
-      _startTimer();
+    if (authState.phoneNumber == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Phone number not found'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
     }
+
+    final userService = ref.read(userServiceProvider);
+    final phoneNumber = authState.phoneNumber!.replaceAll(RegExp(r'[^\d]'), '');
+
+    if (widget.isCreateAccount) {
+      // Use partner Send OTP API for registration flow
+      print('📤 [OTPVerificationScreen] Resending OTP via partnerSendOtp (create account)');
+      final result = await userService.partnerSendOtp(
+        mobile: phoneNumber,
+      );
+      result.fold(
+        (failure) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(failure.message),
+              backgroundColor: Colors.red,
+            ),
+          );
+        },
+        (data) {
+          // Update auth state with OTP if available
+          if (data['otp'] != null) {
+            ref.read(authProvider.notifier).state = authState.copyWith(
+              otp: data['otp'].toString(),
+            );
+            // Pre-fill OTP if available
+            _prefillOTP(data['otp'].toString());
+          }
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('OTP sent successfully'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        },
+      );
+    } else {
+      // Use partner Login API for phone verification (login) flow
+      print('📤 [OTPVerificationScreen] Resending OTP via partnerLogin (phone verification)');
+      final result = await userService.partnerLogin(
+        mobile: phoneNumber,
+      );
+      result.fold(
+        (failure) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(failure.message),
+              backgroundColor: Colors.red,
+            ),
+          );
+        },
+        (data) {
+          final status = data['status'] as bool? ?? false;
+          final message = data['message'] as String? ?? '';
+          final accountStatus = data['Account_status'] as String?;
+
+          if (status == true) {
+            // OTP sent successfully
+            if (data['otp'] != null) {
+              ref.read(authProvider.notifier).state = authState.copyWith(
+                otp: data['otp'].toString(),
+              );
+              // Pre-fill OTP if available
+              _prefillOTP(data['otp'].toString());
+            }
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('OTP sent successfully'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          } else {
+            // Handle different error scenarios
+            String errorMessage = message;
+            
+            if (message.contains('not registered') || 
+                message.toLowerCase().contains('mobile number not registered')) {
+              errorMessage = 'Your account is in review. You will receive an update once verification completes.';
+            } else if (accountStatus == 'pending' || 
+                       message.toLowerCase().contains('not active')) {
+              errorMessage = 'Your account is not active. Please contact support.';
+            }
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(errorMessage),
+                backgroundColor: Colors.orange,
+                duration: const Duration(seconds: 4),
+              ),
+            );
+          }
+        },
+      );
+    }
+    
+    _startTimer();
   }
 
   String _getFormattedPhoneNumber() {
@@ -188,9 +313,52 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
     );
 
     print('⏳ [OTPVerificationScreen] Calling verifyOTP...');
-    // Verify OTP outside of widget lifecycle
-    // final isSuccess = await ref.read(authProvider.notifier).verifyOTP(otp);
-    final isSuccess = true;
+    
+    bool isSuccess = false;
+    
+    if (widget.isCreateAccount) {
+      // Use partner OTP verification API
+      final authState = ref.read(authProvider);
+      if (authState.phoneNumber == null) {
+        Navigator.of(context).pop(); // Close loading dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Phone number not found'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        _isVerifying = false;
+        return;
+      }
+      
+      final userService = ref.read(userServiceProvider);
+      final result = await userService.partnerVerifyOtp(
+        mobile: authState.phoneNumber!,
+        otp: otp,
+      );
+      
+      result.fold(
+        (failure) {
+          isSuccess = false;
+        },
+        (data) {
+          isSuccess = true;
+          // Update auth state with token if available
+          // The token is already saved to SharedPreferences by partnerVerifyOtp method
+          if (data['token'] != null) {
+            ref.read(authProvider.notifier).state = authState.copyWith(
+              authToken: data['token'],
+              isVerified: true,
+            );
+            print('✅ [OTPVerificationScreen] Token saved to state (already saved to SharedPreferences by service)');
+          }
+        },
+      );
+    } else {
+      // Use regular user OTP verification
+      isSuccess = await ref.read(authProvider.notifier).verifyOTP(otp);
+    }
+    
     print('📥 [OTPVerificationScreen] verifyOTP result: $isSuccess');
 
     // Close loading dialog
@@ -251,8 +419,8 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
                           child:
                               widget.isCreateAccount
                                   // ? LocationPermissionScreen()
-                                  ? SetPasswordScreen()
-                                  : const HomeDashboardScreen(),
+                                  ? MapScreen()
+                                  : const HomePageScreen(),
                         ),
                       );
                     },

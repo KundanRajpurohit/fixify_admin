@@ -49,13 +49,13 @@ dependencies:
   # For state management
   flutter_riverpod: ^2.4.9
   image_picker: ^1.0.7
-  
-  file_picker: 
+  font_awesome_flutter:
+  file_picker:
+  url_launcher:
 
   
   # For HTTP requests
   http: ^1.1.0
-  
   # For country codes
   country_code_picker: ^3.0.0
   

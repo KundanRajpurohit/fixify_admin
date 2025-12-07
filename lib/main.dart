@@ -2,7 +2,6 @@ import 'package:dio/dio.dart';
 import 'package:fixify_admin/config/api_config.dart';
 import 'package:fixify_admin/dio/auth_interceptor.dart';
 import 'package:fixify_admin/providers/auth_provider.dart';
-import 'package:fixify_admin/providers/categories_service.dart';
 import 'package:fixify_admin/providers/location_provider.dart';
 import 'package:fixify_admin/screens/auth/splash_screen.dart';
 import 'package:fixify_admin/services/user_service.dart';
@@ -60,7 +59,6 @@ void main() async {
   runApp(
     ProviderScope(
       overrides: [
-        dioProvider.overrideWithValue(dio),
         userServiceProvider.overrideWithValue(userService),
       ],
       child: const MyApp(),

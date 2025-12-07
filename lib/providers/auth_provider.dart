@@ -146,10 +146,14 @@ class AuthNotifier extends StateNotifier<PhoneVerificationState> {
       await prefs.setBool(_isLoggedInKey, true);
       await prefs.setString(_phoneNumberKey, phoneNumber);
       await prefs.setString(_countryCodeKey, countryCode);
-      await prefs.setString(_userIdKey, userId);
-      await prefs.setString(_userTokenKey, userToken);
+      if (userId.isNotEmpty) {
+        await prefs.setString(_userIdKey, userId);
+      }
+      if (userToken.isNotEmpty) {
+        await prefs.setString(_userTokenKey, userToken);
+      }
       await prefs.setString(_authTokenKey, authToken);
-      print('Login status saved - phoneNumber: $phoneNumber, countryCode: $countryCode, userId: $userId');
+      print('Login status saved - phoneNumber: $phoneNumber, countryCode: $countryCode, userId: $userId, userToken: $userToken');
     } catch (e) {
       print('Error saving login status: $e');
     }
@@ -169,66 +173,6 @@ class AuthNotifier extends StateNotifier<PhoneVerificationState> {
     }
   }
 
-  Future<void> sendOTP(String phoneNumber, String countryCode) async {
-    print('📱 [AuthProvider] Starting sendOTP...');
-    print('📝 [AuthProvider] Phone: $phoneNumber, Country: $countryCode');
-    
-    state = state.copyWith(isLoading: true, error: null);
-    print('⏳ [AuthProvider] Set isLoading to true');
-
-    try {
-      // Get user ID from state (should be set after default address is saved)
-      final userId = state.userId;
-      print('👤 [AuthProvider] Current userId: $userId');
-      
-      if (userId == null) {
-        print('❌ [AuthProvider] User ID not found in state');
-        state = state.copyWith(
-          isLoading: false,
-          error: 'User ID not found. Please save your location first.',
-        );
-        return;
-      }
-
-      print('📤 [AuthProvider] Calling UserService.sendOtp...');
-      final result = await _userService.sendOtp(
-        mobile: phoneNumber,
-        userId: userId,
-      );
-
-      print('📥 [AuthProvider] SendOTP result received');
-      result.fold(
-        (failure) {
-          print('❌ [AuthProvider] SendOTP failed: ${failure.message}');
-          state = state.copyWith(
-            isLoading: false,
-            error: failure.message,
-          );
-        },
-        (data) {
-          print('✅ [AuthProvider] SendOTP successful');
-          print('📊 [AuthProvider] Response data: $data');
-          print('🔢 [AuthProvider] OTP received: ${data['otp']}');
-          
-          state = state.copyWith(
-            phoneNumber: phoneNumber,
-            countryCode: countryCode,
-            otp: data['otp']?.toString(),
-            isLoading: false,
-            error: null,
-          );
-          print('✅ [AuthProvider] State updated with OTP data');
-        },
-      );
-    } catch (e) {
-      print('❌ [AuthProvider] SendOTP exception: $e');
-      print('❌ [AuthProvider] Exception type: ${e.runtimeType}');
-      state = state.copyWith(
-        isLoading: false,
-        error: 'Something went wrong. Please try again.',
-      );
-    }
-  }
 
   Future<bool> verifyOTP(String otp) async {
     print('🔐 [AuthProvider] Starting verifyOTP...');
@@ -269,12 +213,17 @@ class AuthNotifier extends StateNotifier<PhoneVerificationState> {
           print('🔑 [AuthProvider] Auth token: ${data['token']}');
           
           // Save login status to SharedPreferences
+          // For login flow, userId and userToken might be null, so use empty strings or get from response
           print('💾 [AuthProvider] Saving login status...');
+          final userId = state.userId ?? data['data']?['id']?.toString() ?? '';
+          final userToken = state.userToken ?? data['data']?['partnerid']?.toString() ?? '';
+          final countryCode = state.countryCode ?? '+91';
+          
           await _saveLoginStatus(
-            state.phoneNumber!,
-            state.countryCode!,
-            state.userId!,
-            state.userToken!,
+            state.phoneNumber ?? '',
+            countryCode,
+            userId,
+            userToken,
             data['token'],
           );
           print('✅ [AuthProvider] Login status saved');
@@ -283,6 +232,8 @@ class AuthNotifier extends StateNotifier<PhoneVerificationState> {
             isLoading: false,
             isVerified: true,
             authToken: data['token'],
+            userId: userId.isNotEmpty ? userId : state.userId,
+            userToken: userToken.isNotEmpty ? userToken : state.userToken,
             error: null,
           );
           print('✅ [AuthProvider] State updated - user verified');

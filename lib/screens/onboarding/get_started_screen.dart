@@ -1,5 +1,6 @@
 import 'package:fixify_admin/config/app_colors.dart';
 import 'package:fixify_admin/screens/auth/create_profile.dart';
+import 'package:fixify_admin/screens/auth/phone_verification_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -246,7 +247,7 @@ class _GetStartedScreenState extends State<GetStartedScreen>
                               PageTransition(
                                 type: PageTransitionType.fade,
                                 duration: const Duration(milliseconds: 500),
-                                child: const LocationPermissionScreen(),
+                                child: const PhoneVerificationScreen(),
                               ),
                             );
                           },

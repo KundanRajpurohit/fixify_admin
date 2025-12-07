@@ -1,11 +1,14 @@
 
 import 'package:fixify_admin/config/app_colors.dart';
+import 'package:fixify_admin/screens/dashboard/dashboard_screen.dart';
 import 'package:fixify_admin/screens/dashboard/home_screen.dart';
+import 'package:fixify_admin/services/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:page_transition/page_transition.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/location_provider.dart' show userServiceProvider;
 
 import 'country_picker_screen.dart';
 import 'otp_verification_screen.dart';
@@ -22,6 +25,33 @@ class _PhoneVerificationScreenState
     extends ConsumerState<PhoneVerificationScreen> {
   final TextEditingController _phoneController = TextEditingController();
   final FocusNode _phoneFocusNode = FocusNode();
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Check if token exists and navigate to dashboard
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkExistingToken();
+    });
+  }
+
+  Future<void> _checkExistingToken() async {
+    final authState = ref.read(authProvider);
+    if (authState.authToken != null && authState.authToken!.isNotEmpty) {
+      print('✅ [PhoneVerificationScreen] Token exists, navigating to dashboard');
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          PageTransition(
+            type: PageTransitionType.fade,
+            duration: const Duration(milliseconds: 500),
+            child: const HomePageScreen(),
+          ),
+        );
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -30,10 +60,110 @@ class _PhoneVerificationScreenState
     super.dispose();
   }
 
+  Future<void> _handleLogin() async {
+    if (_phoneController.text.length < 10) {
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final userService = ref.read(userServiceProvider);
+      final phoneNumber = _phoneController.text.trim().replaceAll(RegExp(r'[^\d]'), '');
+      final selectedCountry = ref.read(selectedCountryProvider);
+      
+      print('📱 [PhoneVerificationScreen] Calling partner login API');
+      print('📝 [PhoneVerificationScreen] Phone: $phoneNumber');
+
+      final result = await userService.partnerLogin(mobile: phoneNumber);
+
+      if (!mounted) return;
+
+      result.fold(
+        (failure) {
+          setState(() {
+            _isLoading = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(failure.message),
+              backgroundColor: Colors.red,
+            ),
+          );
+        },
+        (data) {
+          setState(() {
+            _isLoading = false;
+          });
+
+          print('📊 [PhoneVerificationScreen] Login response: $data');
+          
+          final status = data['status'] as bool? ?? false;
+          final message = data['message'] as String? ?? '';
+          final accountStatus = data['Account_status'] as String?;
+
+          if (status == true) {
+            // OTP sent successfully
+            print('✅ [PhoneVerificationScreen] OTP sent successfully');
+            
+            // Update auth state with phone number and OTP
+            final authState = ref.read(authProvider);
+            ref.read(authProvider.notifier).state = authState.copyWith(
+              phoneNumber: data['mobile']?.toString() ?? phoneNumber,
+              countryCode: selectedCountry.dialCode,
+              otp: data['otp']?.toString(),
+            );
+
+            // Navigate to OTP verification screen
+            Navigator.push(
+              context,
+              PageTransition(
+                type: PageTransitionType.rightToLeft,
+                duration: const Duration(milliseconds: 300),
+                child: const OTPVerificationScreen(),
+              ),
+            );
+          } else {
+            // Handle different error scenarios
+            String errorMessage = message;
+            
+            if (message.contains('not registered') || 
+                message.toLowerCase().contains('mobile number not registered')) {
+              errorMessage = 'Your account is in review. You will receive an update once verification completes.';
+            } else if (accountStatus == 'pending' || 
+                       message.toLowerCase().contains('not active')) {
+              errorMessage = 'Your account is not active. Please contact support.';
+            }
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(errorMessage),
+                backgroundColor: Colors.orange,
+                duration: const Duration(seconds: 4),
+              ),
+            );
+          }
+        },
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final selectedCountry = ref.watch(selectedCountryProvider);
-    final authState = ref.watch(authProvider);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -62,7 +192,7 @@ class _PhoneVerificationScreenState
                         PageTransition(
                           type: PageTransitionType.fade,
                           duration: const Duration(milliseconds: 100),
-                          child: const HomeDashboardScreen(),
+                          child: const HomePageScreen(),
                         ),
                       );
                     },
@@ -259,53 +389,8 @@ class _PhoneVerificationScreenState
                 height: 56.h,
                 child: ElevatedButton(
                   onPressed:
-                      _phoneController.text.length >= 10 && !authState.isLoading
-                          ? () async {
-                              print(
-                                  '📱 [PhoneVerificationScreen] Verify button pressed');
-                              print(
-                                  '📝 [PhoneVerificationScreen] Phone: ${_phoneController.text.trim()}');
-                              print(
-                                  '🌍 [PhoneVerificationScreen] Country: ${selectedCountry.dialCode}');
-                              print(
-                                  '⏳ [PhoneVerificationScreen] Current loading state: ${authState.isLoading}');
-
-                              await ref.read(authProvider.notifier).sendOTP(
-                                    _phoneController.text.trim(),
-                                    selectedCountry.dialCode,
-                                  );
-
-                              // Check auth state after OTP is sent
-                              final updatedAuthState = ref.read(authProvider);
-                              print(
-                                  '📊 [PhoneVerificationScreen] Auth state after sendOTP:');
-                              print(
-                                  '   - isLoading: ${updatedAuthState.isLoading}');
-                              print('   - error: ${updatedAuthState.error}');
-                              print(
-                                  '   - phoneNumber: ${updatedAuthState.phoneNumber}');
-                              print('   - otp: ${updatedAuthState.otp}');
-                              print('   - userId: ${updatedAuthState.userId}');
-
-                              if (updatedAuthState.error == null &&
-                                  updatedAuthState.phoneNumber != null) {
-                                print(
-                                    '✅ [PhoneVerificationScreen] OTP sent successfully, navigating to OTP screen');
-                                Navigator.push(
-                                  context,
-                                  PageTransition(
-                                    type: PageTransitionType.rightToLeft,
-                                    duration: const Duration(milliseconds: 300),
-                                    child: const OTPVerificationScreen(),
-                                  ),
-                                );
-                              } else {
-                                print(
-                                    '❌ [PhoneVerificationScreen] OTP send failed or error occurred');
-                                print(
-                                    '❌ [PhoneVerificationScreen] Error: ${updatedAuthState.error}');
-                              }
-                            }
+                      _phoneController.text.length >= 10 && !_isLoading
+                          ? _handleLogin
                           : null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _phoneController.text.length >= 10
@@ -319,7 +404,7 @@ class _PhoneVerificationScreenState
                     ),
                     elevation: 0,
                   ),
-                  child: authState.isLoading
+                  child: _isLoading
                       ? const SizedBox(
                           width: 20,
                           height: 20,

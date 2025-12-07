@@ -84,7 +84,16 @@ class LocationNotifier extends StateNotifier<LocationState> {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      final permission = await Permission.location.request();
+      // Check current permission status first
+      final permissionStatus = await Permission.location.status;
+      
+      PermissionStatus permission;
+      if (permissionStatus.isDenied) {
+        // Request permission if not granted
+        permission = await Permission.location.request();
+      } else {
+        permission = permissionStatus;
+      }
 
       if (permission.isGranted) {
         final position = await Geolocator.getCurrentPosition(
@@ -100,19 +109,39 @@ class LocationNotifier extends StateNotifier<LocationState> {
             currentPosition: latLng,
             selectedPosition: latLng,
             isLoading: false,
+            error: null,
           );
           _addMarker(latLng, 'Current Location');
           await _getAddressFromCoordinates(latLng, 'Current Location');
         } else {
           _useDefaultLocation();
         }
+      } else if (permission.isPermanentlyDenied) {
+        state = state.copyWith(
+          isLoading: false,
+          error: 'Location permission is permanently denied. Please enable it in app settings.',
+        );
+        _useDefaultLocation();
       } else {
+        state = state.copyWith(
+          isLoading: false,
+          error: 'Location permission denied. Using default location.',
+        );
         _useDefaultLocation();
       }
     } catch (e) {
       print('Error getting current location: $e');
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Failed to get location: ${e.toString()}',
+      );
       _useDefaultLocation();
     }
+  }
+
+  // Public method to request location permission again
+  Future<void> requestLocationPermission() async {
+    await _getCurrentLocation();
   }
 
   void _useDefaultLocation() {
@@ -426,11 +455,12 @@ class LocationNotifier extends StateNotifier<LocationState> {
     }
   }
 
-  Future<ApiResult<Map<String, dynamic>>> saveLocation() async {
+  Future<ApiResult<Map<String, dynamic>>> saveLocation() async
+  {
     print('🗺️ [LocationProvider] Starting saveLocation...');
     print('📍 [LocationProvider] Selected position: ${state.selectedPosition}');
     print('📋 [LocationProvider] Address details: ${state.addressDetails}');
-    
+
     if (state.selectedPosition == null || state.addressDetails.isEmpty) {
       print('❌ [LocationProvider] No location selected or address details empty');
       return left(const ServerFailure('No location selected', 400));
@@ -461,7 +491,7 @@ class LocationNotifier extends StateNotifier<LocationState> {
         (data) {
           print('✅ [LocationProvider] API call successful');
           print('📊 [LocationProvider] Response data: $data');
-          
+
           if (data['status'] == true && data['data'] != null) {
             final userData = data['data'];
             print('👤 [LocationProvider] Setting user data in auth provider');
@@ -480,7 +510,7 @@ class LocationNotifier extends StateNotifier<LocationState> {
     } catch (e) {
       print('❌ [LocationProvider] Exception occurred: $e');
       print('❌ [LocationProvider] Exception type: ${e.runtimeType}');
-      
+
       state = state.copyWith(
         isSaving: false,
         error: e.toString(),

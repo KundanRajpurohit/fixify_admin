@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'home_screen.dart';
+import 'my_jobs_screen.dart';
+import 'profile_screen.dart';
+import 'settings_screen.dart';
 
 class HomePageScreen extends StatefulWidget {
   final int initialIndex;
@@ -23,19 +27,19 @@ class _HomePageScreenState extends State<HomePageScreen> {
 
   final List<Widget> _screens = [
     const HomeDashboardScreen(),
-    const HomeDashboardScreen(),
-    const HomeDashboardScreen(),
-    const HomeDashboardScreen(),
+    const MyJobsScreen(),
+    const SettingsScreen(),
+    const ProfileScreen(),
   ];
 
   final List<IconData> _icons = [
-    Icons.home,
-    Icons.search,
-    Icons.shopping_cart,
-    Icons.person,
+    FontAwesomeIcons.house,
+    FontAwesomeIcons.clipboardList,
+    FontAwesomeIcons.gear,
+    FontAwesomeIcons.user,
   ];
 
-  final List<String> _labels = ['Home', 'Search', 'Cart', 'Profile'];
+  final List<String> _labels = ['Home', 'My Jobs', 'Settings', 'Profile'];
 
   @override
   void initState() {
@@ -128,11 +132,11 @@ class _HomePageScreenState extends State<HomePageScreen> {
       case 0:
         return 95.0; // Home
       case 1:
-        return 100.0; // Search
+        return 110.0; // Search
       case 2:
         return 95.0; // Cart
       case 3:
-        return 95.0; // Profile
+        return 100.0; // Profile
       default:
         return 100.0;
     }
@@ -162,7 +166,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
                   scale: isSelected ? 1.1 : 1.0,
                   child: Row(
                     children: [
-                      SizedBox(width: !isSelected ? 0 : 6),
+                      SizedBox(width: !isSelected ? 0 : 2),
                       Icon(
                         icon,
                         color: isSelected ? Colors.white : Colors.grey.shade400,
@@ -171,20 +175,6 @@ class _HomePageScreenState extends State<HomePageScreen> {
                     ],
                   ),
                 ),
-                // Cart badge
-                if (index == 2 && !isSelected)
-                  Positioned(
-                    top: -2,
-                    right: -2,
-                    child: Container(
-                      width: 8,
-                      height: 8,
-                      decoration: const BoxDecoration(
-                        color: Colors.red,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  ),
               ],
             ),
             AnimatedContainer(

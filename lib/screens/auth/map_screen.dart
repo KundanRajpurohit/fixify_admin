@@ -1,11 +1,16 @@
 
 import 'package:fixify_admin/config/app_colors.dart';
+import 'package:fixify_admin/dio/resulr.dart';
 import 'package:fixify_admin/providers/location_provider.dart';
+import 'package:fixify_admin/screens/auth/upload_document_screen.dart';
+import 'package:fixify_admin/services/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:page_transition/page_transition.dart';
+import 'package:permission_handler/permission_handler.dart';
 
+import '../../providers/auth_provider.dart';
 import 'phone_verification_screen.dart';
 
 class MapScreen extends ConsumerStatefulWidget {
@@ -18,6 +23,74 @@ class MapScreen extends ConsumerStatefulWidget {
 
 class _MapScreenState extends ConsumerState<MapScreen> {
   final TextEditingController _searchController = TextEditingController();
+  bool _hasCheckedPermission = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Check permission status when screen loads
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkLocationPermission();
+    });
+  }
+
+  Future<void> _checkLocationPermission() async {
+    if (_hasCheckedPermission) return;
+    
+    final permissionStatus = await Permission.location.status;
+    final locationState = ref.read(locationProvider);
+    
+    if (permissionStatus.isDenied || permissionStatus.isPermanentlyDenied) {
+      // Show permission dialog if not granted
+      if (mounted && locationState.error != null) {
+        _showPermissionDialog(permissionStatus.isPermanentlyDenied);
+      }
+    }
+    
+    setState(() {
+      _hasCheckedPermission = true;
+    });
+  }
+
+  void _showPermissionDialog(bool isPermanentlyDenied) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Location Permission Required'),
+          content: Text(
+            isPermanentlyDenied
+                ? 'Location permission is permanently denied. Please enable it in app settings to use your current location.'
+                : 'FIXIFY needs location access to find your current location. Please allow location access.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Continue Without'),
+            ),
+            if (isPermanentlyDenied)
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  openAppSettings();
+                },
+                child: const Text('Open Settings'),
+              )
+            else
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  ref.read(locationProvider.notifier).requestLocationPermission();
+                },
+                child: const Text('Allow'),
+              ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   void dispose() {
@@ -49,8 +122,54 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     print('   - Address details: ${ref.read(locationProvider).addressDetails}');
     print('   - Is saving: ${ref.read(locationProvider).isSaving}');
 
-    final result = await ref.read(locationProvider.notifier).saveLocation();
+    final locationState = ref.read(locationProvider);
+    
+    if (locationState.selectedPosition == null || locationState.addressDetails.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a location'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
 
+    // Use partner API if this is from create account flow (not from profile)
+    if (widget.isFromProfile == false) {
+      await _savePartnerLocation(locationState);
+    } else {
+      final result = await ref.read(locationProvider.notifier).saveLocation();
+      _handleSaveResult(result);
+    }
+  }
+
+  Future<void> _savePartnerLocation(LocationState locationState) async {
+    try {
+      final userService = ref.read(userServiceProvider);
+      
+      print('📤 [MapScreen] Calling partner add default address API');
+      
+      final result = await userService.partnerAddDefaultAddress(
+        address: locationState.addressDetails['address'] ?? '',
+        state: locationState.addressDetails['state'] ?? '',
+        city: locationState.addressDetails['city'] ?? '',
+        landmark: locationState.addressDetails['landmark'] ?? '',
+        pincode: locationState.addressDetails['pincode'] ?? '',
+      );
+
+      _handleSaveResult(result);
+    } catch (e) {
+      print('❌ [MapScreen] Error saving partner location: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  void _handleSaveResult(ApiResult<Map<String, dynamic>> result) {
     print('📥 [MapScreen] Save result received');
 
     result.fold(
@@ -69,6 +188,17 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         print('✅ [MapScreen] Save successful');
         print('📊 [MapScreen] Success data: $success');
 
+        // Update auth provider with user data if available
+        if (success['data'] != null) {
+          final userData = success['data'];
+          if (userData['userid'] != null && userData['token'] != null) {
+            ref.read(authProvider.notifier).setUserData(
+              userData['userid'].toString(),
+              userData['token'].toString(),
+            );
+          }
+        }
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Location saved successfully!'),
@@ -76,15 +206,15 @@ class _MapScreenState extends ConsumerState<MapScreen> {
           ),
         );
 
-        // Navigate to phone verification
-        print('🚀 [MapScreen] Navigating to PhoneVerificationScreen');
+        // Navigate to document upload screen
+        print('🚀 [MapScreen] Navigating to UploadDocumentsScreen');
         if (widget.isFromProfile == false) {
           Navigator.pushReplacement(
             context,
             PageTransition(
-              type: PageTransitionType.rightToLeft,
-              duration: const Duration(milliseconds: 300),
-              child: const PhoneVerificationScreen(),
+              type: PageTransitionType.fade,
+              duration: const Duration(milliseconds: 500),
+              child: const UploadDocumentsScreen(),
             ),
           );
         } else {
@@ -344,7 +474,24 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                       const SizedBox(height: 16),
                       Center(
                         child: GestureDetector(
-                          onTap: _useCurrentLocation,
+                          onTap: () async {
+                            // Check permission before using current location
+                            final permissionStatus = await Permission.location.status;
+                            if (permissionStatus.isDenied || permissionStatus.isPermanentlyDenied) {
+                              if (permissionStatus.isPermanentlyDenied) {
+                                _showPermissionDialog(true);
+                              } else {
+                                final permission = await Permission.location.request();
+                                if (permission.isGranted) {
+                                  _useCurrentLocation();
+                                } else {
+                                  _showPermissionDialog(false);
+                                }
+                              }
+                            } else {
+                              _useCurrentLocation();
+                            }
+                          },
                           child: const Text(
                             'Use Current Location',
                             style: TextStyle(
@@ -355,6 +502,20 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                           ),
                         ),
                       ),
+                      // Show error message if permission was denied
+                      if (locationState.error != null && 
+                          locationState.error!.contains('permission'))
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Text(
+                            locationState.error!,
+                            style: const TextStyle(
+                              color: Colors.orange,
+                              fontSize: 12,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
                     ],
                   ),
                 ),

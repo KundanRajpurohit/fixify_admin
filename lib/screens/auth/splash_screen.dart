@@ -1,5 +1,6 @@
 import 'package:fixify_admin/providers/auth_provider.dart';
 import 'package:fixify_admin/screens/auth/phone_verification_screen.dart';
+import 'package:fixify_admin/screens/dashboard/dashboard_screen.dart';
 import 'package:fixify_admin/screens/dashboard/home_screen.dart';
 import 'package:fixify_admin/screens/onboarding/onboarding_screen.dart';
 import 'package:flutter/material.dart';
@@ -65,7 +66,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         PageTransition(
           type: PageTransitionType.fade,
           duration: const Duration(milliseconds: 500),
-          child: const HomeDashboardScreen(),
+          child: const HomePageScreen(),
         ),
       );
     }

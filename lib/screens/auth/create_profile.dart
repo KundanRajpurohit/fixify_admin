@@ -4,19 +4,23 @@ import 'package:fixify_admin/config/app_colors.dart';
 import 'package:fixify_admin/providers/auth_provider.dart';
 import 'package:fixify_admin/screens/auth/country_picker_screen.dart';
 import 'package:fixify_admin/screens/auth/otp_verification_screen.dart';
+import 'package:fixify_admin/services/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:page_transition/page_transition.dart';
 
-class CreateAccountScreen extends StatefulWidget {
+import '../../providers/location_provider.dart';
+
+class CreateAccountScreen extends ConsumerStatefulWidget {
   const CreateAccountScreen({super.key});
 
   @override
-  State<CreateAccountScreen> createState() => _CreateAccountScreenState();
+  ConsumerState<CreateAccountScreen> createState() => _CreateAccountScreenState();
 }
 
-class _CreateAccountScreenState extends State<CreateAccountScreen> {
+class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
   final _formKey = GlobalKey<FormState>();
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
@@ -45,30 +49,110 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
       return;
     }
 
+    // Validate email format
+    final email = _emailController.text.trim();
+    if (email.isNotEmpty && !email.contains('@')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a valid email address'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Validate phone number
+    final phoneNumber = _phoneNumberController.text.trim();
+    if (phoneNumber.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter your phone number'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     setState(() {
       _isLoading = true;
     });
 
-    await Future.delayed(const Duration(milliseconds: 500)); // just for feel
+    try {
+      final userService = ref.read(userServiceProvider);
+      final fullName =
+          '${_firstNameController.text.trim()} ${_lastNameController.text.trim()}'
+              .trim();
+      
+      // Use phone number as entered (API expects just the number without dial code)
+      final mobileNumber = phoneNumber.replaceAll(RegExp(r'[^\d]'), ''); // Remove any non-digits
 
-    if (!mounted) return;
+      print('📝 [CreateProfile] Registering partner:');
+      print('   - name: $fullName');
+      print('   - mobile: $mobileNumber');
+      print('   - email: $email');
 
-    setState(() {
-      _isLoading = false;
-    });
+      final result = await userService.partnerRegister(
+        name: fullName,
+        mobile: mobileNumber,
+        email: email,
+        image: _profileImage,
+      );
 
-    final fullName =
-        '${_firstNameController.text.trim()} ${_lastNameController.text.trim()}'
-            .trim();
+      if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Account created for $fullName (UI only, no API)'),
-        backgroundColor: Colors.green,
-      ),
-    );
+      result.fold(
+        (failure) {
+          setState(() {
+            _isLoading = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(failure.message),
+              backgroundColor: Colors.red,
+            ),
+          );
+        },
+        (data) {
+          setState(() {
+            _isLoading = false;
+          });
 
-    Navigator.pop(context);
+          print('✅ [CreateProfile] Registration successful');
+          print('📊 [CreateProfile] Response: $data');
+
+          // Store mobile number and OTP in auth provider for OTP verification
+          final currentState = ref.read(authProvider);
+          ref.read(authProvider.notifier).state = currentState.copyWith(
+            phoneNumber: data['mobile']?.toString() ?? mobileNumber,
+            countryCode: _selectedDialCode,
+            otp: data['otp']?.toString(), // Store OTP if provided in response
+          );
+
+          // Navigate to OTP verification screen
+          Navigator.push(
+            context,
+            PageTransition(
+              type: PageTransitionType.fade,
+              duration: const Duration(milliseconds: 500),
+              child: const OTPVerificationScreen(
+                isCreateAccount: true,
+              ),
+            ),
+          );
+        },
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override
@@ -129,18 +213,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                     width: double.infinity,
                     height: 56,
                     child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          PageTransition(
-                            type: PageTransitionType.fade,
-                            duration: const Duration(milliseconds: 500),
-                            child: const OTPVerificationScreen(
-                              isCreateAccount: true,
-                            ),
-                          ),
-                        );
-                      },
+                      onPressed: _isLoading ? null : _saveAccount,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         foregroundColor: Colors.white,
@@ -149,13 +222,22 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                         ),
                         elevation: 3,
                       ),
-                      child: const Text(
-                        'Verify',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            )
+                          : const Text(
+                              'Continue',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                     ),
                   ).animate().scale(duration: 200.ms, delay: 200.ms),
                 ],
@@ -440,9 +522,10 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                       fillColor: Colors.grey.shade50,
                       border: InputBorder.none,
                     ),
+                    keyboardType: TextInputType.phone,
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
-                        return 'Please enter your  number';
+                        return 'Please enter your phone number';
                       }
                       return null;
                     },
@@ -479,7 +562,10 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
             ),
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
-                return 'Please enter your Email ';
+                return 'Please enter your email';
+              }
+              if (!value.contains('@')) {
+                return 'Please enter a valid email address';
               }
               return null;
             },

@@ -1,19 +1,25 @@
+import 'dart:io';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:fixify_admin/screens/auth/docuent_submitted_screen.dart';
+import 'package:fixify_admin/services/user_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class UploadDocumentsScreen extends StatefulWidget {
+import '../../providers/location_provider.dart';
+
+class UploadDocumentsScreen extends ConsumerStatefulWidget {
   const UploadDocumentsScreen({super.key});
 
   @override
-  State<UploadDocumentsScreen> createState() => _UploadDocumentsScreenState();
+  ConsumerState<UploadDocumentsScreen> createState() => _UploadDocumentsScreenState();
 }
 
-class _UploadDocumentsScreenState extends State<UploadDocumentsScreen> {
-  // store picked file names (or null if not picked)
-  String? _aadhaarFile;
-  String? _addressFile;
-  String? _licenseFile;
+class _UploadDocumentsScreenState extends ConsumerState<UploadDocumentsScreen> {
+  // store picked file paths (or null if not picked)
+  File? _aadhaarFile;
+  File? _addressFile;
+  File? _licenseFile;
 
   bool _isSubmitting = false;
 
@@ -28,15 +34,16 @@ class _UploadDocumentsScreenState extends State<UploadDocumentsScreen> {
 
     if (result == null || result.files.isEmpty) return;
 
-    final fileName = result.files.single.name;
+    final filePath = result.files.single.path;
+    if (filePath == null) return;
 
     setState(() {
       if (type == 'aadhaar') {
-        _aadhaarFile = fileName;
+        _aadhaarFile = File(filePath);
       } else if (type == 'address') {
-        _addressFile = fileName;
+        _addressFile = File(filePath);
       } else if (type == 'license') {
-        _licenseFile = fileName;
+        _licenseFile = File(filePath);
       }
     });
   }
@@ -45,12 +52,13 @@ class _UploadDocumentsScreenState extends State<UploadDocumentsScreen> {
       _aadhaarFile != null && _addressFile != null; // license is optional
 
   Future<void> _submit() async {
-    if (_canSubmit) {
+    if (!_canSubmit) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
             'Please upload Aadhaar Card and Address Proof before submitting.',
           ),
+          backgroundColor: Colors.red,
         ),
       );
       return;
@@ -58,17 +66,54 @@ class _UploadDocumentsScreenState extends State<UploadDocumentsScreen> {
 
     setState(() => _isSubmitting = true);
 
-    // just for feel, no API
-    await Future.delayed(const Duration(milliseconds: 600));
+    try {
+      final userService = ref.read(userServiceProvider);
+      
+      print('📄 [UploadDocuments] Uploading documents:');
+      print('   - national_id: ${_aadhaarFile?.path}');
+      print('   - proof_national_id: ${_addressFile?.path}');
+      print('   - services_license: ${_licenseFile?.path}');
 
-    if (!mounted) return;
+      final result = await userService.partnerUploadDocuments(
+        nationalId: _aadhaarFile,
+        proofNationalId: _addressFile,
+        servicesLicense: _licenseFile,
+      );
 
-    setState(() => _isSubmitting = false);
+      if (!mounted) return;
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const DocumentsSubmittedScreen()),
-    );
+      result.fold(
+        (failure) {
+          setState(() => _isSubmitting = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(failure.message),
+              backgroundColor: Colors.red,
+            ),
+          );
+        },
+        (data) {
+          setState(() => _isSubmitting = false);
+          
+          print('✅ [UploadDocuments] Documents uploaded successfully');
+          print('📊 [UploadDocuments] Response: $data');
+
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const DocumentsSubmittedScreen()),
+          );
+        },
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isSubmitting = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override
@@ -104,21 +149,21 @@ class _UploadDocumentsScreenState extends State<UploadDocumentsScreen> {
                   _buildDocumentSection(
                     title: 'Aadhaar Card',
                     hint: 'JPG, PNG, PDF',
-                    selectedFile: _aadhaarFile,
+                    selectedFile: _aadhaarFile?.path.split('/').last,
                     onUpload: () => _pickFileFor('aadhaar'),
                   ),
                   const SizedBox(height: 12),
                   _buildDocumentSection(
                     title: 'Address Proof',
                     hint: 'JPG, PNG, PDF',
-                    selectedFile: _addressFile,
+                    selectedFile: _addressFile?.path.split('/').last,
                     onUpload: () => _pickFileFor('address'),
                   ),
                   const SizedBox(height: 12),
                   _buildDocumentSection(
                     title: 'Service License (if applicable)',
                     hint: 'JPG, PNG, PDF',
-                    selectedFile: _licenseFile,
+                    selectedFile: _licenseFile?.path.split('/').last,
                     onUpload: () => _pickFileFor('license'),
                   ),
                   const SizedBox(height: 32),
