@@ -132,11 +132,11 @@ class _HomePageScreenState extends State<HomePageScreen> {
       case 0:
         return 95.0; // Home
       case 1:
-        return 110.0; // Search
+        return 115.0; // Search
       case 2:
-        return 95.0; // Cart
+        return 115.0; // Cart
       case 3:
-        return 100.0; // Profile
+        return 110.0; // Profile
       default:
         return 100.0;
     }
@@ -163,7 +163,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
               children: [
                 AnimatedScale(
                   duration: const Duration(milliseconds: 200),
-                  scale: isSelected ? 1.1 : 1.0,
+                  scale: isSelected ? 1.0 : 1.0,
                   child: Row(
                     children: [
                       SizedBox(width: !isSelected ? 0 : 2),
@@ -179,7 +179,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
             ),
             AnimatedContainer(
               duration: const Duration(milliseconds: 300),
-              width: isSelected ? 6 : 0,
+              width: isSelected ? 3 : 0,
             ),
             AnimatedDefaultTextStyle(
               duration: const Duration(milliseconds: 300),

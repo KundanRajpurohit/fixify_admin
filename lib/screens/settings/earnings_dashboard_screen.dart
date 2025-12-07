@@ -1,3 +1,4 @@
+import 'package:fixify_admin/components/custom_app_bar.dart';
 import 'package:fixify_admin/config/app_colors.dart';
 import 'package:fixify_admin/screens/dashboard/withdraw_earnings_screen.dart';
 import 'package:flutter/material.dart';
@@ -7,7 +8,8 @@ class EarningsDashboardScreen extends StatefulWidget {
   const EarningsDashboardScreen({super.key});
 
   @override
-  State<EarningsDashboardScreen> createState() => _EarningsDashboardScreenState();
+  State<EarningsDashboardScreen> createState() =>
+      _EarningsDashboardScreenState();
 }
 
 class _EarningsDashboardScreenState extends State<EarningsDashboardScreen> {
@@ -30,106 +32,146 @@ class _EarningsDashboardScreenState extends State<EarningsDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: CustomAppBar(title: 'Earnings Dashboard', showbackButton: true),
       backgroundColor: const Color(0xFFF5F7F8),
       body: Column(
         children: [
           // Header
-          Container(
-            padding: const EdgeInsets.fromLTRB(16, 50, 16, 16),
-            decoration: BoxDecoration(
-              color: AppColors.secondary.withOpacity(0.4),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.black87),
-                  onPressed: () => Navigator.pop(context),
-                ),
-                const Text(
-                  'Earnings Dashboard',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-                Container(
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                  child: IconButton(
-                    icon: const Icon(
-                      Icons.notifications,
-                      color: Color(0xFF217043),
-                      size: 22,
-                    ),
-                    onPressed: () {},
-                  ),
-                ),
-              ],
-            ),
-          ),
 
           // Time Filters
           Container(
             padding: const EdgeInsets.all(16),
-            color: Colors.white,
+            color: Color(0xFFF5F7F8),
             child: Column(
               children: [
-                Row(
-                  children: List.generate(_filters.length, (index) {
-                    final isSelected = _selectedFilter == index;
-                    return Expanded(
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _selectedFilter = index;
-                          });
-                        },
-                        child: Container(
-                          margin: EdgeInsets.only(
-                            right: index < _filters.length - 1 ? 8 : 0,
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? AppColors.primary
-                                : Colors.grey.shade100,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            _filters[index],
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: isSelected ? Colors.white : Colors.black87,
+                Container(
+                  padding: const EdgeInsets.all(3),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(40),
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
+                  child: Row(
+                    children: List.generate(_filters.length, (index) {
+                      final isSelected = _selectedFilter == index;
+
+                      return Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _selectedFilter = index;
+                            });
+                          },
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            margin: EdgeInsets.only(
+                              right: index < _filters.length - 1 ? 4 : 0,
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            decoration: BoxDecoration(
+                              color:
+                                  isSelected
+                                      ? AppColors.primary.withOpacity(0.08)
+                                      : Colors.transparent,
+                              borderRadius: BorderRadius.circular(40),
+                              border: Border.all(
+                                color:
+                                    isSelected
+                                        ? AppColors.primary.withOpacity(0.4)
+                                        : Colors.transparent,
+                                width: 1.5,
+                              ),
+                            ),
+                            child: Text(
+                              _filters[index],
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color:
+                                    isSelected
+                                        ? AppColors.primary
+                                        : Colors.black87,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    );
-                  }),
+                      );
+                    }),
+                  ),
                 ),
+
                 const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.calendar_today,
-                      size: 16,
-                      color: Colors.grey.shade600,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      _dateDisplay,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey.shade700,
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.12),
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          vertical: 13,
+                          horizontal: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.grey.shade300),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.calendar_today,
+                              size: 16,
+                              color: Colors.grey.shade600,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              _dateDisplay,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey.shade700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 16),
+                      _buildTotalEarningsCard(),
+                      const SizedBox(height: 16),
+                      // Payout Status Cards
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildPayoutStatusCard(
+                              icon: Icons.check_circle,
+                              iconColor: Colors.blue,
+                              title: 'Completed Payouts',
+                              amount: '₹4,000',
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _buildPayoutStatusCard(
+                              icon: Icons.access_time,
+                              iconColor: Colors.orange,
+                              title: 'Pending Payouts',
+                              amount: '₹2,000',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -143,31 +185,7 @@ class _EarningsDashboardScreenState extends State<EarningsDashboardScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Total Earnings Card
-                  _buildTotalEarningsCard(),
-                  const SizedBox(height: 16),
-                  // Payout Status Cards
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildPayoutStatusCard(
-                          icon: Icons.check_circle,
-                          iconColor: Colors.blue,
-                          title: 'Completed Payouts',
-                          amount: '₹4,000',
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _buildPayoutStatusCard(
-                          icon: Icons.access_time,
-                          iconColor: Colors.orange,
-                          title: 'Pending Payouts',
-                          amount: '₹2,000',
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
+
                   // View All Payouts
                   const Text(
                     'View All Payouts',
@@ -191,7 +209,7 @@ class _EarningsDashboardScreenState extends State<EarningsDashboardScreen> {
 
   Widget _buildTotalEarningsCard() {
     return GestureDetector(
-      onTap: (){
+      onTap: () {
         Navigator.push(
           context,
           PageTransition(
@@ -214,7 +232,7 @@ class _EarningsDashboardScreenState extends State<EarningsDashboardScreen> {
               child: Image.asset(
                 'assets/images/Metric item.png',
                 width: double.infinity,
-                height: 180,
+                height: 160,
                 fit: BoxFit.cover,
               ),
             ),
@@ -284,19 +302,12 @@ class _EarningsDashboardScreenState extends State<EarningsDashboardScreen> {
               color: iconColor.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(
-              icon,
-              color: iconColor,
-              size: 24,
-            ),
+            child: Icon(icon, color: iconColor, size: 24),
           ),
           const SizedBox(height: 12),
           Text(
             title,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey.shade600,
-            ),
+            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
           ),
           const SizedBox(height: 4),
           Text(
@@ -354,32 +365,33 @@ class _EarningsDashboardScreenState extends State<EarningsDashboardScreen> {
 
     String? currentDate;
     return Column(
-      children: payouts.map((payout) {
-        final showDateHeader = currentDate != payout['date'];
-        if (showDateHeader) {
-          currentDate = payout['date'] as String;
-        }
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (showDateHeader) ...[
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12, top: 8),
-                child: Text(
-                  payout['date'] as String,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey.shade700,
+      children:
+          payouts.map((payout) {
+            final showDateHeader = currentDate != payout['date'];
+            if (showDateHeader) {
+              currentDate = payout['date'] as String;
+            }
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (showDateHeader) ...[
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12, top: 8),
+                    child: Text(
+                      payout['date'] as String,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey.shade700,
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            ],
-            _buildPayoutItem(payout),
-            const SizedBox(height: 12),
-          ],
-        );
-      }).toList(),
+                ],
+                _buildPayoutItem(payout),
+                const SizedBox(height: 12),
+              ],
+            );
+          }).toList(),
     );
   }
 
@@ -411,18 +423,12 @@ class _EarningsDashboardScreenState extends State<EarningsDashboardScreen> {
                 const SizedBox(height: 4),
                 Text(
                   payout['status'] as String,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   payout['description'] as String,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade700,
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
                 ),
               ],
             ),
@@ -432,27 +438,17 @@ class _EarningsDashboardScreenState extends State<EarningsDashboardScreen> {
             children: [
               Text(
                 payout['time'] as String,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey.shade600,
-                ),
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
               ),
               const SizedBox(height: 8),
               Row(
                 children: [
                   Text(
                     payout['jobId'] as String,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade700,
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
                   ),
                   const SizedBox(width: 4),
-                  Icon(
-                    Icons.copy,
-                    size: 14,
-                    color: Colors.grey.shade600,
-                  ),
+                  Icon(Icons.copy, size: 14, color: Colors.grey.shade600),
                 ],
               ),
             ],
@@ -462,4 +458,3 @@ class _EarningsDashboardScreenState extends State<EarningsDashboardScreen> {
     );
   }
 }
-

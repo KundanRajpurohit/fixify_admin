@@ -1,3 +1,4 @@
+import 'package:fixify_admin/components/custom_app_bar.dart';
 import 'package:fixify_admin/config/app_colors.dart';
 import 'package:fixify_admin/screens/dashboard/cancel_job_screen.dart';
 import 'package:fixify_admin/screens/dashboard/complete_job_screen.dart';
@@ -25,7 +26,10 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
   bool _isTimerRunning = false;
   Duration _elapsedTime = Duration.zero;
   Timer? _timer;
-  final List<TextEditingController> _otpControllers = List.generate(4, (_) => TextEditingController());
+  final List<TextEditingController> _otpControllers = List.generate(
+    4,
+    (_) => TextEditingController(),
+  );
   final List<FocusNode> _otpFocusNodes = List.generate(4, (_) => FocusNode());
   Future<void> _makePhoneCall(String phoneNumber) async {
     final Uri phoneUri = Uri(scheme: 'tel', path: phoneNumber);
@@ -105,10 +109,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
                   ),
                   child: const Text(
                     'Go to My Jobs',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 ),
               ),
@@ -168,11 +169,13 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
   }
 
   bool get _isHourlyService {
-    final serviceType = widget.job['serviceType']?.toString().toLowerCase() ?? 
-                        widget.job['jobType']?.toString().toLowerCase() ?? '';
-    return serviceType == 'hourly' || 
-           serviceType.contains('hourly') || 
-           serviceType.contains('hour');
+    final serviceType =
+        widget.job['serviceType']?.toString().toLowerCase() ??
+        widget.job['jobType']?.toString().toLowerCase() ??
+        '';
+    return serviceType == 'hourly' ||
+        serviceType.contains('hourly') ||
+        serviceType.contains('hour');
   }
 
   void _showOTPDialog() {
@@ -421,10 +424,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
                   ),
                   child: const Text(
                     'Go to Job Details',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 ),
               ),
@@ -452,9 +452,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
       PageTransition(
         type: PageTransitionType.rightToLeft,
         duration: const Duration(milliseconds: 300),
-        child: CancelJobScreen(
-          job: widget.job,
-        ),
+        child: CancelJobScreen(job: widget.job),
       ),
     );
   }
@@ -465,48 +463,52 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
       backgroundColor: const Color(0xFFF5F7F8),
       body: Column(
         children: [
-          // Header
-          Container(
-            padding: const EdgeInsets.fromLTRB(16, 50, 16, 16),
-            decoration: BoxDecoration(
-              color: AppColors.secondary.withOpacity(0.4),
-            ),
-            child: Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.black87),
-                  onPressed: () => Navigator.pop(context),
-                ),
-                Expanded(
-                  child: Text(
-                    widget.isNewJob ? 'New Job Request Details' : 'Job Details',
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                Container(
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                  child: IconButton(
-                    icon: const Icon(
-                      Icons.notifications,
-                      color: Color(0xFF217043),
-                      size: 22,
-                    ),
-                    onPressed: () {
-                      // Handle notifications
-                    },
-                  ),
-                ),
-              ],
-            ),
+          CustomAppBar(
+            title: widget.isNewJob ? 'New Job Request Details' : 'Job Details',
+            showbackButton: true,
           ),
+          // Header
+          // Container(
+          //   padding: const EdgeInsets.fromLTRB(16, 50, 16, 16),
+          //   decoration: BoxDecoration(
+          //     color: AppColors.secondary.withOpacity(1),
+          //   ),
+          //   child: Row(
+          //     children: [
+          //       IconButton(
+          //         icon: const Icon(Icons.arrow_back, color: Colors.black87),
+          //         onPressed: () => Navigator.pop(context),
+          //       ),
+          //       Expanded(
+          //         child: Text(
+          //           widget.isNewJob ? 'New Job Request Details' : 'Job Details',
+          //           style: const TextStyle(
+          //             fontSize: 20,
+          //             fontWeight: FontWeight.bold,
+          //             color: Colors.black87,
+          //           ),
+          //           textAlign: TextAlign.center,
+          //         ),
+          //       ),
+          //       Container(
+          //         decoration: const BoxDecoration(
+          //           color: Colors.white,
+          //           shape: BoxShape.circle,
+          //         ),
+          //         child: IconButton(
+          //           icon: const Icon(
+          //             Icons.notifications,
+          //             color: Color(0xFF217043),
+          //             size: 22,
+          //           ),
+          //           onPressed: () {
+          //             // Handle notifications
+          //           },
+          //         ),
+          //       ),
+          //     ],
+          //   ),
+          // ),
 
           // Timer (only for hourly services when job is ongoing)
           if (_jobStatus == 'Ongoing' && _isHourlyService)
@@ -653,10 +655,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
                   ),
                   child: const Text(
                     'Complete Job',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 ),
               ),
@@ -665,7 +664,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Color(0xffF2F6FB),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.05),
@@ -683,19 +682,17 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(35),
                     ),
                   ),
                   child: const Text(
                     'Start Job',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 ),
               ),
             ),
+          SizedBox(height: 8),
         ],
       ),
     );
@@ -706,7 +703,14 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -717,17 +721,21 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
               const Text(
                 'Service Details',
                 style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
                   color: Colors.black87,
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
-                  color: _jobStatus == 'Ongoing'
-                      ? AppColors.secondary.withOpacity(0.3)
-                      : Colors.blue.shade100,
+                  color:
+                      _jobStatus == 'Ongoing'
+                          ? AppColors.secondary.withOpacity(0.3)
+                          : Colors.blue.shade100,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -735,9 +743,10 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: _jobStatus == 'Ongoing'
-                        ? AppColors.primary
-                        : Colors.blue.shade700,
+                    color:
+                        _jobStatus == 'Ongoing'
+                            ? AppColors.primary
+                            : Colors.blue.shade700,
                   ),
                 ),
               ),
@@ -771,7 +780,14 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -779,8 +795,8 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
           const Text(
             'Customer Details',
             style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
               color: Colors.black87,
             ),
           ),
@@ -818,7 +834,14 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -834,11 +857,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
           const SizedBox(height: 12),
           const Text(
             'My home number is 203 — please ring the bell at the door.',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.black87,
-              height: 1.5,
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.black87, height: 1.5),
           ),
         ],
       ),
@@ -857,14 +876,10 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: AppColors.secondary.withOpacity(0.2),
+            color: AppColors.secondary.withOpacity(1),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(
-            icon,
-            color: AppColors.primary,
-            size: 20,
-          ),
+          child: Icon(icon, color: AppColors.primary, size: 20),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -874,17 +889,18 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
               Text(
                 label,
                 style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey.shade600,
+                  fontSize: 17,
+                  color: Colors.black,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 value,
                 style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black87,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w400,
+                  color: Color(0xff6B7280),
                 ),
               ),
             ],
@@ -908,14 +924,10 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: AppColors.secondary.withOpacity(0.2),
+            color: AppColors.secondary.withOpacity(1),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(
-            icon,
-            color: AppColors.primary,
-            size: 20,
-          ),
+          child: Icon(icon, color: AppColors.primary, size: 20),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -925,17 +937,18 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
               Text(
                 label,
                 style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey.shade600,
+                  fontSize: 17,
+                  color: Colors.black,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 value,
                 style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black87,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w400,
+                  color: Color(0xff6B7280),
                 ),
               ),
             ],
@@ -955,4 +968,3 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
     );
   }
 }
-

@@ -1,8 +1,10 @@
 import 'package:fixify_admin/config/app_colors.dart';
 import 'package:fixify_admin/providers/auth_provider.dart';
-import 'package:fixify_admin/providers/location_provider.dart' show userServiceProvider;
+import 'package:fixify_admin/providers/location_provider.dart'
+    show userServiceProvider;
 import 'package:fixify_admin/screens/dashboard/bank_accounts_screen.dart';
-import 'package:fixify_admin/screens/dashboard/earnings_dashboard_screen.dart';
+import 'package:fixify_admin/screens/settings/earnings_dashboard_screen.dart';
+import 'package:fixify_admin/screens/settings/revieW_page.dart';
 import 'package:fixify_admin/services/user_service.dart';
 import 'package:fixify_admin/widgets/logout_dialog.dart';
 import 'package:flutter/material.dart';
@@ -80,40 +82,39 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7F8),
-      body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-              ),
-            )
-          : RefreshIndicator(
-              onRefresh: _loadProfile,
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                child: Column(
-                  children: [
-                    _buildHeader(),
-                    _buildProfileCard(),
-                    _buildDocumentsSection(),
-                    _buildEarningsSection(),
-                    _buildRatingSection(),
-                    _buildNotificationSection(),
-                    _buildLegalSection(),
-                    _buildLogoutButton(),
-                    const SizedBox(height: 20),
-                  ],
+      body:
+          _isLoading
+              ? const Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                ),
+              )
+              : RefreshIndicator(
+                onRefresh: _loadProfile,
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: Column(
+                    children: [
+                      _buildHeader(),
+                      _buildProfileCard(),
+                      _buildDocumentsSection(),
+                      _buildEarningsSection(),
+                      _buildRatingSection(),
+                      _buildNotificationSection(),
+                      _buildLegalSection(),
+                      _buildLogoutButton(),
+                      const SizedBox(height: 20),
+                    ],
+                  ),
                 ),
               ),
-            ),
     );
   }
 
   Widget _buildHeader() {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 50, 16, 16),
-      decoration: BoxDecoration(
-        color: AppColors.secondary.withOpacity(0.4),
-      ),
+      decoration: BoxDecoration(color: AppColors.secondary.withOpacity(0.4)),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -172,16 +173,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               CircleAvatar(
                 radius: 50,
                 backgroundColor: Colors.grey.shade200,
-                backgroundImage: imageUrl != null
-                    ? NetworkImage(imageUrl)
-                    : null,
-                child: imageUrl == null
-                    ? const Icon(
-                        Icons.person,
-                        size: 50,
-                        color: Colors.grey,
-                      )
-                    : null,
+                backgroundImage:
+                    imageUrl != null ? NetworkImage(imageUrl) : null,
+                child:
+                    imageUrl == null
+                        ? const Icon(Icons.person, size: 50, color: Colors.grey)
+                        : null,
               ),
               Positioned(
                 bottom: 0,
@@ -194,11 +191,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     shape: BoxShape.circle,
                     border: Border.all(color: Colors.white, width: 2),
                   ),
-                  child: const Icon(
-                    Icons.edit,
-                    color: Colors.white,
-                    size: 18,
-                  ),
+                  child: const Icon(Icons.edit, color: Colors.white, size: 18),
                 ),
               ),
             ],
@@ -218,10 +211,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       children: [
         Text(
           label,
-          style: TextStyle(
-            fontSize: 14,
-            color: Colors.grey.shade600,
-          ),
+          style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
         ),
         Text(
           value,
@@ -236,9 +226,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Widget _buildDocumentsSection() {
-    final nationalIdVerified = _profileData?['national_id_verification'] ?? false;
-    final proofNationalIdVerified = _profileData?['proof_national_id_verification'] ?? false;
-    final servicesLicenseVerified = _profileData?['services_license_verification'] ?? false;
+    final nationalIdVerified =
+        _profileData?['national_id_verification'] ?? false;
+    final proofNationalIdVerified =
+        _profileData?['proof_national_id_verification'] ?? false;
+    final servicesLicenseVerified =
+        _profileData?['services_license_verification'] ?? false;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -268,10 +261,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   color: Colors.black87,
                 ),
               ),
-              const Icon(
-                Icons.chevron_right,
-                color: Colors.grey,
-              ),
+              const Icon(Icons.chevron_right, color: Colors.grey),
             ],
           ),
           const SizedBox(height: 16),
@@ -279,7 +269,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           const Divider(height: 24),
           _buildDocumentItem('Address Proof', proofNationalIdVerified),
           const Divider(height: 24),
-          _buildDocumentItem('Service License (if applicable)', servicesLicenseVerified),
+          _buildDocumentItem(
+            'Service License (if applicable)',
+            servicesLicenseVerified,
+          ),
         ],
       ),
     );
@@ -291,17 +284,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       children: [
         Text(
           title,
-          style: const TextStyle(
-            fontSize: 14,
-            color: Colors.black87,
-          ),
+          style: const TextStyle(fontSize: 14, color: Colors.black87),
         ),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: isVerified
-                ? AppColors.secondary.withOpacity(0.2)
-                : Colors.orange.shade100,
+            color:
+                isVerified
+                    ? AppColors.secondary.withOpacity(0.2)
+                    : Colors.orange.shade100,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
@@ -309,9 +300,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: isVerified
-                  ? AppColors.primary
-                  : Colors.orange.shade700,
+              color: isVerified ? AppColors.primary : Colors.orange.shade700,
             ),
           ),
         ),
@@ -404,6 +393,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         title: 'My Rating & Reviews',
         onTap: () {
           // Navigate to rating & reviews
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const RatingPage()),
+          );
         },
       ),
     );
@@ -532,16 +525,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         onTap: () {
           showDialog(
             context: context,
-            builder: (context) => LogoutDialog(
-              onLogout: () async {
-                Navigator.of(context).pop(); // Close dialog
-                await ref.read(authProvider.notifier).logout();
-                // Navigation will be handled by auth state change
-              },
-              onCancel: () {
-                Navigator.of(context).pop(); // Close dialog
-              },
-            ),
+            builder:
+                (context) => LogoutDialog(
+                  onLogout: () async {
+                    Navigator.of(context).pop(); // Close dialog
+                    await ref.read(authProvider.notifier).logout();
+                    // Navigation will be handled by auth state change
+                  },
+                  onCancel: () {
+                    Navigator.of(context).pop(); // Close dialog
+                  },
+                ),
           );
         },
       ),
@@ -564,26 +558,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               color: AppColors.secondary.withOpacity(0.2),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(
-              icon,
-              color: AppColors.primary,
-              size: 20,
-            ),
+            child: Icon(icon, color: AppColors.primary, size: 20),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               title,
-              style: const TextStyle(
-                fontSize: 14,
-                color: Colors.black87,
-              ),
+              style: const TextStyle(fontSize: 14, color: Colors.black87),
             ),
           ),
-          const Icon(
-            Icons.chevron_right,
-            color: Colors.grey,
-          ),
+          const Icon(Icons.chevron_right, color: Colors.grey),
         ],
       ),
     );
@@ -604,20 +588,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             color: AppColors.secondary.withOpacity(0.2),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(
-            icon,
-            color: AppColors.primary,
-            size: 20,
-          ),
+          child: Icon(icon, color: AppColors.primary, size: 20),
         ),
         const SizedBox(width: 12),
         Expanded(
           child: Text(
             title,
-            style: const TextStyle(
-              fontSize: 14,
-              color: Colors.black87,
-            ),
+            style: const TextStyle(fontSize: 14, color: Colors.black87),
           ),
         ),
         Switch(
@@ -629,4 +606,3 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 }
-
