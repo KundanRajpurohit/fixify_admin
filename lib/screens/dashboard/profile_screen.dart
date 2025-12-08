@@ -5,6 +5,7 @@ import 'package:fixify_admin/providers/location_provider.dart'
 import 'package:fixify_admin/screens/dashboard/bank_accounts_screen.dart';
 import 'package:fixify_admin/screens/settings/earnings_dashboard_screen.dart';
 import 'package:fixify_admin/screens/settings/revieW_page.dart';
+import 'package:fixify_admin/screens/settings/transaction_history.dart';
 import 'package:fixify_admin/services/user_service.dart';
 import 'package:fixify_admin/widgets/logout_dialog.dart';
 import 'package:flutter/material.dart';
@@ -352,7 +353,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             icon: Icons.swap_horiz,
             title: 'Transaction History',
             onTap: () {
-              // Navigate to transaction history
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const TransactionHistoryScreen(),
+                ),
+              );
             },
           ),
           const Divider(height: 24),

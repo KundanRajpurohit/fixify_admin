@@ -1,3 +1,4 @@
+import 'package:fixify_admin/components/custom_app_bar.dart';
 import 'package:fixify_admin/config/app_colors.dart';
 import 'package:fixify_admin/screens/dashboard/job_details_screen.dart';
 import 'package:flutter/material.dart';
@@ -38,45 +39,11 @@ class _MyJobsScreenState extends State<MyJobsScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: CustomAppBar(title: 'My Jobs'),
       backgroundColor: const Color(0xFFF5F7F8),
       body: Column(
         children: [
           // Header
-          Container(
-            padding: const EdgeInsets.fromLTRB(16, 50, 16, 16),
-            decoration: BoxDecoration(
-              color: AppColors.secondary.withOpacity(0.4),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'My Jobs',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-                Container(
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                  child: IconButton(
-                    icon: const Icon(
-                      Icons.notifications,
-                      color: Color(0xFF217043),
-                      size: 22,
-                    ),
-                    onPressed: () {
-                      // Handle notifications
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
           Container(
             color: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 12),
