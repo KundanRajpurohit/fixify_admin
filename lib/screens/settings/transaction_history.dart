@@ -53,7 +53,7 @@ class TransactionHistoryScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FB),
-      appBar: CustomAppBar(title: 'Transaction History', showbackButton: true),
+      appBar: CustomAppBar(title: 'Transaction History ', showbackButton: true),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: ListView(
