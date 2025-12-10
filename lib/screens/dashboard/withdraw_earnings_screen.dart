@@ -1,3 +1,4 @@
+import 'package:fixify_admin/components/custom_app_bar.dart';
 import 'package:fixify_admin/config/app_colors.dart';
 import 'package:fixify_admin/models/bank_model.dart';
 import 'package:flutter/material.dart';
@@ -36,7 +37,8 @@ class _WithdrawEarningsScreenState extends State<WithdrawEarningsScreen> {
   @override
   void initState() {
     super.initState();
-    _selectedBankAccount = _bankAccounts.isNotEmpty ? _bankAccounts[0]['id'] : null;
+    _selectedBankAccount =
+        _bankAccounts.isNotEmpty ? _bankAccounts[0]['id'] : null;
   }
 
   @override
@@ -104,7 +106,9 @@ class _WithdrawEarningsScreenState extends State<WithdrawEarningsScreen> {
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.of(context).pop(); // Close dialog
-                    Navigator.of(context).pop(); // Go back to earnings dashboard
+                    Navigator.of(
+                      context,
+                    ).pop(); // Go back to earnings dashboard
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
@@ -115,10 +119,7 @@ class _WithdrawEarningsScreenState extends State<WithdrawEarningsScreen> {
                   ),
                   child: const Text(
                     'View Transaction',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 ),
               ),
@@ -190,49 +191,11 @@ class _WithdrawEarningsScreenState extends State<WithdrawEarningsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: CustomAppBar(title: 'Withdraw Earnings', showbackButton: true),
       backgroundColor: const Color(0xFFF5F7F8),
       body: Column(
         children: [
           // Header
-          Container(
-            padding: const EdgeInsets.fromLTRB(16, 50, 16, 16),
-            decoration: BoxDecoration(
-              color: AppColors.secondary.withOpacity(0.4),
-            ),
-            child: Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.black87),
-                  onPressed: () => Navigator.pop(context),
-                ),
-                const Expanded(
-                  child: Text(
-                    'Withdraw Earnings',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                Container(
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                  child: IconButton(
-                    icon: const Icon(
-                      Icons.notifications,
-                      color: Color(0xFF217043),
-                      size: 22,
-                    ),
-                    onPressed: () {},
-                  ),
-                ),
-              ],
-            ),
-          ),
 
           // Content
           Expanded(
@@ -261,7 +224,7 @@ class _WithdrawEarningsScreenState extends State<WithdrawEarningsScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Color(0xFFF5F7F8),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.05),
@@ -272,32 +235,35 @@ class _WithdrawEarningsScreenState extends State<WithdrawEarningsScreen> {
             ),
             child: SizedBox(
               width: double.infinity,
-              height: 48,
+              height: 55,
               child: ElevatedButton(
                 onPressed: _isSubmitting ? null : _handleWithdraw,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(30),
                   ),
                 ),
-                child: _isSubmitting
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                child:
+                    _isSubmitting
+                        ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
+                          ),
+                        )
+                        : const Text(
+                          'Request Withdrawal',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      )
-                    : const Text(
-                        'Request Withdrawal',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
               ),
             ),
           ),
@@ -410,14 +376,14 @@ class _WithdrawEarningsScreenState extends State<WithdrawEarningsScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: isSelected
-                        ? AppColors.secondary.withOpacity(0.1)
-                        : Colors.grey.shade50,
+                    color:
+                        isSelected
+                            ? AppColors.secondary.withOpacity(0.1)
+                            : Colors.grey.shade50,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: isSelected
-                          ? AppColors.primary
-                          : Colors.grey.shade300,
+                      color:
+                          isSelected ? AppColors.primary : Colors.grey.shade300,
                       width: isSelected ? 2 : 1,
                     ),
                   ),
@@ -441,10 +407,7 @@ class _WithdrawEarningsScreenState extends State<WithdrawEarningsScreen> {
                           color: Colors.grey.shade200,
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Icon(
-                          Icons.account_balance,
-                          size: 24,
-                        ),
+                        child: const Icon(Icons.account_balance, size: 24),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -518,9 +481,7 @@ class _WithdrawEarningsScreenState extends State<WithdrawEarningsScreen> {
           TextField(
             controller: _amountController,
             keyboardType: TextInputType.number,
-            inputFormatters: [
-              FilteringTextInputFormatter.digitsOnly,
-            ],
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             decoration: InputDecoration(
               hintText: 'Enter amount (₹500 - ₹10,000)',
               prefixText: '₹ ',
@@ -536,7 +497,10 @@ class _WithdrawEarningsScreenState extends State<WithdrawEarningsScreen> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                borderSide: const BorderSide(
+                  color: AppColors.primary,
+                  width: 2,
+                ),
               ),
             ),
             onChanged: (value) {
@@ -574,9 +538,15 @@ class _WithdrawEarningsScreenState extends State<WithdrawEarningsScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          _buildSummaryRow('Withdrawal Amount', '₹${_withdrawalAmount.toStringAsFixed(0)}'),
+          _buildSummaryRow(
+            'Withdrawal Amount',
+            '₹${_withdrawalAmount.toStringAsFixed(0)}',
+          ),
           const Divider(height: 24),
-          _buildSummaryRow('Platform Fee', '₹${_platformFee.toStringAsFixed(0)}'),
+          _buildSummaryRow(
+            'Platform Fee',
+            '₹${_platformFee.toStringAsFixed(0)}',
+          ),
           const Divider(height: 24),
           _buildSummaryRow(
             'Will Receive',
@@ -612,6 +582,3 @@ class _WithdrawEarningsScreenState extends State<WithdrawEarningsScreen> {
     );
   }
 }
-
-
-

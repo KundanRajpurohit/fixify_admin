@@ -1,3 +1,4 @@
+import 'package:fixify_admin/components/custom_app_bar.dart';
 import 'package:fixify_admin/config/app_colors.dart';
 import 'package:fixify_admin/screens/dashboard/job_details_screen.dart';
 import 'package:flutter/material.dart';
@@ -13,12 +14,20 @@ class MyJobsScreen extends StatefulWidget {
 class _MyJobsScreenState extends State<MyJobsScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  String _selectedFilter = 'All Jobs';
+  final String _selectedFilter = 'All Jobs';
+  int _selectedTabIndex = 0;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(() {
+      if (_selectedTabIndex != _tabController.index) {
+        setState(() {
+          _selectedTabIndex = _tabController.index;
+        });
+      }
+    });
   }
 
   @override
@@ -30,66 +39,29 @@ class _MyJobsScreenState extends State<MyJobsScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: CustomAppBar(title: 'My Jobs'),
       backgroundColor: const Color(0xFFF5F7F8),
       body: Column(
         children: [
           // Header
           Container(
-            padding: const EdgeInsets.fromLTRB(16, 50, 16, 16),
-            decoration: BoxDecoration(
-              color: AppColors.secondary.withOpacity(0.4),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'My Jobs',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-                Container(
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                  child: IconButton(
-                    icon: const Icon(
-                      Icons.notifications,
-                      color: Color(0xFF217043),
-                      size: 22,
-                    ),
-                    onPressed: () {
-                      // Handle notifications
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Tabs
-          Container(
             color: Colors.white,
-            child: TabBar(
-              controller: _tabController,
-              indicatorColor: AppColors.primary,
-              labelColor: AppColors.primary,
-              unselectedLabelColor: Colors.grey.shade600,
-              labelStyle: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Center(
+              child: Container(
+                padding: const EdgeInsets.all(3),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(40),
+                  border: Border.all(color: Colors.grey.shade300),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildPillTab(title: 'New Job Request', index: 0),
+                    _buildPillTab(title: 'Assigned Job', index: 1),
+                  ],
+                ),
               ),
-              unselectedLabelStyle: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.normal,
-              ),
-              tabs: const [
-                Tab(text: 'New Job Request'),
-                Tab(text: 'Assigned Job'),
-              ],
             ),
           ),
 
@@ -101,9 +73,12 @@ class _MyJobsScreenState extends State<MyJobsScreen>
               children: [
                 Expanded(
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 16,
+                    ),
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade100,
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(color: Colors.grey.shade300),
                     ),
@@ -157,7 +132,8 @@ class _MyJobsScreenState extends State<MyJobsScreen>
         'price': '₹199',
         'status': isNewJob ? 'Upcoming' : 'Assigned',
         'statusColor': isNewJob ? Colors.blue.shade100 : Colors.green.shade100,
-        'statusTextColor': isNewJob ? Colors.blue.shade700 : Colors.green.shade700,
+        'statusTextColor':
+            isNewJob ? Colors.blue.shade700 : Colors.green.shade700,
       },
       {
         'clientName': 'Paula Lewis',
@@ -177,18 +153,11 @@ class _MyJobsScreenState extends State<MyJobsScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.work_outline,
-              size: 64,
-              color: Colors.grey.shade400,
-            ),
+            Icon(Icons.work_outline, size: 64, color: Colors.grey.shade400),
             const SizedBox(height: 16),
             Text(
               isNewJob ? 'No new job requests' : 'No assigned jobs',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey.shade600,
-              ),
+              style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
             ),
           ],
         ),
@@ -205,6 +174,42 @@ class _MyJobsScreenState extends State<MyJobsScreen>
     );
   }
 
+  Widget _buildPillTab({required String title, required int index}) {
+    final bool isSelected = _selectedTabIndex == index;
+
+    return GestureDetector(
+      onTap: () {
+        _tabController.animateTo(index);
+        setState(() => _selectedTabIndex = index);
+      },
+      child: AnimatedContainer(
+        margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+        decoration: BoxDecoration(
+          color:
+              isSelected ? AppColors.primary.withOpacity(0.08) : Colors.white,
+          borderRadius: BorderRadius.circular(40),
+          border: Border.all(
+            color:
+                isSelected
+                    ? AppColors.primary.withOpacity(0.4)
+                    : Colors.transparent,
+            width: 1.5,
+          ),
+        ),
+        child: Text(
+          title,
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            color: isSelected ? AppColors.primary : Colors.black87,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildJobCard(Map<String, dynamic> job, bool isNewJob) {
     return GestureDetector(
       onTap: () {
@@ -213,10 +218,7 @@ class _MyJobsScreenState extends State<MyJobsScreen>
           PageTransition(
             type: PageTransitionType.rightToLeft,
             duration: const Duration(milliseconds: 300),
-            child: JobDetailsScreen(
-              job: job,
-              isNewJob: isNewJob,
-            ),
+            child: JobDetailsScreen(job: job, isNewJob: isNewJob),
           ),
         );
       },
@@ -225,7 +227,7 @@ class _MyJobsScreenState extends State<MyJobsScreen>
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(18),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.05),
@@ -252,10 +254,7 @@ class _MyJobsScreenState extends State<MyJobsScreen>
                   const SizedBox(height: 4),
                   Text(
                     job['jobType'],
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade600,
-                    ),
+                    style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
                   ),
                   const SizedBox(height: 8),
                   Row(
@@ -281,7 +280,10 @@ class _MyJobsScreenState extends State<MyJobsScreen>
                   ),
                   const SizedBox(height: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: job['statusColor'],
                       borderRadius: BorderRadius.circular(12),
@@ -310,10 +312,7 @@ class _MyJobsScreenState extends State<MyJobsScreen>
                   ),
                 ),
                 const SizedBox(height: 8),
-                Icon(
-                  Icons.chevron_right,
-                  color: Colors.grey.shade400,
-                ),
+                Icon(Icons.chevron_right, color: Colors.grey.shade400),
               ],
             ),
           ],
@@ -322,4 +321,3 @@ class _MyJobsScreenState extends State<MyJobsScreen>
     );
   }
 }
-

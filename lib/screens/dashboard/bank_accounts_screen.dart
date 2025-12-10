@@ -1,3 +1,4 @@
+import 'package:fixify_admin/components/custom_app_bar.dart';
 import 'package:fixify_admin/config/app_colors.dart';
 import 'package:fixify_admin/models/bank_model.dart';
 import 'package:fixify_admin/screens/dashboard/add_edit_bank_account_screen.dart';
@@ -13,7 +14,7 @@ class BankAccountsScreen extends StatefulWidget {
 
 class _BankAccountsScreenState extends State<BankAccountsScreen> {
   // Sample bank accounts data - replace with API data
-  List<BankAccount> _bankAccounts = [
+  final List<BankAccount> _bankAccounts = [
     BankAccount(
       id: '1',
       accountHolderName: 'Dhaval Paghadal',
@@ -44,88 +45,38 @@ class _BankAccountsScreenState extends State<BankAccountsScreen> {
       body: Column(
         children: [
           // Header
-          Container(
-            padding: const EdgeInsets.fromLTRB(16, 50, 16, 16),
-            decoration: BoxDecoration(
-              color: AppColors.secondary.withOpacity(0.4),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'My Bank Accounts',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-                Stack(
-                  children: [
-                    Container(
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                      ),
-                      child: IconButton(
-                        icon: const Icon(
-                          Icons.notifications,
-                          color: Color(0xFF217043),
-                          size: 22,
-                        ),
-                        onPressed: () {
-                          // Handle notifications
-                        },
-                      ),
-                    ),
-                    Positioned(
-                      right: 8,
-                      top: 8,
-                      child: Container(
-                        width: 8,
-                        height: 8,
-                        decoration: const BoxDecoration(
-                          color: AppColors.primary,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
+          CustomAppBar(title: 'My Bank Accounts', showbackButton: true),
           // Bank Accounts List
           Expanded(
-            child: _bankAccounts.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.account_balance,
-                          size: 64,
-                          color: Colors.grey.shade400,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'No bank accounts added',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.grey.shade600,
+            child:
+                _bankAccounts.isEmpty
+                    ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.account_balance,
+                            size: 64,
+                            color: Colors.grey.shade400,
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 16),
+                          Text(
+                            'No bank accounts added',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                    : ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: _bankAccounts.length,
+                      itemBuilder: (context, index) {
+                        return _buildBankAccountCard(_bankAccounts[index]);
+                      },
                     ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: _bankAccounts.length,
-                    itemBuilder: (context, index) {
-                      return _buildBankAccountCard(_bankAccounts[index]);
-                    },
-                  ),
           ),
 
           // Add New Bank Account Button
@@ -170,10 +121,7 @@ class _BankAccountsScreenState extends State<BankAccountsScreen> {
                 ),
                 child: const Text(
                   'Add New Bank Account',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
               ),
             ),
@@ -185,7 +133,7 @@ class _BankAccountsScreenState extends State<BankAccountsScreen> {
 
   Widget _buildBankAccountCard(BankAccount account) {
     final bank = BankValidationRules.getBankByName(account.bankName);
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -210,18 +158,19 @@ class _BankAccountsScreenState extends State<BankAccountsScreen> {
               color: Colors.grey.shade200,
               borderRadius: BorderRadius.circular(25),
             ),
-            child: bank != null && bank.logoImageUrl.isNotEmpty
-                ? ClipRRect(
-                    borderRadius: BorderRadius.circular(25),
-                    child: Image.network(
-                      bank.logoImageUrl,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return const Icon(Icons.account_balance, size: 30);
-                      },
-                    ),
-                  )
-                : const Icon(Icons.account_balance, size: 30),
+            child:
+                bank != null && bank.logoImageUrl.isNotEmpty
+                    ? ClipRRect(
+                      borderRadius: BorderRadius.circular(25),
+                      child: Image.network(
+                        bank.logoImageUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Icon(Icons.account_balance, size: 30);
+                        },
+                      ),
+                    )
+                    : const Icon(Icons.account_balance, size: 30),
           ),
           const SizedBox(width: 12),
           // Bank Details
@@ -240,26 +189,17 @@ class _BankAccountsScreenState extends State<BankAccountsScreen> {
                 const SizedBox(height: 4),
                 Text(
                   account.accountHolderName,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade700,
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'Ac No. : ${account.maskedAccountNumber}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   'IFSC: ${account.ifscCode}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                 ),
               ],
             ),
@@ -272,11 +212,7 @@ class _BankAccountsScreenState extends State<BankAccountsScreen> {
                 color: AppColors.secondary.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(
-                Icons.edit,
-                color: AppColors.primary,
-                size: 18,
-              ),
+              child: const Icon(Icons.edit, color: AppColors.primary, size: 18),
             ),
             onPressed: () {
               Navigator.push(
@@ -284,9 +220,7 @@ class _BankAccountsScreenState extends State<BankAccountsScreen> {
                 PageTransition(
                   type: PageTransitionType.rightToLeft,
                   duration: const Duration(milliseconds: 300),
-                  child: AddEditBankAccountScreen(
-                    bankAccount: account,
-                  ),
+                  child: AddEditBankAccountScreen(bankAccount: account),
                 ),
               ).then((result) {
                 if (result != null && result is BankAccount) {
@@ -307,6 +241,3 @@ class _BankAccountsScreenState extends State<BankAccountsScreen> {
     );
   }
 }
-
-
-
