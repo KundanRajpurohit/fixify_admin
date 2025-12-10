@@ -1,9 +1,12 @@
 import 'package:fixify_admin/config/app_colors.dart';
 import 'package:fixify_admin/models/bank_model.dart';
+import 'package:fixify_admin/providers/location_provider.dart';
+import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 
-class AddEditBankAccountScreen extends StatefulWidget {
+class AddEditBankAccountScreen extends ConsumerStatefulWidget {
   final BankAccount? bankAccount;
 
   const AddEditBankAccountScreen({
@@ -12,11 +15,11 @@ class AddEditBankAccountScreen extends StatefulWidget {
   });
 
   @override
-  State<AddEditBankAccountScreen> createState() =>
+  ConsumerState<AddEditBankAccountScreen> createState() =>
       _AddEditBankAccountScreenState();
 }
 
-class _AddEditBankAccountScreenState extends State<AddEditBankAccountScreen> {
+class _AddEditBankAccountScreenState extends ConsumerState<AddEditBankAccountScreen> {
   final _formKey = GlobalKey<FormState>();
   final _accountHolderNameController = TextEditingController();
   final _accountNumberController = TextEditingController();
@@ -25,6 +28,7 @@ class _AddEditBankAccountScreenState extends State<AddEditBankAccountScreen> {
   String? _selectedBank;
   BankInfo? _selectedBankInfo;
   bool _isSubmitting = false;
+
 
   @override
   void initState() {
@@ -97,15 +101,7 @@ class _AddEditBankAccountScreenState extends State<AddEditBankAccountScreen> {
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.of(context).pop(); // Close dialog
-                    Navigator.of(context).pop(
-                      BankAccount(
-                        id: widget.bankAccount?.id,
-                        accountHolderName: _accountHolderNameController.text,
-                        bankName: _selectedBank!,
-                        accountNumber: _accountNumberController.text,
-                        ifscCode: _ifscCodeController.text,
-                      ),
-                    );
+                    Navigator.of(context).pop(true); // Return true to indicate success
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
@@ -135,20 +131,103 @@ class _AddEditBankAccountScreenState extends State<AddEditBankAccountScreen> {
       return;
     }
 
+    if (_selectedBank == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a bank'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     setState(() {
       _isSubmitting = true;
     });
 
-    // Simulate API call
-    await Future.delayed(const Duration(milliseconds: 500));
+    try {
+      final userService = ref.read(userServiceProvider);
+      final isEdit = widget.bankAccount != null;
 
-    if (!mounted) return;
+      if (isEdit && widget.bankAccount?.id != null) {
+        // Update existing bank account
+        final result = await userService.updateBankAccount(
+          id: widget.bankAccount!.id!,
+          accountHolderName: _accountHolderNameController.text.trim(),
+          bank: _selectedBank!,
+          accountNumber: _accountNumberController.text.trim(),
+          ifscCode: _ifscCodeController.text.trim().toUpperCase(),
+        );
 
-    setState(() {
-      _isSubmitting = false;
-    });
+        result.fold(
+          (failure) {
+            if (mounted) {
+              setState(() {
+                _isSubmitting = false;
+              });
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Failed to update bank account: ${failure.message}'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          },
+          (data) {
+            if (mounted) {
+              setState(() {
+                _isSubmitting = false;
+              });
+              _showSuccessDialog(true);
+            }
+          },
+        );
+      } else {
+        // Add new bank account
+        final result = await userService.addBankAccount(
+          accountHolderName: _accountHolderNameController.text.trim(),
+          bank: _selectedBank!,
+          accountNumber: _accountNumberController.text.trim(),
+          ifscCode: _ifscCodeController.text.trim().toUpperCase(),
+        );
 
-    _showSuccessDialog(widget.bankAccount != null);
+        result.fold(
+          (failure) {
+            if (mounted) {
+              setState(() {
+                _isSubmitting = false;
+              });
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Failed to add bank account: ${failure.message}'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          },
+          (data) {
+            if (mounted) {
+              setState(() {
+                _isSubmitting = false;
+              });
+              _showSuccessDialog(false);
+            }
+          },
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -209,19 +288,19 @@ class _AddEditBankAccountScreenState extends State<AddEditBankAccountScreen> {
               child: Form(
                 key: _formKey,
                 child: Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Column(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _buildTextField(
@@ -413,53 +492,81 @@ class _AddEditBankAccountScreenState extends State<AddEditBankAccountScreen> {
           ),
         ),
         const SizedBox(height: 8),
-        DropdownButtonFormField<String>(
-          value: _selectedBank,
-          decoration: InputDecoration(
-            hintText: 'Select Bank',
-            filled: true,
-            fillColor: Colors.grey.shade50,
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey.shade300),
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey.shade300),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.primary, width: 2),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Colors.red, width: 2),
-            ),
-            focusedErrorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Colors.red, width: 2),
-            ),
-          ),
-          items: BankValidationRules.banks.map((bank) {
-            return DropdownMenuItem<String>(
-              value: bank.bankName,
-              child: Text(bank.bankName),
-            );
-          }).toList(),
-          onChanged: (value) {
-            setState(() {
-              _selectedBank = value;
-              _selectedBankInfo = BankValidationRules.getBankByName(value!);
-              // Clear account number and IFSC when bank changes to trigger re-validation
-              _accountNumberController.clear();
-              _ifscCodeController.clear();
-            });
-          },
+        FormField<BankInfo>(
+          initialValue: _selectedBankInfo,
           validator: (value) {
-            if (value == null || value.isEmpty) {
+            if (value == null) {
               return 'Please select a bank';
             }
             return null;
+          },
+          builder: (FormFieldState<BankInfo> field) {
+            return DropdownSearch<BankInfo>(
+              selectedItem: _selectedBankInfo,
+              items: BankValidationRules.banks,
+              popupProps: PopupProps.menu(
+                showSearchBox: true,
+                searchFieldProps: TextFieldProps(
+                  decoration: InputDecoration(
+                    hintText: 'Search bank...',
+                    prefixIcon: const Icon(Icons.search),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+                menuProps: const MenuProps(
+                  backgroundColor: Colors.white,
+                  elevation: 8,
+                ),
+              ),
+              itemAsString: (BankInfo bank) => bank.bankName,
+              filterFn: (BankInfo bank, String filter) {
+                return bank.bankName.toLowerCase().contains(filter.toLowerCase()) ||
+                    bank.shortCode.toLowerCase().contains(filter.toLowerCase());
+              },
+              dropdownDecoratorProps: DropDownDecoratorProps(
+                dropdownSearchDecoration: InputDecoration(
+                  hintText: 'Search and select bank',
+                  filled: true,
+                  fillColor: Colors.grey.shade50,
+                  prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey.shade300),
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey.shade300),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                  ),
+                  errorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.red, width: 2),
+                  ),
+                  focusedErrorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.red, width: 2),
+                  ),
+                  errorText: field.errorText,
+                ),
+              ),
+              onChanged: (BankInfo? bank) {
+                field.didChange(bank);
+                setState(() {
+                  if (bank != null) {
+                    _selectedBank = bank.bankName;
+                    _selectedBankInfo = bank;
+                    // Clear account number and IFSC when bank changes
+                    _accountNumberController.clear();
+                    _ifscCodeController.clear();
+                  }
+                });
+              },
+            );
           },
         ),
         if (_selectedBankInfo != null) ...[

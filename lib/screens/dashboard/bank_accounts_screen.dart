@@ -1,42 +1,140 @@
 import 'package:fixify_admin/components/custom_app_bar.dart';
 import 'package:fixify_admin/config/app_colors.dart';
 import 'package:fixify_admin/models/bank_model.dart';
+import 'package:fixify_admin/providers/location_provider.dart';
 import 'package:fixify_admin/screens/dashboard/add_edit_bank_account_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:page_transition/page_transition.dart';
 
-class BankAccountsScreen extends StatefulWidget {
+class BankAccountsScreen extends ConsumerStatefulWidget {
   const BankAccountsScreen({super.key});
 
   @override
-  State<BankAccountsScreen> createState() => _BankAccountsScreenState();
+  ConsumerState<BankAccountsScreen> createState() => _BankAccountsScreenState();
 }
 
-class _BankAccountsScreenState extends State<BankAccountsScreen> {
-  // Sample bank accounts data - replace with API data
-  final List<BankAccount> _bankAccounts = [
-    BankAccount(
-      id: '1',
-      accountHolderName: 'Dhaval Paghadal',
-      bankName: 'HDFC Bank',
-      accountNumber: '12345678904421',
-      ifscCode: 'HDFC00017782',
-    ),
-    BankAccount(
-      id: '2',
-      accountHolderName: 'Dhaval Paghadal',
-      bankName: 'HDFC Bank',
-      accountNumber: '12345678904421',
-      ifscCode: 'HDFC00017782',
-    ),
-    BankAccount(
-      id: '3',
-      accountHolderName: 'Dhaval Paghadal',
-      bankName: 'HDFC Bank',
-      accountNumber: '12345678904421',
-      ifscCode: 'HDFC00017782',
-    ),
-  ];
+class _BankAccountsScreenState extends ConsumerState<BankAccountsScreen> {
+  List<BankAccount> _bankAccounts = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBankAccounts();
+  }
+
+  Future<void> _loadBankAccounts() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final userService = ref.read(userServiceProvider);
+      final result = await userService.getAllBankAccounts();
+
+      result.fold(
+        (failure) {
+          if (mounted) {
+            setState(() {
+              _isLoading = false;
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Failed to load bank accounts: ${failure.message}'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        },
+        (data) {
+          if (mounted) {
+            setState(() {
+              _bankAccounts = data.map((json) => BankAccount.fromJson(json)).toList();
+              _isLoading = false;
+            });
+          }
+        },
+      );
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _deleteBankAccount(BankAccount account) async {
+    if (account.id == null) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Bank Account'),
+        content: const Text('Are you sure you want to delete this bank account?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.red,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      final userService = ref.read(userServiceProvider);
+      final result = await userService.deleteBankAccount(account.id!);
+
+      result.fold(
+        (failure) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Failed to delete bank account: ${failure.message}'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        },
+        (data) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Bank account deleted successfully'),
+                backgroundColor: Colors.green,
+              ),
+            );
+            _loadBankAccounts(); // Reload list
+          }
+        },
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,35 +146,43 @@ class _BankAccountsScreenState extends State<BankAccountsScreen> {
           CustomAppBar(title: 'My Bank Accounts', showbackButton: true),
           // Bank Accounts List
           Expanded(
-            child:
-                _bankAccounts.isEmpty
-                    ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.account_balance,
-                            size: 64,
-                            color: Colors.grey.shade400,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'No bank accounts added',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                    : ListView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: _bankAccounts.length,
-                      itemBuilder: (context, index) {
-                        return _buildBankAccountCard(_bankAccounts[index]);
-                      },
+            child: _isLoading
+                ? const Center(
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
                     ),
+                  )
+                : _bankAccounts.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.account_balance,
+                              size: 64,
+                              color: Colors.grey.shade400,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'No bank accounts added',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : RefreshIndicator(
+                        onRefresh: _loadBankAccounts,
+                        child: ListView.builder(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: _bankAccounts.length,
+                          itemBuilder: (context, index) {
+                            return _buildBankAccountCard(_bankAccounts[index]);
+                          },
+                        ),
+                      ),
           ),
 
           // Add New Bank Account Button
@@ -105,10 +211,8 @@ class _BankAccountsScreenState extends State<BankAccountsScreen> {
                       child: const AddEditBankAccountScreen(),
                     ),
                   ).then((result) {
-                    if (result != null && result is BankAccount) {
-                      setState(() {
-                        _bankAccounts.add(result);
-                      });
+                    if (result == true) {
+                      _loadBankAccounts(); // Reload list after adding
                     }
                   });
                 },
@@ -204,37 +308,46 @@ class _BankAccountsScreenState extends State<BankAccountsScreen> {
               ],
             ),
           ),
-          // Edit Button
-          IconButton(
-            icon: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppColors.secondary.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(Icons.edit, color: AppColors.primary, size: 18),
-            ),
-            onPressed: () {
-              Navigator.push(
-                context,
-                PageTransition(
-                  type: PageTransitionType.rightToLeft,
-                  duration: const Duration(milliseconds: 300),
-                  child: AddEditBankAccountScreen(bankAccount: account),
+          // Edit and Delete Buttons
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.secondary.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.edit, color: AppColors.primary, size: 18),
                 ),
-              ).then((result) {
-                if (result != null && result is BankAccount) {
-                  setState(() {
-                    final index = _bankAccounts.indexWhere(
-                      (acc) => acc.id == account.id,
-                    );
-                    if (index != -1) {
-                      _bankAccounts[index] = result;
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    PageTransition(
+                      type: PageTransitionType.rightToLeft,
+                      duration: const Duration(milliseconds: 300),
+                      child: AddEditBankAccountScreen(bankAccount: account),
+                    ),
+                  ).then((result) {
+                    if (result == true) {
+                      _loadBankAccounts(); // Reload list after editing
                     }
                   });
-                }
-              });
-            },
+                },
+              ),
+              IconButton(
+                icon: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.delete, color: Colors.red, size: 18),
+                ),
+                onPressed: () => _deleteBankAccount(account),
+              ),
+            ],
           ),
         ],
       ),

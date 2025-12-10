@@ -50,7 +50,8 @@ class AccountValidation {
 }
 
 class BankAccount {
-  final String? id;
+  final int? id;
+  final String? partnerid;
   final String accountHolderName;
   final String bankName;
   final String accountNumber;
@@ -58,11 +59,33 @@ class BankAccount {
 
   BankAccount({
     this.id,
+    this.partnerid,
     required this.accountHolderName,
     required this.bankName,
     required this.accountNumber,
     required this.ifscCode,
   });
+
+  factory BankAccount.fromJson(Map<String, dynamic> json) {
+    return BankAccount(
+      id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? ''),
+      partnerid: json['partnerid']?.toString(),
+      accountHolderName: json['account_holder_name'] ?? '',
+      bankName: json['bank'] ?? '',
+      accountNumber: json['account_number'] ?? '',
+      ifscCode: json['ifsc_code'] ?? '',
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      if (id != null) 'id': id.toString(),
+      'account_holder_name': accountHolderName,
+      'bank': bankName,
+      'account_number': accountNumber,
+      'ifsc_code': ifscCode,
+    };
+  }
 
   String get maskedAccountNumber {
     if (accountNumber.length <= 4) return accountNumber;
@@ -477,8 +500,26 @@ class BankValidationRules {
 
   static BankInfo? getBankByName(String bankName) {
     try {
+      // First try to match by full bank name
       return banks.firstWhere(
         (bank) => bank.bankName.toLowerCase() == bankName.toLowerCase(),
+      );
+    } catch (e) {
+      // If not found, try to match by short code
+      try {
+        return banks.firstWhere(
+          (bank) => bank.shortCode.toLowerCase() == bankName.toUpperCase(),
+        );
+      } catch (e2) {
+        return null;
+      }
+    }
+  }
+  
+  static BankInfo? getBankByShortCode(String shortCode) {
+    try {
+      return banks.firstWhere(
+        (bank) => bank.shortCode.toUpperCase() == shortCode.toUpperCase(),
       );
     } catch (e) {
       return null;

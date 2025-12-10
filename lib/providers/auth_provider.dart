@@ -147,10 +147,10 @@ class AuthNotifier extends StateNotifier<PhoneVerificationState> {
       await prefs.setString(_phoneNumberKey, phoneNumber);
       await prefs.setString(_countryCodeKey, countryCode);
       if (userId.isNotEmpty) {
-        await prefs.setString(_userIdKey, userId);
+      await prefs.setString(_userIdKey, userId);
       }
       if (userToken.isNotEmpty) {
-        await prefs.setString(_userTokenKey, userToken);
+      await prefs.setString(_userTokenKey, userToken);
       }
       await prefs.setString(_authTokenKey, authToken);
       print('Login status saved - phoneNumber: $phoneNumber, countryCode: $countryCode, userId: $userId, userToken: $userToken');

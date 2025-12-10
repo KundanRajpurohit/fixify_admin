@@ -1,14 +1,19 @@
 import 'package:dio/dio.dart';
 import 'package:fixify_admin/config/api_config.dart';
 import 'package:fixify_admin/dio/auth_interceptor.dart';
+import 'package:fixify_admin/dio/unauth_interceptor.dart';
 import 'package:fixify_admin/providers/auth_provider.dart';
 import 'package:fixify_admin/providers/location_provider.dart';
+import 'package:fixify_admin/screens/auth/phone_verification_screen.dart';
 import 'package:fixify_admin/screens/auth/splash_screen.dart';
 import 'package:fixify_admin/services/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+// Global navigator key for handling 401 redirects
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -45,11 +50,34 @@ void main() async {
   dio.interceptors.add(
     AuthInterceptor(
       protectedPaths: [
+        '/partner/profile',
+        '/partner/update-profile',
+        '/partner/upload-image',
+        '/partner/logout',
+        '/partner/update-notification',
+        '/partner/add-default-address',
+        '/partner/upload-documents',
+        '/partner/bank/all',
+        '/partner/bank/store',
+        '/partner/bank/update',
+        '/partner/bank/delete',
+        '/partner/get-availability',
+        '/partner/availability/mon',
+        '/partner/availability/tue',
+        '/partner/availability/wed',
+        '/partner/availability/thu',
+        '/partner/availability/fri',
+        '/partner/availability/sat',
+        '/partner/availability/sun',
         '/add-to-cart',
         '/get-cart-data',
-        // 👈 add your protected endpoints here
       ],
     ),
+  );
+  
+  // Add unauthorized interceptor to handle 401 errors
+  dio.interceptors.add(
+    UnauthorizedInterceptor(navigatorKey: navigatorKey),
   );
 
   print('🔧 [Main] Dio initialized with base URL: ${ApiConfig.baseUrl}');
@@ -77,6 +105,7 @@ class MyApp extends StatelessWidget {
       splitScreenMode: true,
       builder: (context, child) {
         return MaterialApp(
+          navigatorKey: navigatorKey,
           title: 'FIXIFY',
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(

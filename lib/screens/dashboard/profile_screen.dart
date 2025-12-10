@@ -3,6 +3,9 @@ import 'package:fixify_admin/providers/auth_provider.dart';
 import 'package:fixify_admin/providers/location_provider.dart'
     show userServiceProvider;
 import 'package:fixify_admin/screens/dashboard/bank_accounts_screen.dart';
+import 'package:fixify_admin/screens/dashboard/edit_profile_screen.dart';
+import 'package:fixify_admin/screens/dashboard/privacy_policy_screen.dart';
+import 'package:fixify_admin/screens/dashboard/terms_of_service_screen.dart';
 import 'package:fixify_admin/screens/settings/earnings_dashboard_screen.dart';
 import 'package:fixify_admin/screens/settings/revieW_page.dart';
 import 'package:fixify_admin/screens/settings/transaction_history.dart';
@@ -10,6 +13,7 @@ import 'package:fixify_admin/services/user_service.dart';
 import 'package:fixify_admin/widgets/logout_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -184,15 +188,29 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               Positioned(
                 bottom: 0,
                 right: 0,
-                child: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 2),
+                child: GestureDetector(
+                  onTap: () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => EditProfileScreen(profileData: _profileData),
+                      ),
+                    );
+                    if (result == true) {
+                      // Reload profile if update was successful
+                      _loadProfile();
+                    }
+                  },
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 2),
+                    ),
+                    child: const Icon(Icons.edit, color: Colors.white, size: 18),
                   ),
-                  child: const Icon(Icons.edit, color: Colors.white, size: 18),
                 ),
               ),
             ],
@@ -439,11 +457,115 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             icon: Icons.notifications,
             title: 'Notifications On/Off',
             value: _notificationsEnabled,
-            onChanged: (value) {
-              setState(() {
-                _notificationsEnabled = value;
-              });
-              // TODO: Update notification setting via API
+            onChanged: (value) async {
+              if (value) {
+                // Check for notification permission
+                final status = await Permission.notification.status;
+                
+                if (status.isDenied || status.isPermanentlyDenied) {
+                  // Show permission dialog
+                  final shouldRequest = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Notification Permission Required'),
+                      content: Text(
+                        status.isPermanentlyDenied
+                            ? 'Notifications are disabled for this app. Please enable them in your device settings to receive notifications.'
+                            : 'To enable notifications, please grant notification permission.',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: const Text('Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, true),
+                          child: const Text('Open Settings'),
+                        ),
+                      ],
+                    ),
+                  );
+
+                  if (shouldRequest == true) {
+                    if (status.isPermanentlyDenied) {
+                      // Open app settings directly if permanently denied
+                      await openAppSettings();
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Please enable "All fixify_admin notifications" in settings'),
+                            backgroundColor: Colors.orange,
+                            duration: Duration(seconds: 4),
+                          ),
+                        );
+                      }
+                      return;
+                    } else {
+                      // Try to request permission
+                      final result = await Permission.notification.request();
+                      if (!result.isGranted) {
+                        if (mounted) {
+                          // Open app settings if permission still not granted
+                          await openAppSettings();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Please enable notifications in settings'),
+                              backgroundColor: Colors.orange,
+                              duration: Duration(seconds: 3),
+                            ),
+                          );
+                        }
+                        return;
+                      }
+                    }
+                  } else {
+                    return; // User cancelled
+                  }
+                } else if (!status.isGranted) {
+                  // If status is not granted but not denied, try requesting
+                  final result = await Permission.notification.request();
+                  if (!result.isGranted) {
+                    if (mounted) {
+                      await openAppSettings();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Please enable notifications in settings'),
+                          backgroundColor: Colors.orange,
+                          duration: Duration(seconds: 3),
+                        ),
+                      );
+                    }
+                    return;
+                  }
+                }
+              }
+              
+              // Update notification setting via API
+              final userService = ref.read(userServiceProvider);
+              final result = await userService.updateNotification(value);
+              
+              result.fold(
+                (failure) {
+                  if (mounted) {
+                    setState(() {
+                      _notificationsEnabled = !value; // Revert on failure
+                    });
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Failed to update notification: ${failure.message}'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                },
+                (data) {
+                  if (mounted) {
+                    setState(() {
+                      _notificationsEnabled = value;
+                    });
+                  }
+                },
+              );
             },
           ),
           const Divider(height: 24),
@@ -494,7 +616,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             icon: Icons.privacy_tip,
             title: 'Privacy Policy',
             onTap: () {
-              // Navigate to privacy policy
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const PrivacyPolicyScreen(),
+                ),
+              );
             },
           ),
           const Divider(height: 24),
@@ -502,7 +629,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             icon: Icons.description,
             title: 'Terms of Service',
             onTap: () {
-              // Navigate to terms of service
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const TermsOfServiceScreen(),
+                ),
+              );
             },
           ),
         ],
@@ -535,8 +667,26 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 (context) => LogoutDialog(
                   onLogout: () async {
                     Navigator.of(context).pop(); // Close dialog
+                    
+                    // Call logout API (will clear preferences even on 401)
+                    final userService = ref.read(userServiceProvider);
+                    final result = await userService.partnerLogout();
+                    
+                    // Always clear auth state and navigate, regardless of API result
                     await ref.read(authProvider.notifier).logout();
+                    
                     // Navigation will be handled by auth state change
+                    if (mounted) {
+                      result.fold(
+                        (failure) {
+                          // Even if API fails, we've cleared preferences
+                          print('⚠️ [ProfileScreen] Logout API failed but preferences cleared');
+                        },
+                        (data) {
+                          print('✅ [ProfileScreen] Logout successful');
+                        },
+                      );
+                    }
                   },
                   onCancel: () {
                     Navigator.of(context).pop(); // Close dialog

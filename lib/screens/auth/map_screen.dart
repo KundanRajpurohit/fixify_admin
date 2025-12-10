@@ -138,7 +138,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     if (widget.isFromProfile == false) {
       await _savePartnerLocation(locationState);
     } else {
-      final result = await ref.read(locationProvider.notifier).saveLocation();
+    final result = await ref.read(locationProvider.notifier).saveLocation();
       _handleSaveResult(result);
     }
   }
@@ -514,8 +514,8 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                               fontSize: 12,
                             ),
                             textAlign: TextAlign.center,
-                          ),
                         ),
+                      ),
                     ],
                   ),
                 ),
