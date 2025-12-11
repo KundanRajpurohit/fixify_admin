@@ -34,175 +34,173 @@ class _EarningsDashboardScreenState extends State<EarningsDashboardScreen> {
     return Scaffold(
       appBar: CustomAppBar(title: 'Earnings Dashboard', showbackButton: true),
       backgroundColor: const Color(0xFFF5F7F8),
-      body: Column(
-        children: [
-          // Header
-
-          // Time Filters
-          Container(
-            padding: const EdgeInsets.all(16),
-            color: Color(0xFFF5F7F8),
-            child: Column(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(3),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(40),
-                    border: Border.all(color: Colors.grey.shade300),
-                  ),
-                  child: Row(
-                    children: List.generate(_filters.length, (index) {
-                      final isSelected = _selectedFilter == index;
-
-                      return Expanded(
-                        child: GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _selectedFilter = index;
-                            });
-                          },
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            margin: EdgeInsets.only(
-                              right: index < _filters.length - 1 ? 4 : 0,
-                            ),
-                            padding: const EdgeInsets.symmetric(vertical: 10),
-                            decoration: BoxDecoration(
-                              color:
-                                  isSelected
-                                      ? AppColors.primary.withOpacity(0.08)
-                                      : Colors.transparent,
-                              borderRadius: BorderRadius.circular(40),
-                              border: Border.all(
-                                color:
-                                    isSelected
-                                        ? AppColors.primary.withOpacity(0.4)
-                                        : Colors.transparent,
-                                width: 1.5,
-                              ),
-                            ),
-                            child: Text(
-                              _filters[index],
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color:
-                                    isSelected
-                                        ? AppColors.primary
-                                        : Colors.black87,
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    }),
-                  ),
-                ),
-
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.12),
-                        blurRadius: 10,
-                        offset: const Offset(0, 2),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              // Time Filters
+              Container(
+                padding: const EdgeInsets.all(16),
+                color: Color(0xFFF5F7F8),
+                child: Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(3),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(40),
+                        border: Border.all(color: Colors.grey.shade300),
                       ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          vertical: 13,
-                          horizontal: 12,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.grey.shade300),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.calendar_today,
-                              size: 16,
-                              color: Colors.grey.shade600,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              _dateDisplay,
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey.shade700,
+                      child: Row(
+                        children: List.generate(_filters.length, (index) {
+                          final isSelected = _selectedFilter == index;
+        
+                          return Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  _selectedFilter = index;
+                                });
+                              },
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                margin: EdgeInsets.only(
+                                  right: index < _filters.length - 1 ? 4 : 0,
+                                ),
+                                padding: const EdgeInsets.symmetric(vertical: 10),
+                                decoration: BoxDecoration(
+                                  color:
+                                      isSelected
+                                          ? AppColors.primary.withOpacity(0.08)
+                                          : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(40),
+                                  border: Border.all(
+                                    color:
+                                        isSelected
+                                            ? AppColors.primary.withOpacity(0.4)
+                                            : Colors.transparent,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                child: Text(
+                                  _filters[index],
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color:
+                                        isSelected
+                                            ? AppColors.primary
+                                            : Colors.black87,
+                                  ),
+                                ),
                               ),
                             ),
-                          ],
-                        ),
+                          );
+                        }),
                       ),
-                      SizedBox(height: 16),
-                      _buildTotalEarningsCard(),
-                      const SizedBox(height: 16),
-                      // Payout Status Cards
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildPayoutStatusCard(
-                              icon: Icons.check_circle,
-                              iconColor: Colors.blue,
-                              title: 'Completed Payouts',
-                              amount: '₹4,000',
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _buildPayoutStatusCard(
-                              icon: Icons.access_time,
-                              iconColor: Colors.orange,
-                              title: 'Pending Payouts',
-                              amount: '₹2,000',
-                            ),
+                    ),
+        
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.12),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
                           ),
                         ],
                       ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Content
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Total Earnings Card
-
-                  // View All Payouts
-                  const Text(
-                    'View All Payouts',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+                      child: Column(
+                        children: [
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              vertical: 13,
+                              horizontal: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.grey.shade300),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.calendar_today,
+                                  size: 16,
+                                  color: Colors.grey.shade600,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  _dateDisplay,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey.shade700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(height: 16),
+                          _buildTotalEarningsCard(),
+                          const SizedBox(height: 16),
+                          // Payout Status Cards
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildPayoutStatusCard(
+                                  icon: Icons.check_circle,
+                                  iconColor: Colors.blue,
+                                  title: 'Completed Payouts',
+                                  amount: '₹4,000',
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _buildPayoutStatusCard(
+                                  icon: Icons.access_time,
+                                  iconColor: Colors.orange,
+                                  title: 'Pending Payouts',
+                                  amount: '₹2,000',
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  // Payout List
-                  _buildPayoutList(),
-                ],
+                  ],
+                ),
               ),
-            ),
+        
+              // Content
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // View All Payouts
+                    const Text(
+                      'View All Payouts',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // Payout List
+                    _buildPayoutList(),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
