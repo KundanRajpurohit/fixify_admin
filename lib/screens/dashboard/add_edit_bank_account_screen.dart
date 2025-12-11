@@ -236,188 +236,162 @@ class _AddEditBankAccountScreenState extends ConsumerState<AddEditBankAccountScr
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7F8),
-      body: Column(
-        children: [
-          // Header
-          Container(
-            padding: const EdgeInsets.fromLTRB(16, 50, 16, 16),
-            decoration: BoxDecoration(
-              color: AppColors.secondary.withOpacity(0.4),
-            ),
-            child: Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.black87),
-                  onPressed: () => Navigator.pop(context),
-                ),
-                Expanded(
-                  child: Text(
-                    isEdit ? 'Edit New Bank Account' : 'Add New Bank Account',
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                Container(
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                  child: IconButton(
-                    icon: const Icon(
-                      Icons.notifications,
-                      color: Color(0xFF217043),
-                      size: 22,
-                    ),
-                    onPressed: () {
-                      // Handle notifications
-                    },
-                  ),
-                ),
-              ],
-            ),
+      appBar: AppBar(
+        title: Text(
+          isEdit ? 'Edit New Bank Account' : 'Add New Bank Account',
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
           ),
-
-          // Form
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Form(
-                key: _formKey,
-                child: Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 10,
-                          offset: const Offset(0, 2),
+          textAlign: TextAlign.center,
+        ),
+        leading:  IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black87),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Form
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Form(
+                  key: _formKey,
+                  child: Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildTextField(
+                          label: 'Account Holder Name',
+                          controller: _accountHolderNameController,
+                          hint: 'Enter Account Holder Name',
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Please enter account holder name';
+                            }
+                            if (value.trim().length < 3) {
+                              return 'Name must be at least 3 characters';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 20),
+                        _buildBankDropdown(),
+                        const SizedBox(height: 20),
+                        _buildTextField(
+                          label: 'Account Number',
+                          controller: _accountNumberController,
+                          hint: 'Enter Account Number',
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Please enter account number';
+                            }
+                            if (_selectedBank == null) {
+                              return 'Please select a bank first';
+                            }
+                            final error = BankValidationRules.validateAccountNumber(
+                              value.trim(),
+                              _selectedBank!,
+                            );
+                            return error;
+                          },
+                        ),
+                        const SizedBox(height: 20),
+                        _buildTextField(
+                          label: 'IFSC Code',
+                          controller: _ifscCodeController,
+                          hint: 'Enter IFSC Code',
+                          textCapitalization: TextCapitalization.characters,
+                          inputFormatters: [
+                            LengthLimitingTextInputFormatter(11),
+                            UpperCaseTextFormatter(),
+                          ],
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Please enter IFSC code';
+                            }
+                            if (_selectedBank == null) {
+                              return 'Please select a bank first';
+                            }
+                            final error = BankValidationRules.validateIFSCForBank(
+                              value.trim(),
+                              _selectedBank!,
+                            );
+                            return error;
+                          },
                         ),
                       ],
                     ),
-                    child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildTextField(
-                        label: 'Account Holder Name',
-                        controller: _accountHolderNameController,
-                        hint: 'Enter Account Holder Name',
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Please enter account holder name';
-                          }
-                          if (value.trim().length < 3) {
-                            return 'Name must be at least 3 characters';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 20),
-                      _buildBankDropdown(),
-                      const SizedBox(height: 20),
-                      _buildTextField(
-                        label: 'Account Number',
-                        controller: _accountNumberController,
-                        hint: 'Enter Account Number',
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                        ],
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Please enter account number';
-                          }
-                          if (_selectedBank == null) {
-                            return 'Please select a bank first';
-                          }
-                          final error = BankValidationRules.validateAccountNumber(
-                            value.trim(),
-                            _selectedBank!,
-                          );
-                          return error;
-                        },
-                      ),
-                      const SizedBox(height: 20),
-                      _buildTextField(
-                        label: 'IFSC Code',
-                        controller: _ifscCodeController,
-                        hint: 'Enter IFSC Code',
-                        textCapitalization: TextCapitalization.characters,
-                        inputFormatters: [
-                          LengthLimitingTextInputFormatter(11),
-                          UpperCaseTextFormatter(),
-                        ],
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Please enter IFSC code';
-                          }
-                          if (_selectedBank == null) {
-                            return 'Please select a bank first';
-                          }
-                          final error = BankValidationRules.validateIFSCForBank(
-                            value.trim(),
-                            _selectedBank!,
-                          );
-                          return error;
-                        },
-                      ),
-                    ],
                   ),
                 ),
               ),
             ),
-          ),
-
-          // Submit Button
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, -2),
-                ),
-              ],
-            ),
-            child: SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton(
-                onPressed: _isSubmitting ? null : _handleSubmit,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+        
+            // Submit Button
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, -2),
                   ),
+                ],
+              ),
+              child: SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: _isSubmitting ? null : _handleSubmit,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: _isSubmitting
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : Text(
+                          isEdit ? 'Save Bank Details' : 'Add Bank Details',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                 ),
-                child: _isSubmitting
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                        ),
-                      )
-                    : Text(
-                        isEdit ? 'Save Bank Details' : 'Add Bank Details',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

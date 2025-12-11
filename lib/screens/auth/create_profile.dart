@@ -8,6 +8,7 @@ import 'package:fixify_admin/services/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:page_transition/page_transition.dart';
 
@@ -194,57 +195,60 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
           ),
         ],
       ),
-      body: Stack(
-        children: [
-          Container(height: 220, color: AppColors.secondary.withOpacity(0.4)),
-          SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                children: [
-                  _buildProfileFormCard(),
-                  const SizedBox(height: 20),
-                  _buildContactInformationCard(
-                    _phoneNumberController,
-                    _emailController,
-                  ),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: ElevatedButton(
-                      onPressed: _isLoading ? null : _saveAccount,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(28),
-                        ),
-                        elevation: 3,
-                      ),
-                      child: _isLoading
-                          ? const SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                              ),
-                            )
-                          : const Text(
-                              'Continue',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
+      body: SafeArea(
+        child: Stack(
+          children: [
+            Container(height: 220, color: AppColors.secondary.withOpacity(0.4)),
+            SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    _buildProfileFormCard(),
+                    const SizedBox(height: 20),
+                    _buildContactInformationCard(
+                      _phoneNumberController,
+                      _emailController,
                     ),
-                  ).animate().scale(duration: 200.ms, delay: 200.ms),
-                ],
+                    SizedBox(height:15.h),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _saveAccount,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(28),
+                          ),
+                          elevation: 3,
+                        ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                ),
+                              )
+                            : const Text(
+                                'Continue',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                      ),
+                    ).animate().scale(duration: 200.ms, delay: 200.ms),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -72,7 +72,7 @@ class _GetStartedScreenState extends State<GetStartedScreen>
             children: [
               // 🔹 Top Row (moves left to right)
               SizedBox(
-                height: 150.h, // Fixed height to prevent cutting
+                height: 90.h, // Fixed height to prevent cutting
                 child: OverflowBox(
                   maxWidth: double.infinity,
                   child: AnimatedBuilder(

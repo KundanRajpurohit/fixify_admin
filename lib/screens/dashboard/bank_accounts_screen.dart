@@ -135,102 +135,108 @@ class _BankAccountsScreenState extends ConsumerState<BankAccountsScreen> {
       }
     }
   }
+  static const Color _lightGreen = Color(0xFFE6F6E7);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: _lightGreen,
+          title: Text('My Bank Accounts')
+      ),
       backgroundColor: const Color(0xFFF5F7F8),
-      body: Column(
-        children: [
-          // Header
-          CustomAppBar(title: 'My Bank Accounts', showbackButton: true),
-          // Bank Accounts List
-          Expanded(
-            child: _isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-                    ),
-                  )
-                : _bankAccounts.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.account_balance,
-                              size: 64,
-                              color: Colors.grey.shade400,
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'No bank accounts added',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey.shade600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : RefreshIndicator(
-                        onRefresh: _loadBankAccounts,
-                        child: ListView.builder(
-                          padding: const EdgeInsets.all(16),
-                          itemCount: _bankAccounts.length,
-                          itemBuilder: (context, index) {
-                            return _buildBankAccountCard(_bankAccounts[index]);
-                          },
-                        ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Header
+            // Bank Accounts List
+            Expanded(
+              child: _isLoading
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
                       ),
-          ),
-
-          // Add New Bank Account Button
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, -2),
-                ),
-              ],
+                    )
+                  : _bankAccounts.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.account_balance,
+                                size: 64,
+                                color: Colors.grey.shade400,
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'No bank accounts added',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : RefreshIndicator(
+                          onRefresh: _loadBankAccounts,
+                          child: ListView.builder(
+                            padding: const EdgeInsets.all(16),
+                            itemCount: _bankAccounts.length,
+                            itemBuilder: (context, index) {
+                              return _buildBankAccountCard(_bankAccounts[index]);
+                            },
+                          ),
+                        ),
             ),
-            child: SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    PageTransition(
-                      type: PageTransitionType.rightToLeft,
-                      duration: const Duration(milliseconds: 300),
-                      child: const AddEditBankAccountScreen(),
-                    ),
-                  ).then((result) {
-                    if (result == true) {
-                      _loadBankAccounts(); // Reload list after adding
-                    }
-                  });
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+        
+            // Add New Bank Account Button
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, -2),
                   ),
-                ),
-                child: const Text(
-                  'Add New Bank Account',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                ],
+              ),
+              child: SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      PageTransition(
+                        type: PageTransitionType.rightToLeft,
+                        duration: const Duration(milliseconds: 300),
+                        child: const AddEditBankAccountScreen(),
+                      ),
+                    ).then((result) {
+                      if (result == true) {
+                        _loadBankAccounts(); // Reload list after adding
+                      }
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Add New Bank Account',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

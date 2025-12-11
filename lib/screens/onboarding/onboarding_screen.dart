@@ -88,93 +88,95 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
 
             // Bottom section with navigation - Green Card with more rounded corners
-            ClipPath(
-              clipper: CurvedTopClipper(),
-              child: Container(
-                height: MediaQuery.of(context).size.height * 0.4,
-                decoration: const BoxDecoration(color: AppColors.primary),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(30, 50, 30, 30),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Title + description
-                      Column(
-                        children: [
-                          const SizedBox(height: 40),
-                          Text(
-                                _pages[_currentPage].title,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.bold,
-                                  height: 1.2,
-                                ),
-                                textAlign: TextAlign.center,
-                              )
-                              .animate()
-                              .fadeIn(duration: 300.ms)
-                              .slideY(begin: 0.2),
-                          const SizedBox(height: 20),
-                          Text(
-                                _pages[_currentPage].description,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  height: 1.4,
-                                  fontWeight: FontWeight.w400,
-                                ),
-                                textAlign: TextAlign.center,
-                              )
-                              .animate()
-                              .fadeIn(duration: 300.ms, delay: 100.ms)
-                              .slideY(begin: 0.2),
-                        ],
-                      ),
-
-                      // Navigation button with segmented ring
-                      GestureDetector(
-                        onTap: () {
-                          if (_currentPage < _pages.length - 1) {
-                            _pageController.nextPage(
-                              duration: const Duration(milliseconds: 300),
-                              curve: Curves.easeInOut,
-                            );
-                          } else {
-                            _navigateToMainApp();
-                          }
-                        },
-                        child: Stack(
-                          alignment: Alignment.center,
+            SafeArea(
+              child: ClipPath(
+                clipper: CurvedTopClipper(),
+                child: Container(
+                  height: MediaQuery.of(context).size.height * 0.43,
+                  decoration: const BoxDecoration(color: AppColors.primary),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(30, 50, 30, 30),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Title + description
+                        Column(
                           children: [
-                            // Segmented ring
-                            CustomPaint(
-                              size: Size(70.h, 70.h),
-                              painter: SegmentedRingPainter(
-                                totalSegments: 3,
-                                currentSegment: _currentPage + 1,
-                                activeColor: Colors.white,
-                                inactiveColor: Colors.white.withOpacity(0.3),
-                              ),
-                            ),
-                            // Inner white circle button
-                            Container(
-                              width: 56,
-                              height: 56,
-                              decoration: const BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.arrow_forward,
-                                color: Color(0xFF217043),
-                                size: 24,
-                              ),
-                            ),
+                            const SizedBox(height: 40),
+                            Text(
+                                  _pages[_currentPage].title,
+                                  style:  TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 26.sp,
+                                    fontWeight: FontWeight.bold,
+                                    height: 1.2,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                )
+                                .animate()
+                                .fadeIn(duration: 300.ms)
+                                .slideY(begin: 0.2),
+                            const SizedBox(height: 20),
+                            Text(
+                                  _pages[_currentPage].description,
+                                  style:  TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 15.sp,
+                                    height: 1.4,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                )
+                                .animate()
+                                .fadeIn(duration: 300.ms, delay: 100.ms)
+                                .slideY(begin: 0.2),
                           ],
                         ),
-                      ).animate().scale(duration: 300.ms, delay: 200.ms),
-                    ],
+              
+                        // Navigation button with segmented ring
+                        GestureDetector(
+                          onTap: () {
+                            if (_currentPage < _pages.length - 1) {
+                              _pageController.nextPage(
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeInOut,
+                              );
+                            } else {
+                              _navigateToMainApp();
+                            }
+                          },
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              // Segmented ring
+                              CustomPaint(
+                                size: Size(70.h, 70.h),
+                                painter: SegmentedRingPainter(
+                                  totalSegments: 3,
+                                  currentSegment: _currentPage + 1,
+                                  activeColor: Colors.white,
+                                  inactiveColor: Colors.white.withOpacity(0.3),
+                                ),
+                              ),
+                              // Inner white circle button
+                              Container(
+                                width: 56,
+                                height: 56,
+                                decoration: const BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.arrow_forward,
+                                  color: Color(0xFF217043),
+                                  size: 24,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ).animate().scale(duration: 300.ms, delay: 200.ms),
+                      ],
+                    ),
                   ),
                 ),
               ),

@@ -65,53 +65,55 @@ class _HomePageScreenState extends State<HomePageScreen> {
         },
         child: IndexedStack(index: _selectedIndex, children: _screens),
       ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, -2),
-            ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-          child: SizedBox(
-            height: 50,
-            child: Stack(
-              children: [
-                // Animated sliding indicator
-                AnimatedPositioned(
-                  duration: const Duration(milliseconds: 400),
-                  curve: Curves.easeInOutCubic,
-                  left: _getIndicatorPosition(),
-                  top: 5,
-                  child: Container(
-                    height: 40,
-                    width: _getIndicatorWidth(),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF217043),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                  ),
-                ),
-                // Navigation items
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: List.generate(
-                    4,
-                    (index) => Expanded(
-                      child: _buildNavItem(
-                        index: index,
-                        icon: _icons[index],
-                        label: _labels[index],
+      bottomNavigationBar: SafeArea(
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 10,
+                offset: const Offset(0, -2),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+            child: SizedBox(
+              height: 50,
+              child: Stack(
+                children: [
+                  // Animated sliding indicator
+                  AnimatedPositioned(
+                    duration: const Duration(milliseconds: 400),
+                    curve: Curves.easeInOutCubic,
+                    left: _getIndicatorPosition(),
+                    top: 5,
+                    child: Container(
+                      height: 40,
+                      width: _getIndicatorWidth(),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF217043),
+                        borderRadius: BorderRadius.circular(20),
                       ),
                     ),
                   ),
-                ),
-              ],
+                  // Navigation items
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: List.generate(
+                      4,
+                      (index) => Expanded(
+                        child: _buildNavItem(
+                          index: index,
+                          icon: _icons[index],
+                          label: _labels[index],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -136,7 +138,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
       case 2:
         return 115.0; // Cart
       case 3:
-        return 110.0; // Profile
+        return 90.0; // Profile
       default:
         return 100.0;
     }
@@ -153,7 +155,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
       onTap: () => _onItemTapped(index),
       behavior: HitTestBehavior.opaque,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 10),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
@@ -166,7 +168,9 @@ class _HomePageScreenState extends State<HomePageScreen> {
                   scale: isSelected ? 1.0 : 1.0,
                   child: Row(
                     children: [
-                      SizedBox(width: !isSelected ? 0 : 2),
+                      SizedBox(
+                        width: !isSelected ? 0 : 6,
+                      ),
                       Icon(
                         icon,
                         color: isSelected ? Colors.white : Colors.grey.shade400,
@@ -180,6 +184,9 @@ class _HomePageScreenState extends State<HomePageScreen> {
             AnimatedContainer(
               duration: const Duration(milliseconds: 300),
               width: isSelected ? 3 : 0,
+            ),
+            SizedBox(
+              width: !isSelected ? 0 : 6,
             ),
             AnimatedDefaultTextStyle(
               duration: const Duration(milliseconds: 300),
