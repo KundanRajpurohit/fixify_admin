@@ -1,3 +1,4 @@
+import 'package:fixify_admin/components/custom_app_bar.dart';
 import 'package:fixify_admin/config/app_colors.dart';
 import 'package:fixify_admin/providers/auth_provider.dart';
 import 'package:fixify_admin/providers/location_provider.dart'
@@ -13,6 +14,8 @@ import 'package:fixify_admin/services/user_service.dart';
 import 'package:fixify_admin/widgets/logout_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:page_transition/page_transition.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -87,6 +90,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7F8),
+      appBar: CustomAppBar(title: 'My Profile', showbackButton: false),
       body:
           _isLoading
               ? const Center(
@@ -100,7 +104,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   physics: const AlwaysScrollableScrollPhysics(),
                   child: Column(
                     children: [
-                      _buildHeader(),
                       _buildProfileCard(),
                       _buildDocumentsSection(),
                       _buildEarningsSection(),
@@ -165,7 +168,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withOpacity(0.15),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -173,6 +176,41 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       ),
       child: Column(
         children: [
+          Align(
+            alignment: Alignment.topRight,
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  PageTransition(
+                    type: PageTransitionType.rightToLeft,
+                    child: const EditProfileScreen(),
+                  ),
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF217043),
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      FontAwesomeIcons.solidPenToSquare,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
           Stack(
             children: [
               CircleAvatar(
@@ -185,39 +223,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         ? const Icon(Icons.person, size: 50, color: Colors.grey)
                         : null,
               ),
-              Positioned(
-                bottom: 0,
-                right: 0,
-                child: GestureDetector(
-                  onTap: () async {
-                    final result = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => EditProfileScreen(profileData: _profileData),
-                      ),
-                    );
-                    if (result == true) {
-                      // Reload profile if update was successful
-                      _loadProfile();
-                    }
-                  },
-                  child: Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 2),
-                    ),
-                    child: const Icon(Icons.edit, color: Colors.white, size: 18),
-                  ),
-                ),
-              ),
             ],
           ),
           const SizedBox(height: 20),
           _buildInfoRow('Name:', name),
-          const SizedBox(height: 12),
+          const SizedBox(height: 6),
+          Divider(color: Colors.grey.shade300),
+          const SizedBox(height: 6),
           _buildInfoRow('Contact', '+91 $mobile'),
         ],
       ),
@@ -228,15 +240,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          label,
-          style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
-        ),
+        Text(label, style: TextStyle(fontSize: 17, color: Color(0xff111928))),
         Text(
           value,
           style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
+            fontSize: 17,
+            fontWeight: FontWeight.w400,
             color: Colors.black87,
           ),
         ),
@@ -260,7 +269,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withOpacity(0.15),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -303,7 +312,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       children: [
         Text(
           title,
-          style: const TextStyle(fontSize: 14, color: Colors.black87),
+          style: const TextStyle(fontSize: 17, color: Color(0xff111928)),
         ),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -336,7 +345,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withOpacity(0.15),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -406,7 +415,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withOpacity(0.15),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -435,7 +444,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withOpacity(0.15),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -461,29 +470,30 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               if (value) {
                 // Check for notification permission
                 final status = await Permission.notification.status;
-                
+
                 if (status.isDenied || status.isPermanentlyDenied) {
                   // Show permission dialog
                   final shouldRequest = await showDialog<bool>(
                     context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Notification Permission Required'),
-                      content: Text(
-                        status.isPermanentlyDenied
-                            ? 'Notifications are disabled for this app. Please enable them in your device settings to receive notifications.'
-                            : 'To enable notifications, please grant notification permission.',
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, false),
-                          child: const Text('Cancel'),
+                    builder:
+                        (context) => AlertDialog(
+                          title: const Text('Notification Permission Required'),
+                          content: Text(
+                            status.isPermanentlyDenied
+                                ? 'Notifications are disabled for this app. Please enable them in your device settings to receive notifications.'
+                                : 'To enable notifications, please grant notification permission.',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: const Text('Cancel'),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, true),
+                              child: const Text('Open Settings'),
+                            ),
+                          ],
                         ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, true),
-                          child: const Text('Open Settings'),
-                        ),
-                      ],
-                    ),
                   );
 
                   if (shouldRequest == true) {
@@ -493,7 +503,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('Please enable "All fixify_admin notifications" in settings'),
+                            content: Text(
+                              'Please enable "All fixify_admin notifications" in settings',
+                            ),
                             backgroundColor: Colors.orange,
                             duration: Duration(seconds: 4),
                           ),
@@ -509,7 +521,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           await openAppSettings();
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text('Please enable notifications in settings'),
+                              content: Text(
+                                'Please enable notifications in settings',
+                              ),
                               backgroundColor: Colors.orange,
                               duration: Duration(seconds: 3),
                             ),
@@ -529,7 +543,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       await openAppSettings();
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Please enable notifications in settings'),
+                          content: Text(
+                            'Please enable notifications in settings',
+                          ),
                           backgroundColor: Colors.orange,
                           duration: Duration(seconds: 3),
                         ),
@@ -539,11 +555,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   }
                 }
               }
-              
+
               // Update notification setting via API
               final userService = ref.read(userServiceProvider);
               final result = await userService.updateNotification(value);
-              
+
               result.fold(
                 (failure) {
                   if (mounted) {
@@ -552,7 +568,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     });
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Failed to update notification: ${failure.message}'),
+                        content: Text(
+                          'Failed to update notification: ${failure.message}',
+                        ),
                         backgroundColor: Colors.red,
                       ),
                     );
@@ -594,7 +612,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withOpacity(0.15),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -651,7 +669,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withOpacity(0.15),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -667,20 +685,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 (context) => LogoutDialog(
                   onLogout: () async {
                     Navigator.of(context).pop(); // Close dialog
-                    
+
                     // Call logout API (will clear preferences even on 401)
                     final userService = ref.read(userServiceProvider);
                     final result = await userService.partnerLogout();
-                    
+
                     // Always clear auth state and navigate, regardless of API result
                     await ref.read(authProvider.notifier).logout();
-                    
+
                     // Navigation will be handled by auth state change
                     if (mounted) {
                       result.fold(
                         (failure) {
                           // Even if API fails, we've cleared preferences
-                          print('⚠️ [ProfileScreen] Logout API failed but preferences cleared');
+                          print(
+                            '⚠️ [ProfileScreen] Logout API failed but preferences cleared',
+                          );
                         },
                         (data) {
                           print('✅ [ProfileScreen] Logout successful');
@@ -720,7 +740,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           Expanded(
             child: Text(
               title,
-              style: const TextStyle(fontSize: 14, color: Colors.black87),
+              style: const TextStyle(fontSize: 17, color: Colors.black),
             ),
           ),
           const Icon(Icons.chevron_right, color: Colors.grey),
@@ -750,7 +770,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         Expanded(
           child: Text(
             title,
-            style: const TextStyle(fontSize: 14, color: Colors.black87),
+            style: const TextStyle(fontSize: 17, color: Colors.black87),
           ),
         ),
         Switch(

@@ -21,7 +21,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
   final _phoneNumberController = TextEditingController();
-  
+
   final ImagePicker _imagePicker = ImagePicker();
   File? _profileImage;
   String? _imageUrl;
@@ -38,11 +38,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       final name = widget.profileData!['name'] ?? '';
       final mobile = widget.profileData!['mobile'] ?? '';
       _imageUrl = widget.profileData!['image'];
-      
+
       // Split name into first and last name
       final nameParts = name.split(' ');
       _firstNameController.text = nameParts.isNotEmpty ? nameParts[0] : '';
-      _lastNameController.text = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
+      _lastNameController.text =
+          nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
       _phoneNumberController.text = mobile;
     }
   }
@@ -64,9 +65,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         });
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error picking image: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error picking image: $e')));
     }
   }
 
@@ -108,8 +109,14 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               ),
               if (_profileImage != null || _imageUrl != null)
                 ListTile(
-                  leading: const Icon(Icons.delete_outline, color: Colors.redAccent),
-                  title: const Text('Remove Photo', style: TextStyle(color: Colors.redAccent)),
+                  leading: const Icon(
+                    Icons.delete_outline,
+                    color: Colors.redAccent,
+                  ),
+                  title: const Text(
+                    'Remove Photo',
+                    style: TextStyle(color: Colors.redAccent),
+                  ),
                   onTap: () {
                     Navigator.pop(ctx);
                     setState(() {
@@ -130,63 +137,64 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: AppColors.secondary.withOpacity(0.2),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.check,
-                color: AppColors.primary,
-                size: 50,
-              ),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              'Profile Updated',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              'Your profile information has been updated successfully.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.black54,
-              ),
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context); // Close dialog
-                  Navigator.pop(context, true); // Return to profile screen
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+      builder:
+          (context) => AlertDialog(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: AppColors.secondary.withOpacity(0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.check,
+                    color: AppColors.primary,
+                    size: 50,
                   ),
                 ),
-                child: const Text('View Profile', style: TextStyle(fontSize: 16)),
-              ),
+                const SizedBox(height: 20),
+                const Text(
+                  'Profile Updated',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Your profile information has been updated successfully.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 14, color: Colors.black54),
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context); // Close dialog
+                      Navigator.pop(context, true); // Return to profile screen
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text(
+                      'View Profile',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
     );
   }
 
@@ -194,62 +202,63 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: Colors.red.shade50,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.error_outline,
-                color: Colors.red.shade700,
-                size: 50,
-              ),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              'Profile Update Failed',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              'Something went wrong while updating your profile.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.black54,
-              ),
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context); // Close dialog
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+      builder:
+          (context) => AlertDialog(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade50,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.error_outline,
+                    color: Colors.red.shade700,
+                    size: 50,
                   ),
                 ),
-                child: const Text('Try again', style: TextStyle(fontSize: 16)),
-              ),
+                const SizedBox(height: 20),
+                const Text(
+                  'Profile Update Failed',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Something went wrong while updating your profile.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 14, color: Colors.black54),
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context); // Close dialog
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text(
+                      'Try again',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
     );
   }
 
@@ -264,9 +273,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
     try {
       final userService = ref.read(userServiceProvider);
-      
+
       // Update profile with image, name, and mobile
-      final fullName = '${_firstNameController.text.trim()} ${_lastNameController.text.trim()}'.trim();
+      final fullName =
+          '${_firstNameController.text.trim()} ${_lastNameController.text.trim()}'
+              .trim();
       final result = await userService.updatePartnerProfile(
         name: fullName,
         mobile: _phoneNumberController.text.trim(),
@@ -380,56 +391,83 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 10,
+                            horizontal: 10,
+                          ),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(30),
                           ),
                         ),
-                        child: _isLoading
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        child:
+                            _isLoading
+                                ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white,
+                                    ),
+                                  ),
+                                )
+                                : const Text(
+                                  'Save',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
-                              )
-                            : const Text('Save', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                       ),
                     ),
 
-                        Stack(
-                          children: [
-                            CircleAvatar(
-                              radius: 50,
-                              backgroundColor: Colors.grey.shade200,
-                              backgroundImage: _profileImage != null
+                    Stack(
+                      children: [
+                        CircleAvatar(
+                          radius: 50,
+                          backgroundColor: Colors.grey.shade200,
+                          backgroundImage:
+                              _profileImage != null
                                   ? FileImage(_profileImage!)
-                                  : (_imageUrl != null ? NetworkImage(_imageUrl!) : null) as ImageProvider?,
-                              child: _profileImage == null && _imageUrl == null
-                                  ? const Icon(Icons.person, size: 50, color: Colors.grey)
+                                  : (_imageUrl != null
+                                          ? NetworkImage(_imageUrl!)
+                                          : null)
+                                      as ImageProvider?,
+                          child:
+                              _profileImage == null && _imageUrl == null
+                                  ? const Icon(
+                                    Icons.person,
+                                    size: 50,
+                                    color: Colors.grey,
+                                  )
                                   : null,
-                            ),
-                            Positioned(
-                              bottom: 0,
-                              right: 0,
-                              child:
-                              GestureDetector(
-                                onTap: _showImageOptions,
-                                child: Container(
-                                  width: 36,
-                                  height: 36,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.primary,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(color: Colors.white, width: 2),
-                                  ),
-                                  child: const Icon(Icons.camera_alt, color: Colors.white, size: 18),
+                        ),
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: GestureDetector(
+                            onTap: _showImageOptions,
+                            child: Container(
+                              width: 36,
+                              height: 36,
+                              decoration: BoxDecoration(
+                                color: AppColors.primary,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.white,
+                                  width: 2,
                                 ),
                               ),
+                              child: const Icon(
+                                Icons.camera_alt,
+                                color: Colors.white,
+                                size: 18,
+                              ),
                             ),
-                          ],
+                          ),
                         ),
+                      ],
+                    ),
 
                     const SizedBox(height: 32),
 
@@ -468,11 +506,15 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                               fillColor: Colors.grey.shade50,
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: Colors.grey.shade200),
+                                borderSide: BorderSide(
+                                  color: Colors.grey.shade200,
+                                ),
                               ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: Colors.grey.shade200),
+                                borderSide: BorderSide(
+                                  color: Colors.grey.shade200,
+                                ),
                               ),
                             ),
                             validator: (value) {
@@ -502,11 +544,15 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                               fillColor: Colors.grey.shade50,
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: Colors.grey.shade200),
+                                borderSide: BorderSide(
+                                  color: Colors.grey.shade200,
+                                ),
                               ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: Colors.grey.shade200),
+                                borderSide: BorderSide(
+                                  color: Colors.grey.shade200,
+                                ),
                               ),
                             ),
                             validator: (value) {
@@ -556,12 +602,18 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: AppColors.primary,
                                   foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 8,
+                                  ),
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
+                                    borderRadius: BorderRadius.circular(30),
                                   ),
                                 ),
-                                child: const Text('Change', style: TextStyle(fontSize: 14)),
+                                child: const Text(
+                                  'Change',
+                                  style: TextStyle(fontSize: 17),
+                                ),
                               ),
                             ],
                           ),
@@ -584,33 +636,51 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    const Text('🇮🇳', style: TextStyle(fontSize: 20)),
+                                    const Text(
+                                      '🇮🇳',
+                                      style: TextStyle(fontSize: 20),
+                                    ),
                                     const SizedBox(width: 4),
-                                    const Text('+91', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                                    const Text(
+                                      '+91',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
                                     const SizedBox(width: 4),
-                                    Icon(Icons.keyboard_arrow_down, color: Colors.grey.shade600, size: 20),
+                                    Icon(
+                                      Icons.keyboard_arrow_down,
+                                      color: Colors.grey.shade600,
+                                      size: 20,
+                                    ),
                                   ],
                                 ),
                               ),
-                              suffixIcon: _phoneNumberController.text.isNotEmpty
-                                  ? IconButton(
-                                      icon: const Icon(Icons.close, size: 20),
-                                      onPressed: () {
-                                        setState(() {
-                                          _phoneNumberController.clear();
-                                        });
-                                      },
-                                    )
-                                  : null,
+                              suffixIcon:
+                                  _phoneNumberController.text.isNotEmpty
+                                      ? IconButton(
+                                        icon: const Icon(Icons.close, size: 20),
+                                        onPressed: () {
+                                          setState(() {
+                                            _phoneNumberController.clear();
+                                          });
+                                        },
+                                      )
+                                      : null,
                               filled: true,
                               fillColor: Colors.grey.shade50,
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: Colors.grey.shade200),
+                                borderSide: BorderSide(
+                                  color: Colors.grey.shade200,
+                                ),
                               ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: Colors.grey.shade200),
+                                borderSide: BorderSide(
+                                  color: Colors.grey.shade200,
+                                ),
                               ),
                             ),
                             keyboardType: TextInputType.phone,
@@ -629,4 +699,3 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     );
   }
 }
-
