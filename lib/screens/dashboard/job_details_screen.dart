@@ -3,6 +3,7 @@ import 'package:fixify_admin/config/app_colors.dart';
 import 'package:fixify_admin/screens/dashboard/cancel_job_screen.dart';
 import 'package:fixify_admin/screens/dashboard/complete_job_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
@@ -370,24 +371,29 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                       Text(
                         'Running Timer',
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 12.sp,
                           fontWeight: FontWeight.w600,
                           color: Colors.black87,
                         ),
                       ),
-                      Text(
-                        _formatDuration(_elapsedTime),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primary,
+                      // const Spacer(),
+                      SizedBox(width: 10.w,),
+                      Flexible(
+                        child: Text(
+                          _formatDuration(_elapsedTime),
+                          style: TextStyle(
+                            fontSize: 10.sp,
+                            // fontWeight: FontWeight.bold,
+                            color: AppColors.primary,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
+                      const SizedBox(width: 8),
                       Switch(
                         value: _isTimerRunning,
                         onChanged: (value) {
@@ -459,241 +465,243 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F7F8),
-      body: Column(
-        children: [
-          CustomAppBar(
-            title: widget.isNewJob ? 'New Job Request Details' : 'Job Details',
-            showbackButton: true,
-          ),
-          // Header
-          // Container(
-          //   padding: const EdgeInsets.fromLTRB(16, 50, 16, 16),
-          //   decoration: BoxDecoration(
-          //     color: AppColors.secondary.withOpacity(1),
-          //   ),
-          //   child: Row(
-          //     children: [
-          //       IconButton(
-          //         icon: const Icon(Icons.arrow_back, color: Colors.black87),
-          //         onPressed: () => Navigator.pop(context),
-          //       ),
-          //       Expanded(
-          //         child: Text(
-          //           widget.isNewJob ? 'New Job Request Details' : 'Job Details',
-          //           style: const TextStyle(
-          //             fontSize: 20,
-          //             fontWeight: FontWeight.bold,
-          //             color: Colors.black87,
-          //           ),
-          //           textAlign: TextAlign.center,
-          //         ),
-          //       ),
-          //       Container(
-          //         decoration: const BoxDecoration(
-          //           color: Colors.white,
-          //           shape: BoxShape.circle,
-          //         ),
-          //         child: IconButton(
-          //           icon: const Icon(
-          //             Icons.notifications,
-          //             color: Color(0xFF217043),
-          //             size: 22,
-          //           ),
-          //           onPressed: () {
-          //             // Handle notifications
-          //           },
-          //         ),
-          //       ),
-          //     ],
-          //   ),
-          // ),
-
-          // Timer (only for hourly services when job is ongoing)
-          if (_jobStatus == 'Ongoing' && _isHourlyService)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              color: Colors.white,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Running Timer',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  Text(
-                    _formatDuration(_elapsedTime),
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                  Switch(
-                    value: _isTimerRunning,
-                    onChanged: (value) {
-                      setState(() {
-                        _isTimerRunning = value;
-                        if (value) {
-                          _startTimer();
-                        } else {
-                          _stopTimer();
-                        }
-                      });
-                    },
-                    activeColor: AppColors.primary,
-                  ),
-                ],
-              ),
+    return SafeArea(
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF5F7F8),
+        body: Column(
+          children: [
+            CustomAppBar(
+              title: widget.isNewJob ? 'New Job Request Details' : 'Job Details',
+              showbackButton: true,
             ),
-
-          // Content
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  _buildServiceDetailsCard(),
-                  const SizedBox(height: 12),
-                  _buildCustomerDetailsCard(),
-                  const SizedBox(height: 12),
-                  _buildJobNotesCard(),
-                ],
-              ),
-            ),
-          ),
-
-          // Action Buttons
-          if (widget.isNewJob)
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
+            // Header
+            // Container(
+            //   padding: const EdgeInsets.fromLTRB(16, 50, 16, 16),
+            //   decoration: BoxDecoration(
+            //     color: AppColors.secondary.withOpacity(1),
+            //   ),
+            //   child: Row(
+            //     children: [
+            //       IconButton(
+            //         icon: const Icon(Icons.arrow_back, color: Colors.black87),
+            //         onPressed: () => Navigator.pop(context),
+            //       ),
+            //       Expanded(
+            //         child: Text(
+            //           widget.isNewJob ? 'New Job Request Details' : 'Job Details',
+            //           style: const TextStyle(
+            //             fontSize: 20,
+            //             fontWeight: FontWeight.bold,
+            //             color: Colors.black87,
+            //           ),
+            //           textAlign: TextAlign.center,
+            //         ),
+            //       ),
+            //       Container(
+            //         decoration: const BoxDecoration(
+            //           color: Colors.white,
+            //           shape: BoxShape.circle,
+            //         ),
+            //         child: IconButton(
+            //           icon: const Icon(
+            //             Icons.notifications,
+            //             color: Color(0xFF217043),
+            //             size: 22,
+            //           ),
+            //           onPressed: () {
+            //             // Handle notifications
+            //           },
+            //         ),
+            //       ),
+            //     ],
+            //   ),
+            // ),
+      
+            // Timer (only for hourly services when job is ongoing)
+            if (_jobStatus == 'Ongoing' && _isHourlyService)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, -2),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: _handleNotInterested,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.grey.shade300,
-                        foregroundColor: Colors.black87,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Text(
-                        'Not Interested',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Running Timer',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: _showAcceptJobDialog,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Text(
-                        'Accept Job',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
+                    Text(
+                      _formatDuration(_elapsedTime),
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
                       ),
                     ),
-                  ),
-                ],
-              ),
-            )
-          else if (_jobStatus == 'Ongoing')
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, -2),
-                  ),
-                ],
-              ),
-              child: SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton(
-                  onPressed: _handleCompleteJob,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                    Switch(
+                      value: _isTimerRunning,
+                      onChanged: (value) {
+                        setState(() {
+                          _isTimerRunning = value;
+                          if (value) {
+                            _startTimer();
+                          } else {
+                            _stopTimer();
+                          }
+                        });
+                      },
+                      activeColor: AppColors.primary,
                     ),
-                  ),
-                  child: const Text(
-                    'Complete Job',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                  ),
+                  ],
                 ),
               ),
-            )
-          else if (_jobStatus == 'Upcoming')
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Color(0xffF2F6FB),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, -2),
-                  ),
-                ],
-              ),
-              child: SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton(
-                  onPressed: _showOTPDialog,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(35),
-                    ),
-                  ),
-                  child: const Text(
-                    'Start Job',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                  ),
+      
+            // Content
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    _buildServiceDetailsCard(),
+                    const SizedBox(height: 12),
+                    _buildCustomerDetailsCard(),
+                    const SizedBox(height: 12),
+                    _buildJobNotesCard(),
+                  ],
                 ),
               ),
             ),
-          SizedBox(height: 8),
-        ],
+      
+            // Action Buttons
+            if (widget.isNewJob)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, -2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: _handleNotInterested,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.grey.shade300,
+                          foregroundColor: Colors.black87,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text(
+                          'Not Interested',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: _showAcceptJobDialog,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text(
+                          'Accept Job',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            else if (_jobStatus == 'Ongoing')
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, -2),
+                    ),
+                  ],
+                ),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: _handleCompleteJob,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text(
+                      'Complete Job',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ),
+              )
+            else if (_jobStatus == 'Upcoming')
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Color(0xffF2F6FB),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, -2),
+                    ),
+                  ],
+                ),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: _showOTPDialog,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(35),
+                      ),
+                    ),
+                    child: const Text(
+                      'Start Job',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ),
+              ),
+            SizedBox(height: 8),
+          ],
+        ),
       ),
     );
   }

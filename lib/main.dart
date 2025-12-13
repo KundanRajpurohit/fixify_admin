@@ -4,7 +4,6 @@ import 'package:fixify_admin/dio/auth_interceptor.dart';
 import 'package:fixify_admin/dio/unauth_interceptor.dart';
 import 'package:fixify_admin/providers/auth_provider.dart';
 import 'package:fixify_admin/providers/location_provider.dart';
-import 'package:fixify_admin/screens/auth/phone_verification_screen.dart';
 import 'package:fixify_admin/screens/auth/splash_screen.dart';
 import 'package:fixify_admin/services/user_service.dart';
 import 'package:flutter/material.dart';

@@ -18,11 +18,12 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
       backgroundColor: const Color(0xFFF6F7F9),
       appBar: AppBar(
         backgroundColor: _lightGreen,
+        automaticallyImplyLeading: false,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black87),
-          onPressed: () => Navigator.pop(context),
-        ),
+        // leading: IconButton(
+        //   icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black87),
+        //   onPressed: () => Navigator.pop(context),
+        // ),
         title: const Text(
           'Dashboard',
           style: TextStyle(
