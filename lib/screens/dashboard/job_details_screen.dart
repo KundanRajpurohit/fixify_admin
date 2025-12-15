@@ -1,32 +1,81 @@
 import 'package:fixify_admin/components/custom_app_bar.dart';
 import 'package:fixify_admin/config/app_colors.dart';
+import 'package:fixify_admin/providers/location_provider.dart';
 import 'package:fixify_admin/screens/dashboard/cancel_job_screen.dart';
 import 'package:fixify_admin/screens/dashboard/complete_job_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
 
-class JobDetailsScreen extends StatefulWidget {
-  final Map<String, dynamic> job;
+class JobDetailsScreen extends ConsumerStatefulWidget {
+  final String token;
   final bool isNewJob;
 
   const JobDetailsScreen({
     super.key,
-    required this.job,
+    required this.token,
     required this.isNewJob,
   });
 
   @override
-  State<JobDetailsScreen> createState() => _JobDetailsScreenState();
+  ConsumerState<JobDetailsScreen> createState() => _JobDetailsScreenState();
 }
 
-class _JobDetailsScreenState extends State<JobDetailsScreen> {
+class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
   String _jobStatus = 'Upcoming'; // Upcoming, Ongoing, Completed
   bool _isTimerRunning = false;
   Duration _elapsedTime = Duration.zero;
   Timer? _timer;
+  Map<String, dynamic>? jobDetails;
+  bool _loading = true;
+
+  Map<String, dynamic> getStatusStyle(String status) {
+    switch (status.toLowerCase()) {
+      case "upcoming":
+        return {
+          "label": "Upcoming",
+          "bg": Color(0xffF2F6FB),
+          "text": Color(0xFF214370),
+          "border": Color(0xFFC2DAF0),
+        };
+
+      case "ongoing":
+        return {
+          "label": "Ongoing",
+          "bg": Color(0xffFBF6F2),
+          "text": Color(0xFF704B21),
+          "border": Color(0xFFF0E4C2),
+        };
+
+      case "past":
+        return {
+          "label": "Past",
+          "bg": Color(0xffF2FBF2),
+          "text": Color(0xFF257021),
+          "border": Color(0xFFC2F0C7),
+        };
+
+      case "cancelled":
+        return {
+          "label": "Cancelled",
+          "bg": Color(0xffF5F5F5),
+          "text": Color(0xFF434343),
+          "border": Color(0xFFDFDFDF),
+        };
+
+      default:
+        return {
+          "label": "Unknown",
+          "bg": Color(0xffF5F5F5),
+          "text": Color(0xFF434343),
+          "border": Color(0xFFDFDFDF),
+        };
+    }
+  }
+
   final List<TextEditingController> _otpControllers = List.generate(
     4,
     (_) => TextEditingController(),
@@ -124,11 +173,46 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
   @override
   void initState() {
     super.initState();
-    _jobStatus = widget.job['status'] ?? 'Upcoming';
+    _fetchJobDetails();
+    _jobStatus = jobDetails?['status'] ?? 'upcoming';
     if (_jobStatus == 'Ongoing') {
       _isTimerRunning = true;
       _startTimer();
     }
+  }
+
+  Future<void> _fetchJobDetails() async {
+    setState(() => _loading = true);
+    print("fetch job details for token: ${widget.token}");
+
+    final service = ref.read(userServiceProvider);
+    final result = await service.getJobDetails(widget.token);
+
+    result.fold(
+      (failure) {
+        if (!mounted) return;
+
+        setState(() => _loading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(failure.message), backgroundColor: Colors.red),
+        );
+      },
+      (data) {
+        if (!mounted) return;
+
+        setState(() {
+          jobDetails = data["data"];
+          _jobStatus = (jobDetails?["work_status"] ?? "upcoming").toString();
+
+          _loading = false;
+
+          if (_jobStatus == "ongoing") {
+            _isTimerRunning = true;
+            _startTimer();
+          }
+        });
+      },
+    );
   }
 
   @override
@@ -171,8 +255,8 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
 
   bool get _isHourlyService {
     final serviceType =
-        widget.job['serviceType']?.toString().toLowerCase() ??
-        widget.job['jobType']?.toString().toLowerCase() ??
+        jobDetails?['serviceType']?.toString().toLowerCase() ??
+        jobDetails?['jobType']?.toString().toLowerCase() ??
         '';
     return serviceType == 'hourly' ||
         serviceType.contains('hourly') ||
@@ -372,7 +456,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
                   ),
                   child: Row(
                     children: [
-                       Text(
+                      Text(
                         'Running Timer',
                         style: TextStyle(
                           fontSize: 12.sp,
@@ -381,7 +465,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
                         ),
                       ),
                       // const Spacer(),
-                      SizedBox(width: 10.w,),
+                      SizedBox(width: 10.w),
                       Flexible(
                         child: Text(
                           _formatDuration(_elapsedTime),
@@ -447,7 +531,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
       PageTransition(
         type: PageTransitionType.rightToLeft,
         duration: const Duration(milliseconds: 300),
-        child: CompleteJobScreen(job: widget.job),
+        child: CompleteJobScreen(job: jobDetails!),
       ),
     );
   }
@@ -458,69 +542,32 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
       PageTransition(
         type: PageTransitionType.rightToLeft,
         duration: const Duration(milliseconds: 300),
-        child: CancelJobScreen(job: widget.job),
+        child: CancelJobScreen(job: jobDetails!),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_loading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    final status = getStatusStyle(jobDetails?['work_status']);
+
     return SafeArea(
       child: Scaffold(
         backgroundColor: const Color(0xFFF5F7F8),
         body: Column(
           children: [
-            CustomAppBar(
-              title: widget.isNewJob ? 'New Job Request Details' : 'Job Details',
-              showbackButton: true,
-            ),
-            // Header
-            // Container(
-            //   padding: const EdgeInsets.fromLTRB(16, 50, 16, 16),
-            //   decoration: BoxDecoration(
-            //     color: AppColors.secondary.withOpacity(1),
-            //   ),
-            //   child: Row(
-            //     children: [
-            //       IconButton(
-            //         icon: const Icon(Icons.arrow_back, color: Colors.black87),
-            //         onPressed: () => Navigator.pop(context),
-            //       ),
-            //       Expanded(
-            //         child: Text(
-            //           widget.isNewJob ? 'New Job Request Details' : 'Job Details',
-            //           style: const TextStyle(
-            //             fontSize: 20,
-            //             fontWeight: FontWeight.bold,
-            //             color: Colors.black87,
-            //           ),
-            //           textAlign: TextAlign.center,
-            //         ),
-            //       ),
-            //       Container(
-            //         decoration: const BoxDecoration(
-            //           color: Colors.white,
-            //           shape: BoxShape.circle,
-            //         ),
-            //         child: IconButton(
-            //           icon: const Icon(
-            //             Icons.notifications,
-            //             color: Color(0xFF217043),
-            //             size: 22,
-            //           ),
-            //           onPressed: () {
-            //             // Handle notifications
-            //           },
-            //         ),
-            //       ),
-            //     ],
-            //   ),
-            // ),
-      
+            CustomAppBar(title: 'Job Details', showbackButton: true),
+
             // Timer (only for hourly services when job is ongoing)
-            if (_jobStatus == 'Ongoing' && _isHourlyService)
+            if (_jobStatus == 'ongoing' && _isHourlyService)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 color: Colors.white,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -558,7 +605,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
                   ],
                 ),
               ),
-      
+
             // Content
             Expanded(
               child: SingleChildScrollView(
@@ -574,7 +621,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
                 ),
               ),
             ),
-      
+
             // Action Buttons
             if (widget.isNewJob)
               Container(
@@ -662,7 +709,10 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
                     ),
                     child: const Text(
                       'Complete Job',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
@@ -694,7 +744,10 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
                     ),
                     child: const Text(
                       'Start Job',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
@@ -707,6 +760,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
   }
 
   Widget _buildServiceDetailsCard() {
+    final status = getStatusStyle(jobDetails?['work_status']);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -736,25 +790,20 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
               ),
               Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
+                  horizontal: 15,
+                  vertical: 4,
                 ),
                 decoration: BoxDecoration(
-                  color:
-                      _jobStatus == 'Ongoing'
-                          ? AppColors.secondary.withOpacity(0.3)
-                          : Colors.blue.shade100,
-                  borderRadius: BorderRadius.circular(12),
+                  color: status["bg"],
+                  borderRadius: BorderRadius.circular(15),
+                  border: Border.all(color: status["border"], width: 1.5),
                 ),
                 child: Text(
-                  _jobStatus,
+                  '${status["label"]}',
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 13,
+                    color: status["text"],
                     fontWeight: FontWeight.w600,
-                    color:
-                        _jobStatus == 'Ongoing'
-                            ? AppColors.primary
-                            : Colors.blue.shade700,
                   ),
                 ),
               ),
@@ -762,21 +811,27 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
           ),
           const SizedBox(height: 16),
           _buildDetailRow(
-            icon: Icons.checklist,
+            icon: 'assets/images/serviceId.png',
+            label: 'Service Id',
+            value: jobDetails?['ServiceID'] ?? "service",
+          ),
+          const Divider(height: 24),
+          _buildDetailRow(
+            icon: 'assets/images/serviceType.png',
             label: 'Service Type',
-            value: widget.job['jobType'],
+            value: jobDetails?['jobType'] ?? "service",
           ),
           const Divider(height: 24),
           _buildDetailRow(
-            icon: Icons.calendar_today,
+            icon: 'assets/images/calendar 2.png',
             label: 'Time & Date',
-            value: widget.job['date'],
+            value: jobDetails?['date_time'],
           ),
           const Divider(height: 24),
           _buildDetailRow(
-            icon: Icons.currency_rupee,
+            icon: 'assets/images/payment.png',
             label: 'Payment',
-            value: widget.job['price'],
+            value: jobDetails?['price'] ?? "0",
           ),
         ],
       ),
@@ -810,15 +865,15 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
           ),
           const SizedBox(height: 16),
           _buildDetailRow(
-            icon: Icons.person,
+            icon: 'assets/images/person.png',
             label: 'Name',
-            value: widget.job['clientName'],
+            value: jobDetails?['UserName'] ?? "Customer Name",
           ),
           const Divider(height: 24),
           _buildDetailRowWithAction(
             icon: Icons.phone,
             label: 'Contact Number',
-            value: '+91 8535544156',
+            value: jobDetails?['UserMobile'],
             actionText: 'Call Now',
             onAction: () => _makePhoneCall('+918535544156'),
           ),
@@ -826,7 +881,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
           _buildDetailRowWithAction(
             icon: Icons.location_on,
             label: 'Address',
-            value: widget.job['location'],
+            value: jobDetails?['UserAddress'],
             actionText: 'View Map',
             onAction: () {
               // Handle view map
@@ -873,7 +928,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
   }
 
   Widget _buildDetailRow({
-    required IconData icon,
+    required String icon,
     required String label,
     required String value,
   }) {
@@ -887,7 +942,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
             color: AppColors.secondary.withOpacity(1),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(icon, color: AppColors.primary, size: 20),
+          child: Image.asset(icon),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -927,6 +982,7 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
   }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.start,
       children: [
         Container(
           width: 40,
@@ -962,15 +1018,21 @@ class _JobDetailsScreenState extends State<JobDetailsScreen> {
             ],
           ),
         ),
-        TextButton(
-          onPressed: onAction,
-          child: Text(
-            actionText,
-            style: const TextStyle(
-              color: AppColors.primary,
-              fontWeight: FontWeight.w600,
+        Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+
+          children: [
+            TextButton(
+              onPressed: onAction,
+              child: Text(
+                actionText,
+                style: const TextStyle(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
-          ),
+          ],
         ),
       ],
     );

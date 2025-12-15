@@ -11,40 +11,40 @@ import '../models/bank_model.dart';
 
 class UserService {
   final Dio _dio;
-  
+
   UserService(this._dio);
-  
+
   // Save user ID and token to SharedPreferences
   Future<void> _saveUserData(String userId, String userToken) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('user_id', userId);
     await prefs.setString('user_token', userToken);
   }
-  
+
   // Save authorization token to SharedPreferences
   Future<void> _saveAuthToken(String authToken) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('authorization_token', authToken);
   }
-  
+
   // Get user ID from SharedPreferences
   Future<String?> getUserId() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('user_id');
   }
-  
+
   // Get user token from SharedPreferences
   Future<String?> getUserToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('user_token');
   }
-  
+
   // Get authorization token from SharedPreferences
   Future<String?> getAuthToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('authorization_token');
   }
-  
+
   // Clear all user data
   Future<void> clearUserData() async {
     final prefs = await SharedPreferences.getInstance();
@@ -52,7 +52,7 @@ class UserService {
     await prefs.remove('user_token');
     await prefs.remove('authorization_token');
   }
-  
+
   // Clear all SharedPreferences data (complete logout)
   Future<void> clearAllPreferences() async {
     try {
@@ -63,7 +63,7 @@ class UserService {
       print('❌ [UserService] Error clearing SharedPreferences: $e');
     }
   }
-  
+
   // Set default address
   Future<ApiResult<Map<String, dynamic>>> setDefaultAddress({
     required String address,
@@ -71,8 +71,7 @@ class UserService {
     required String city,
     required String landmark,
     required String pincode,
-  }) async
-  {
+  }) async {
     try {
       print('🚀 [UserService] Starting setDefaultAddress API call');
       print('📝 [UserService] Request data:');
@@ -81,9 +80,13 @@ class UserService {
       print('   - city: $city');
       print('   - landmark: $landmark');
       print('   - pincode: $pincode');
-      print('🌐 [UserService] API endpoint: ${ApiConfig.partnerAddDefaultAddress}');
-      print('🔗 [UserService] Full URL: ${ApiConfig.baseUrl}${ApiConfig.partnerAddDefaultAddress}');
-      
+      print(
+        '🌐 [UserService] API endpoint: ${ApiConfig.partnerAddDefaultAddress}',
+      );
+      print(
+        '🔗 [UserService] Full URL: ${ApiConfig.baseUrl}${ApiConfig.partnerAddDefaultAddress}',
+      );
+
       final formData = FormData.fromMap({
         'address': address,
         'state': state,
@@ -91,41 +94,45 @@ class UserService {
         'landmark': landmark,
         'pincode': pincode,
       });
-      
+
       print('📤 [UserService] Sending request...');
       final response = await _dio.post(
         ApiConfig.partnerAddDefaultAddress,
         data: formData,
       );
-      
+
       print('📥 [UserService] Response received:');
       print('   - Status Code: ${response.statusCode}');
       print('   - Response Data: ${response.data}');
-      
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = response.data;
         print('✅ [UserService] Response status: ${data['status']}');
         print('📋 [UserService] Response message: ${data['message']}');
-        
+
         if (data['status'] == true) {
           // Save user ID and token from response
           final userData = data['data'];
           print('💾 [UserService] Saving user data:');
           print('   - User ID: ${userData['userid']}');
           print('   - User Token: ${userData['token']}');
-          
+
           await _saveUserData(userData['userid'], userData['token']);
           print('✅ [UserService] User data saved successfully');
           return right(data);
         } else {
           print('❌ [UserService] API returned status: false');
           print('❌ [UserService] Error message: ${data['message']}');
-          return left(ServerFailure(data['message'] ?? 'Failed to save address', 400));
+          return left(
+            ServerFailure(data['message'] ?? 'Failed to save address', 400),
+          );
         }
       } else {
         print('❌ [UserService] HTTP Error: ${response.statusCode}');
         print('❌ [UserService] Response: ${response.data}');
-        return left(ServerFailure('Failed to save address', response.statusCode ?? 500));
+        return left(
+          ServerFailure('Failed to save address', response.statusCode ?? 500),
+        );
       }
     } on DioException catch (e) {
       print('❌ [UserService] DioException occurred:');
@@ -140,59 +147,62 @@ class UserService {
       return left(UnknownFailure(e.toString()));
     }
   }
-  
-  
+
   // Verify OTP
   Future<ApiResult<Map<String, dynamic>>> verifyOtp({
     required String mobile,
     required String otp,
-  }) async
-  {
+  }) async {
     try {
       print('🔐 [UserService] Starting verifyOtp API call');
       print('📝 [UserService] Request data:');
       print('   - mobile: $mobile');
       print('   - otp: $otp');
       print('🌐 [UserService] API endpoint: ${ApiConfig.verifyOtp}');
-      print('🔗 [UserService] Full URL: ${ApiConfig.baseUrl}${ApiConfig.verifyOtp}');
-      
-      final formData = FormData.fromMap({
-        'mobile': mobile,
-        'otp': otp,
-      });
-      
-      print('📤 [UserService] Sending OTP verification request...');
-      final response = await _dio.post(
-        ApiConfig.verifyOtp,
-        data: formData,
+      print(
+        '🔗 [UserService] Full URL: ${ApiConfig.baseUrl}${ApiConfig.verifyOtp}',
       );
-      
+
+      final formData = FormData.fromMap({'mobile': mobile, 'otp': otp});
+
+      print('📤 [UserService] Sending OTP verification request...');
+      final response = await _dio.post(ApiConfig.verifyOtp, data: formData);
+
       print('📥 [UserService] OTP Verification Response received:');
       print('   - Status Code: ${response.statusCode}');
       print('   - Response Data: ${response.data}');
-      
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = response.data;
         print('✅ [UserService] OTP verification successful');
         print('📋 [UserService] Response message: ${data['message']}');
-        
+
         // Check if status is true and token exists (for both "Login successful" and "OTP Verified" messages)
-        if ((data['status'] == true || data['status'] == 'true') && data['token'] != null) {
+        if ((data['status'] == true || data['status'] == 'true') &&
+            data['token'] != null) {
           print('🎉 [UserService] OTP verified successfully!');
           print('🔑 [UserService] Authorization token: ${data['token']}');
-          
+
           // Save authorization token
           await _saveAuthToken(data['token']);
           print('💾 [UserService] Authorization token saved successfully');
           return right(data);
         } else {
-          print('❌ [UserService] OTP verification failed - message: ${data['message']}');
-          return left(ServerFailure(data['message'] ?? 'OTP verification failed', 400));
+          print(
+            '❌ [UserService] OTP verification failed - message: ${data['message']}',
+          );
+          return left(
+            ServerFailure(data['message'] ?? 'OTP verification failed', 400),
+          );
         }
       } else {
-        print('❌ [UserService] OTP Verification HTTP Error: ${response.statusCode}');
+        print(
+          '❌ [UserService] OTP Verification HTTP Error: ${response.statusCode}',
+        );
         print('❌ [UserService] OTP Verification Response: ${response.data}');
-        return left(ServerFailure('Failed to verify OTP', response.statusCode ?? 500));
+        return left(
+          ServerFailure('Failed to verify OTP', response.statusCode ?? 500),
+        );
       }
     } on DioException catch (e) {
       print('❌ [UserService] OTP Verification DioException occurred:');
@@ -207,23 +217,24 @@ class UserService {
       return left(UnknownFailure(e.toString()));
     }
   }
-  
 
   // Get all FAQs
   Future<ApiResult<Map<String, dynamic>>> getAllFAQs() async {
     try {
       print('❓ [UserService] Starting getAllFAQs API call');
       print('🔗 [UserService] Full URL: ${ApiConfig.baseUrl}/all-faqs');
-      
+
       final response = await _dio.get('/all-faqs');
-      
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         print('✅ [UserService] FAQs retrieved successfully');
         print('📊 [UserService] FAQs response: ${response.data}');
         return right(response.data);
       } else {
         print('❌ [UserService] FAQs API failed');
-        return left(ServerFailure('Failed to retrieve FAQs', response.statusCode ?? 500));
+        return left(
+          ServerFailure('Failed to retrieve FAQs', response.statusCode ?? 500),
+        );
       }
     } on DioException catch (e) {
       print('❌ [UserService] FAQs API exception: ${e.message}');
@@ -249,8 +260,10 @@ class UserService {
       print('   - email: $email');
       print('   - image: ${image?.path ?? "null"}');
       print('🌐 [UserService] API endpoint: ${ApiConfig.partnerRegister}');
-      print('🔗 [UserService] Full URL: ${ApiConfig.baseUrl}${ApiConfig.partnerRegister}');
-      
+      print(
+        '🔗 [UserService] Full URL: ${ApiConfig.baseUrl}${ApiConfig.partnerRegister}',
+      );
+
       final formData = FormData.fromMap({
         'name': name,
         'mobile': mobile,
@@ -267,20 +280,29 @@ class UserService {
         ApiConfig.partnerRegister,
         data: formData,
       );
-      
+
       print('📥 [UserService] Partner Registration Response received:');
       print('   - Status Code: ${response.statusCode}');
       print('   - Response Data: ${response.data}');
-      
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = response.data;
         print('✅ [UserService] Partner registration successful');
         print('📋 [UserService] Response message: ${data['message']}');
         return right(data);
       } else {
-        print('❌ [UserService] Partner Registration HTTP Error: ${response.statusCode}');
-        print('❌ [UserService] Partner Registration Response: ${response.data}');
-        return left(ServerFailure('Failed to register partner', response.statusCode ?? 500));
+        print(
+          '❌ [UserService] Partner Registration HTTP Error: ${response.statusCode}',
+        );
+        print(
+          '❌ [UserService] Partner Registration Response: ${response.data}',
+        );
+        return left(
+          ServerFailure(
+            'Failed to register partner',
+            response.statusCode ?? 500,
+          ),
+        );
       }
     } on DioException catch (e) {
       print('❌ [UserService] Partner Registration DioException occurred:');
@@ -291,11 +313,13 @@ class UserService {
       return left(_handleDioError(e));
     } catch (e) {
       print('❌ [UserService] Partner Registration Unexpected error: $e');
-      print('❌ [UserService] Partner Registration Error type: ${e.runtimeType}');
+      print(
+        '❌ [UserService] Partner Registration Error type: ${e.runtimeType}',
+      );
       return left(UnknownFailure(e.toString()));
     }
   }
-  
+
   // Partner Add Default Address
   Future<ApiResult<Map<String, dynamic>>> partnerAddDefaultAddress({
     required String address,
@@ -312,17 +336,23 @@ class UserService {
       print('   - city: $city');
       print('   - landmark: $landmark');
       print('   - pincode: $pincode');
-      print('🌐 [UserService] API endpoint: ${ApiConfig.partnerAddDefaultAddress}');
-      print('🔗 [UserService] Full URL: ${ApiConfig.baseUrl}${ApiConfig.partnerAddDefaultAddress}');
-      
+      print(
+        '🌐 [UserService] API endpoint: ${ApiConfig.partnerAddDefaultAddress}',
+      );
+      print(
+        '🔗 [UserService] Full URL: ${ApiConfig.baseUrl}${ApiConfig.partnerAddDefaultAddress}',
+      );
+
       final authToken = await getAuthToken();
       if (authToken == null) {
         print('❌ [UserService] No authorization token found');
         return left(const UnauthorizedFailure());
       }
-      
-      print('🔑 [UserService] Using authorization token: ${authToken.substring(0, 10)}...');
-      
+
+      print(
+        '🔑 [UserService] Using authorization token: ${authToken.substring(0, 10)}...',
+      );
+
       final formData = FormData.fromMap({
         'address': address,
         'state': state,
@@ -330,27 +360,23 @@ class UserService {
         'landmark': landmark,
         'pincode': pincode,
       });
-      
+
       print('📤 [UserService] Sending partner add default address request...');
       final response = await _dio.post(
         ApiConfig.partnerAddDefaultAddress,
         data: formData,
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer $authToken',
-          },
-        ),
+        options: Options(headers: {'Authorization': 'Bearer $authToken'}),
       );
-      
+
       print('📥 [UserService] Partner Add Default Address Response received:');
       print('   - Status Code: ${response.statusCode}');
       print('   - Response Data: ${response.data}');
-      
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = response.data;
         print('✅ [UserService] Partner add default address successful');
         print('📋 [UserService] Response message: ${data['message']}');
-        
+
         // Save user ID and token from response if available
         if (data['data'] != null) {
           final userData = data['data'];
@@ -359,15 +385,26 @@ class UserService {
             print('💾 [UserService] User data saved successfully');
           }
         }
-        
+
         return right(data);
       } else {
-        print('❌ [UserService] Partner Add Default Address HTTP Error: ${response.statusCode}');
-        print('❌ [UserService] Partner Add Default Address Response: ${response.data}');
-        return left(ServerFailure('Failed to add default address', response.statusCode ?? 500));
+        print(
+          '❌ [UserService] Partner Add Default Address HTTP Error: ${response.statusCode}',
+        );
+        print(
+          '❌ [UserService] Partner Add Default Address Response: ${response.data}',
+        );
+        return left(
+          ServerFailure(
+            'Failed to add default address',
+            response.statusCode ?? 500,
+          ),
+        );
       }
     } on DioException catch (e) {
-      print('❌ [UserService] Partner Add Default Address DioException occurred:');
+      print(
+        '❌ [UserService] Partner Add Default Address DioException occurred:',
+      );
       print('   - Type: ${e.type}');
       print('   - Message: ${e.message}');
       print('   - Response: ${e.response?.data}');
@@ -375,11 +412,13 @@ class UserService {
       return left(_handleDioError(e));
     } catch (e) {
       print('❌ [UserService] Partner Add Default Address Unexpected error: $e');
-      print('❌ [UserService] Partner Add Default Address Error type: ${e.runtimeType}');
+      print(
+        '❌ [UserService] Partner Add Default Address Error type: ${e.runtimeType}',
+      );
       return left(UnknownFailure(e.toString()));
     }
   }
-  
+
   // Partner Upload Documents
   Future<ApiResult<Map<String, dynamic>>> partnerUploadDocuments({
     File? nationalId,
@@ -392,19 +431,25 @@ class UserService {
       print('   - national_id: ${nationalId?.path ?? "null"}');
       print('   - proof_national_id: ${proofNationalId?.path ?? "null"}');
       print('   - services_license: ${servicesLicense?.path ?? "null"}');
-      print('🌐 [UserService] API endpoint: ${ApiConfig.partnerUploadDocuments}');
-      print('🔗 [UserService] Full URL: ${ApiConfig.baseUrl}${ApiConfig.partnerUploadDocuments}');
-      
+      print(
+        '🌐 [UserService] API endpoint: ${ApiConfig.partnerUploadDocuments}',
+      );
+      print(
+        '🔗 [UserService] Full URL: ${ApiConfig.baseUrl}${ApiConfig.partnerUploadDocuments}',
+      );
+
       final authToken = await getAuthToken();
       if (authToken == null) {
         print('❌ [UserService] No authorization token found');
         return left(const UnauthorizedFailure());
       }
-      
-      print('🔑 [UserService] Using authorization token: ${authToken.substring(0, 10)}...');
-      
+
+      print(
+        '🔑 [UserService] Using authorization token: ${authToken.substring(0, 10)}...',
+      );
+
       final formData = FormData();
-      
+
       if (nationalId != null) {
         formData.files.add(
           MapEntry(
@@ -416,7 +461,7 @@ class UserService {
           ),
         );
       }
-      
+
       if (proofNationalId != null) {
         formData.files.add(
           MapEntry(
@@ -428,7 +473,7 @@ class UserService {
           ),
         );
       }
-      
+
       if (servicesLicense != null) {
         formData.files.add(
           MapEntry(
@@ -440,31 +485,36 @@ class UserService {
           ),
         );
       }
-      
+
       print('📤 [UserService] Sending partner upload documents request...');
       final response = await _dio.post(
         ApiConfig.partnerUploadDocuments,
         data: formData,
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer $authToken',
-          },
-        ),
+        options: Options(headers: {'Authorization': 'Bearer $authToken'}),
       );
-      
+
       print('📥 [UserService] Partner Upload Documents Response received:');
       print('   - Status Code: ${response.statusCode}');
       print('   - Response Data: ${response.data}');
-      
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = response.data;
         print('✅ [UserService] Partner upload documents successful');
         print('📋 [UserService] Response message: ${data['message']}');
         return right(data);
       } else {
-        print('❌ [UserService] Partner Upload Documents HTTP Error: ${response.statusCode}');
-        print('❌ [UserService] Partner Upload Documents Response: ${response.data}');
-        return left(ServerFailure('Failed to upload documents', response.statusCode ?? 500));
+        print(
+          '❌ [UserService] Partner Upload Documents HTTP Error: ${response.statusCode}',
+        );
+        print(
+          '❌ [UserService] Partner Upload Documents Response: ${response.data}',
+        );
+        return left(
+          ServerFailure(
+            'Failed to upload documents',
+            response.statusCode ?? 500,
+          ),
+        );
       }
     } on DioException catch (e) {
       print('❌ [UserService] Partner Upload Documents DioException occurred:');
@@ -475,11 +525,13 @@ class UserService {
       return left(_handleDioError(e));
     } catch (e) {
       print('❌ [UserService] Partner Upload Documents Unexpected error: $e');
-      print('❌ [UserService] Partner Upload Documents Error type: ${e.runtimeType}');
+      print(
+        '❌ [UserService] Partner Upload Documents Error type: ${e.runtimeType}',
+      );
       return left(UnknownFailure(e.toString()));
     }
   }
-  
+
   // Partner Login
   Future<ApiResult<Map<String, dynamic>>> partnerLogin({
     required String mobile,
@@ -489,34 +541,35 @@ class UserService {
       print('📝 [UserService] Request data:');
       print('   - mobile: $mobile');
       print('🌐 [UserService] API endpoint: ${ApiConfig.partnerLogin}');
-      print('🔗 [UserService] Full URL: ${ApiConfig.baseUrl}${ApiConfig.partnerLogin}');
-      
-      final formData = FormData.fromMap({
-        'mobile': mobile,
-      });
-      
-      print('📤 [UserService] Sending partner login request...');
-      final response = await _dio.post(
-        ApiConfig.partnerLogin,
-        data: formData,
+      print(
+        '🔗 [UserService] Full URL: ${ApiConfig.baseUrl}${ApiConfig.partnerLogin}',
       );
-      
+
+      final formData = FormData.fromMap({'mobile': mobile});
+
+      print('📤 [UserService] Sending partner login request...');
+      final response = await _dio.post(ApiConfig.partnerLogin, data: formData);
+
       print('📥 [UserService] Partner Login Response received:');
       print('   - Status Code: ${response.statusCode}');
       print('   - Response Data: ${response.data}');
-      
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = response.data;
         print('✅ [UserService] Partner login response received');
         print('📋 [UserService] Response status: ${data['status']}');
         print('📋 [UserService] Response message: ${data['message']}');
-        
+
         // Return the response as-is, let the caller handle different scenarios
         return right(data);
       } else {
-        print('❌ [UserService] Partner Login HTTP Error: ${response.statusCode}');
+        print(
+          '❌ [UserService] Partner Login HTTP Error: ${response.statusCode}',
+        );
         print('❌ [UserService] Partner Login Response: ${response.data}');
-        return left(ServerFailure('Failed to login', response.statusCode ?? 500));
+        return left(
+          ServerFailure('Failed to login', response.statusCode ?? 500),
+        );
       }
     } on DioException catch (e) {
       print('❌ [UserService] Partner Login DioException occurred:');
@@ -524,14 +577,14 @@ class UserService {
       print('   - Message: ${e.message}');
       print('   - Response: ${e.response?.data}');
       print('   - Status Code: ${e.response?.statusCode}');
-      
+
       // Handle error responses
       if (e.response != null && e.response!.statusCode == 200) {
         // Sometimes API returns status: false with 200 status code
         final data = e.response!.data;
         return right(data);
       }
-      
+
       return left(_handleDioError(e));
     } catch (e) {
       print('❌ [UserService] Partner Login Unexpected error: $e');
@@ -549,22 +602,22 @@ class UserService {
       print('📝 [UserService] Request data:');
       print('   - mobile: $mobile');
       print('🌐 [UserService] API endpoint: ${ApiConfig.partnerSendOtp}');
-      print('🔗 [UserService] Full URL: ${ApiConfig.baseUrl}${ApiConfig.partnerSendOtp}');
-      
-      final formData = FormData.fromMap({
-        'mobile': mobile,
-      });
-      
+      print(
+        '🔗 [UserService] Full URL: ${ApiConfig.baseUrl}${ApiConfig.partnerSendOtp}',
+      );
+
+      final formData = FormData.fromMap({'mobile': mobile});
+
       print('📤 [UserService] Sending partner OTP request...');
       final response = await _dio.post(
         ApiConfig.partnerSendOtp,
         data: formData,
       );
-      
+
       print('📥 [UserService] Partner OTP Response received:');
       print('   - Status Code: ${response.statusCode}');
       print('   - Response Data: ${response.data}');
-      
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = response.data;
         print('✅ [UserService] Partner OTP sent successfully');
@@ -574,7 +627,9 @@ class UserService {
       } else {
         print('❌ [UserService] Partner OTP HTTP Error: ${response.statusCode}');
         print('❌ [UserService] Partner OTP Response: ${response.data}');
-        return left(ServerFailure('Failed to send OTP', response.statusCode ?? 500));
+        return left(
+          ServerFailure('Failed to send OTP', response.statusCode ?? 500),
+        );
       }
     } on DioException catch (e) {
       print('❌ [UserService] Partner OTP DioException occurred:');
@@ -589,7 +644,7 @@ class UserService {
       return left(UnknownFailure(e.toString()));
     }
   }
-  
+
   // Partner Verify OTP
   Future<ApiResult<Map<String, dynamic>>> partnerVerifyOtp({
     required String mobile,
@@ -601,39 +656,44 @@ class UserService {
       print('   - mobile: $mobile');
       print('   - otp: $otp');
       print('🌐 [UserService] API endpoint: ${ApiConfig.partnerVerifyOtp}');
-      print('🔗 [UserService] Full URL: ${ApiConfig.baseUrl}${ApiConfig.partnerVerifyOtp}');
-      
-      final formData = FormData.fromMap({
-        'mobile': mobile,
-        'otp': otp,
-      });
-      
+      print(
+        '🔗 [UserService] Full URL: ${ApiConfig.baseUrl}${ApiConfig.partnerVerifyOtp}',
+      );
+
+      final formData = FormData.fromMap({'mobile': mobile, 'otp': otp});
+
       print('📤 [UserService] Sending partner OTP verification request...');
       final response = await _dio.post(
         ApiConfig.partnerVerifyOtp,
         data: formData,
       );
-      
+
       print('📥 [UserService] Partner OTP Verification Response received:');
       print('   - Status Code: ${response.statusCode}');
       print('   - Response Data: ${response.data}');
-      
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = response.data;
         print('✅ [UserService] Partner OTP verification successful');
         print('📋 [UserService] Response message: ${data['message']}');
-        
+
         if (data['token'] != null) {
           print('🔑 [UserService] Authorization token: ${data['token']}');
           await _saveAuthToken(data['token']);
           print('💾 [UserService] Authorization token saved successfully');
         }
-        
+
         return right(data);
       } else {
-        print('❌ [UserService] Partner OTP Verification HTTP Error: ${response.statusCode}');
-        print('❌ [UserService] Partner OTP Verification Response: ${response.data}');
-        return left(ServerFailure('Failed to verify OTP', response.statusCode ?? 500));
+        print(
+          '❌ [UserService] Partner OTP Verification HTTP Error: ${response.statusCode}',
+        );
+        print(
+          '❌ [UserService] Partner OTP Verification Response: ${response.data}',
+        );
+        return left(
+          ServerFailure('Failed to verify OTP', response.statusCode ?? 500),
+        );
       }
     } on DioException catch (e) {
       print('❌ [UserService] Partner OTP Verification DioException occurred:');
@@ -644,7 +704,9 @@ class UserService {
       return left(_handleDioError(e));
     } catch (e) {
       print('❌ [UserService] Partner OTP Verification Unexpected error: $e');
-      print('❌ [UserService] Partner OTP Verification Error type: ${e.runtimeType}');
+      print(
+        '❌ [UserService] Partner OTP Verification Error type: ${e.runtimeType}',
+      );
       return left(UnknownFailure(e.toString()));
     }
   }
@@ -654,38 +716,42 @@ class UserService {
     try {
       print('👤 [UserService] Starting getPartnerProfile API call');
       print('🌐 [UserService] API endpoint: ${ApiConfig.partnerProfile}');
-      print('🔗 [UserService] Full URL: ${ApiConfig.baseUrl}${ApiConfig.partnerProfile}');
-      
+      print(
+        '🔗 [UserService] Full URL: ${ApiConfig.baseUrl}${ApiConfig.partnerProfile}',
+      );
+
       final authToken = await getAuthToken();
       if (authToken == null) {
         print('❌ [UserService] No authorization token found');
         return left(const UnauthorizedFailure());
       }
-      
-      print('🔑 [UserService] Using authorization token: ${authToken.substring(0, 10)}...');
-      
+
+      print(
+        '🔑 [UserService] Using authorization token: ${authToken.substring(0, 10)}...',
+      );
+
       final response = await _dio.get(
         ApiConfig.partnerProfile,
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer $authToken',
-          },
-        ),
+        options: Options(headers: {'Authorization': 'Bearer $authToken'}),
       );
-      
+
       print('📥 [UserService] Partner Profile Response received:');
       print('   - Status Code: ${response.statusCode}');
       print('   - Response Data: ${response.data}');
-      
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = response.data;
         print('✅ [UserService] Partner profile retrieved successfully');
         print('📋 [UserService] Response message: ${data['message']}');
         return right(data);
       } else {
-        print('❌ [UserService] Partner Profile HTTP Error: ${response.statusCode}');
+        print(
+          '❌ [UserService] Partner Profile HTTP Error: ${response.statusCode}',
+        );
         print('❌ [UserService] Partner Profile Response: ${response.data}');
-        return left(ServerFailure('Failed to get profile', response.statusCode ?? 500));
+        return left(
+          ServerFailure('Failed to get profile', response.statusCode ?? 500),
+        );
       }
     } on DioException catch (e) {
       print('❌ [UserService] Partner Profile DioException occurred:');
@@ -714,15 +780,15 @@ class UserService {
       print('   - mobile: $mobile');
       print('   - image: ${image?.path ?? "null"}');
       print('🌐 [UserService] API endpoint: ${ApiConfig.partnerUpdateProfile}');
-      
+
       final authToken = await getAuthToken();
       if (authToken == null) {
         print('❌ [UserService] No authorization token found');
         return left(const UnauthorizedFailure());
       }
-      
+
       final formData = FormData();
-      
+
       if (name != null) {
         formData.fields.add(MapEntry('name', name));
       }
@@ -740,17 +806,19 @@ class UserService {
           ),
         );
       }
-      
+
       final response = await _dio.post(
         ApiConfig.partnerUpdateProfile,
         data: formData,
       );
-      
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         print('✅ [UserService] Profile updated successfully');
         return right(response.data);
       } else {
-        return left(ServerFailure('Failed to update profile', response.statusCode ?? 500));
+        return left(
+          ServerFailure('Failed to update profile', response.statusCode ?? 500),
+        );
       }
     } on DioException catch (e) {
       return left(_handleDioError(e));
@@ -764,29 +832,31 @@ class UserService {
     try {
       print('📸 [UserService] Starting uploadPartnerImage API call');
       print('🌐 [UserService] API endpoint: ${ApiConfig.partnerUploadImage}');
-      
+
       final authToken = await getAuthToken();
       if (authToken == null) {
         return left(const UnauthorizedFailure());
       }
-      
+
       final formData = FormData.fromMap({
         'image': await MultipartFile.fromFile(
           image.path,
           filename: image.path.split(Platform.pathSeparator).last,
         ),
       });
-      
+
       final response = await _dio.post(
         ApiConfig.partnerUploadImage,
         data: formData,
       );
-      
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         print('✅ [UserService] Image uploaded successfully');
         return right(response.data);
       } else {
-        return left(ServerFailure('Failed to upload image', response.statusCode ?? 500));
+        return left(
+          ServerFailure('Failed to upload image', response.statusCode ?? 500),
+        );
       }
     } on DioException catch (e) {
       return left(_handleDioError(e));
@@ -800,17 +870,17 @@ class UserService {
     try {
       print('🚪 [UserService] Starting partnerLogout API call');
       print('🌐 [UserService] API endpoint: ${ApiConfig.partnerLogout}');
-      
+
       final authToken = await getAuthToken();
       if (authToken == null) {
         // Even if no token, clear preferences
         await clearAllPreferences();
         return left(const UnauthorizedFailure());
       }
-      
+
       try {
         final response = await _dio.post(ApiConfig.partnerLogout);
-        
+
         if (response.statusCode == 200 || response.statusCode == 201) {
           print('✅ [UserService] Logout successful');
           await clearAllPreferences();
@@ -818,14 +888,21 @@ class UserService {
         } else {
           // Still clear preferences even if API fails
           await clearAllPreferences();
-          return left(ServerFailure('Failed to logout', response.statusCode ?? 500));
+          return left(
+            ServerFailure('Failed to logout', response.statusCode ?? 500),
+          );
         }
       } on DioException catch (e) {
         // If 401 or any error, still clear preferences
         await clearAllPreferences();
         if (e.response?.statusCode == 401) {
-          print('🔒 [UserService] Logout returned 401, but preferences cleared');
-          return right({'status': true, 'message': 'Logged out (token expired)'});
+          print(
+            '🔒 [UserService] Logout returned 401, but preferences cleared',
+          );
+          return right({
+            'status': true,
+            'message': 'Logged out (token expired)',
+          });
         }
         return left(_handleDioError(e));
       }
@@ -836,32 +913,122 @@ class UserService {
     }
   }
 
+  // Get All Jobs
+  Future<ApiResult<Map<String, dynamic>>> getAllJobs() async {
+    try {
+      print('📦 [UserService] Starting getAllJobs API call');
+      print('🌐 [UserService] API endpoint: ${ApiConfig.partnerAllJobs}');
+
+      final authToken = await getAuthToken();
+      if (authToken == null) {
+        print('❌ [UserService] No authorization token found');
+        return left(const UnauthorizedFailure());
+      }
+
+      final response = await _dio.get(
+        ApiConfig.partnerAllJobs,
+        options: Options(headers: {'Authorization': 'Bearer $authToken'}),
+      );
+
+      print('📥 [UserService] API Response Status: ${response.statusCode}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print('✅ [UserService] Successfully fetched all jobs');
+        return right(response.data);
+      } else {
+        print(
+          '⚠️ [UserService] Failed to fetch jobs: Status ${response.statusCode}',
+        );
+        return left(
+          ServerFailure('Failed to fetch jobs', response.statusCode ?? 500),
+        );
+      }
+    } on DioException catch (e) {
+      print('❌ [UserService] DioException occurred');
+      return left(_handleDioError(e));
+    } catch (e) {
+      print('❌ [UserService] Unknown error: $e');
+      return left(UnknownFailure(e.toString()));
+    }
+  }
+
+ // job detail
+ Future<ApiResult<Map<String, dynamic>>> getJobDetails(String token) async {
+  try {
+    print('📄 [UserService] Starting getJobDetails API call');
+    print('🔑 [UserService] Token: $token');
+    print('🌐 [UserService] API endpoint: ${ApiConfig.partnerJobDetails(token)}');
+
+    final authToken = await getAuthToken();
+    if (authToken == null) {
+      print('❌ [UserService] No authorization token found');
+      return left(const UnauthorizedFailure());
+    }
+
+    final response = await _dio.get(
+      ApiConfig.partnerJobDetails(token),
+      options: Options(
+        headers: {
+          'Authorization': 'Bearer $authToken',
+        },
+      ),
+    );
+
+    print('📥 [UserService] Response Status: ${response.statusCode}');
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      print('✅ [UserService] Job details fetched successfully');
+      return right(response.data);
+    } else {
+      print('⚠️ [UserService] Failed: Status ${response.statusCode}');
+      return left(ServerFailure(
+        'Failed to fetch job details',
+        response.statusCode ?? 500,
+      ));
+    }
+  } on DioException catch (e) {
+    print('❌ [UserService] DioException occurred: ${e.message}');
+    return left(_handleDioError(e));
+  } catch (e) {
+    print('❌ [UserService] Unknown error: $e');
+    return left(UnknownFailure(e.toString()));
+  }
+}
+
+
   // Update Notification Setting
-  Future<ApiResult<Map<String, dynamic>>> updateNotification(bool enabled) async {
+  Future<ApiResult<Map<String, dynamic>>> updateNotification(
+    bool enabled,
+  ) async {
     try {
       print('🔔 [UserService] Starting updateNotification API call');
       print('📝 [UserService] Notification enabled: $enabled');
-      print('🌐 [UserService] API endpoint: ${ApiConfig.partnerUpdateNotification}');
-      
+      print(
+        '🌐 [UserService] API endpoint: ${ApiConfig.partnerUpdateNotification}',
+      );
+
       final authToken = await getAuthToken();
       if (authToken == null) {
         return left(const UnauthorizedFailure());
       }
-      
-      final formData = FormData.fromMap({
-        'notification': enabled ? '1' : '0',
-      });
-      
+
+      final formData = FormData.fromMap({'notification': enabled ? '1' : '0'});
+
       final response = await _dio.post(
         ApiConfig.partnerUpdateNotification,
         data: formData,
       );
-      
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         print('✅ [UserService] Notification setting updated successfully');
         return right(response.data);
       } else {
-        return left(ServerFailure('Failed to update notification', response.statusCode ?? 500));
+        return left(
+          ServerFailure(
+            'Failed to update notification',
+            response.statusCode ?? 500,
+          ),
+        );
       }
     } on DioException catch (e) {
       return left(_handleDioError(e));
@@ -875,15 +1042,22 @@ class UserService {
     try {
       print('📄 [UserService] Starting getPageDetail API call');
       print('📝 [UserService] Slug: $slug');
-      print('🌐 [UserService] API endpoint: ${ApiConfig.partnerPageDetail}/$slug');
-      
+      print(
+        '🌐 [UserService] API endpoint: ${ApiConfig.partnerPageDetail}/$slug',
+      );
+
       final response = await _dio.get('${ApiConfig.partnerPageDetail}/$slug');
-      
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         print('✅ [UserService] Page detail retrieved successfully');
         return right(response.data);
       } else {
-        return left(ServerFailure('Failed to get page detail', response.statusCode ?? 500));
+        return left(
+          ServerFailure(
+            'Failed to get page detail',
+            response.statusCode ?? 500,
+          ),
+        );
       }
     } on DioException catch (e) {
       return left(_handleDioError(e));
@@ -897,20 +1071,25 @@ class UserService {
     try {
       print('🏦 [UserService] Starting getAllBankAccounts API call');
       print('🌐 [UserService] API endpoint: ${ApiConfig.partnerBankAll}');
-      
+
       final authToken = await getAuthToken();
       if (authToken == null) {
         return left(const UnauthorizedFailure());
       }
-      
+
       final response = await _dio.get(ApiConfig.partnerBankAll);
-      
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         print('✅ [UserService] Bank accounts retrieved successfully');
         final data = response.data['data'] as List<dynamic>? ?? [];
         return right(data);
       } else {
-        return left(ServerFailure('Failed to get bank accounts', response.statusCode ?? 500));
+        return left(
+          ServerFailure(
+            'Failed to get bank accounts',
+            response.statusCode ?? 500,
+          ),
+        );
       }
     } on DioException catch (e) {
       return left(_handleDioError(e));
@@ -934,29 +1113,34 @@ class UserService {
       print('   - account_number: $accountNumber');
       print('   - ifsc_code: $ifscCode');
       print('🌐 [UserService] API endpoint: ${ApiConfig.partnerBankStore}');
-      
+
       final authToken = await getAuthToken();
       if (authToken == null) {
         return left(const UnauthorizedFailure());
       }
-      
+
       final formData = FormData.fromMap({
         'account_holder_name': accountHolderName,
         'bank': bank,
         'account_number': accountNumber,
         'ifsc_code': ifscCode,
       });
-      
+
       final response = await _dio.post(
         ApiConfig.partnerBankStore,
         data: formData,
       );
-      
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         print('✅ [UserService] Bank account added successfully');
         return right(response.data);
       } else {
-        return left(ServerFailure('Failed to add bank account', response.statusCode ?? 500));
+        return left(
+          ServerFailure(
+            'Failed to add bank account',
+            response.statusCode ?? 500,
+          ),
+        );
       }
     } on DioException catch (e) {
       return left(_handleDioError(e));
@@ -982,12 +1166,12 @@ class UserService {
       print('   - account_number: $accountNumber');
       print('   - ifsc_code: $ifscCode');
       print('🌐 [UserService] API endpoint: ${ApiConfig.partnerBankUpdate}');
-      
+
       final authToken = await getAuthToken();
       if (authToken == null) {
         return left(const UnauthorizedFailure());
       }
-      
+
       final formData = FormData.fromMap({
         'id': id.toString(),
         'account_holder_name': accountHolderName,
@@ -995,17 +1179,22 @@ class UserService {
         'account_number': accountNumber,
         'ifsc_code': ifscCode,
       });
-      
+
       final response = await _dio.post(
         ApiConfig.partnerBankUpdate,
         data: formData,
       );
-      
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         print('✅ [UserService] Bank account updated successfully');
         return right(response.data);
       } else {
-        return left(ServerFailure('Failed to update bank account', response.statusCode ?? 500));
+        return left(
+          ServerFailure(
+            'Failed to update bank account',
+            response.statusCode ?? 500,
+          ),
+        );
       }
     } on DioException catch (e) {
       return left(_handleDioError(e));
@@ -1020,26 +1209,29 @@ class UserService {
       print('🗑️ [UserService] Starting deleteBankAccount API call');
       print('📝 [UserService] Bank account id: $id');
       print('🌐 [UserService] API endpoint: ${ApiConfig.partnerBankDelete}');
-      
+
       final authToken = await getAuthToken();
       if (authToken == null) {
         return left(const UnauthorizedFailure());
       }
-      
-      final formData = FormData.fromMap({
-        'id': id.toString(),
-      });
-      
+
+      final formData = FormData.fromMap({'id': id.toString()});
+
       final response = await _dio.post(
         ApiConfig.partnerBankDelete,
         data: formData,
       );
-      
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         print('✅ [UserService] Bank account deleted successfully');
         return right(response.data);
       } else {
-        return left(ServerFailure('Failed to delete bank account', response.statusCode ?? 500));
+        return left(
+          ServerFailure(
+            'Failed to delete bank account',
+            response.statusCode ?? 500,
+          ),
+        );
       }
     } on DioException catch (e) {
       return left(_handleDioError(e));
@@ -1052,20 +1244,27 @@ class UserService {
   Future<ApiResult<Map<String, dynamic>>> getWeeklyAvailability() async {
     try {
       print('📅 [UserService] Starting getWeeklyAvailability API call');
-      print('🌐 [UserService] API endpoint: ${ApiConfig.partnerGetAvailability}');
-      
+      print(
+        '🌐 [UserService] API endpoint: ${ApiConfig.partnerGetAvailability}',
+      );
+
       final authToken = await getAuthToken();
       if (authToken == null) {
         return left(const UnauthorizedFailure());
       }
-      
+
       final response = await _dio.get(ApiConfig.partnerGetAvailability);
-      
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         print('✅ [UserService] Weekly availability retrieved successfully');
         return right(response.data);
       } else {
-        return left(ServerFailure('Failed to get availability', response.statusCode ?? 500));
+        return left(
+          ServerFailure(
+            'Failed to get availability',
+            response.statusCode ?? 500,
+          ),
+        );
       }
     } on DioException catch (e) {
       return left(_handleDioError(e));
@@ -1075,16 +1274,19 @@ class UserService {
   }
 
   // Update Day Availability
-  Future<ApiResult<Map<String, dynamic>>> updateDayAvailability(String day, bool enabled) async {
+  Future<ApiResult<Map<String, dynamic>>> updateDayAvailability(
+    String day,
+    bool enabled,
+  ) async {
     try {
       print('📅 [UserService] Starting updateDayAvailability API call');
       print('📝 [UserService] Day: $day, Enabled: $enabled');
-      
+
       final authToken = await getAuthToken();
       if (authToken == null) {
         return left(const UnauthorizedFailure());
       }
-      
+
       // Map day names to API endpoints
       final dayEndpoints = {
         'Monday': ApiConfig.partnerAvailabilityMon,
@@ -1095,7 +1297,7 @@ class UserService {
         'Saturday': ApiConfig.partnerAvailabilitySat,
         'Sunday': ApiConfig.partnerAvailabilitySun,
       };
-      
+
       // Map day names to API field names
       final dayFields = {
         'Monday': 'mon',
@@ -1106,30 +1308,30 @@ class UserService {
         'Saturday': 'sat',
         'Sunday': 'sun',
       };
-      
+
       final endpoint = dayEndpoints[day];
       final fieldName = dayFields[day];
-      
+
       if (endpoint == null || fieldName == null) {
         return left(ServerFailure('Invalid day: $day', 400));
       }
-      
+
       print('🌐 [UserService] API endpoint: $endpoint');
-      
-      final formData = FormData.fromMap({
-        fieldName: enabled ? '1' : '0',
-      });
-      
-      final response = await _dio.post(
-        endpoint,
-        data: formData,
-      );
-      
+
+      final formData = FormData.fromMap({fieldName: enabled ? '1' : '0'});
+
+      final response = await _dio.post(endpoint, data: formData);
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         print('✅ [UserService] Day availability updated successfully');
         return right(response.data);
       } else {
-        return left(ServerFailure('Failed to update availability', response.statusCode ?? 500));
+        return left(
+          ServerFailure(
+            'Failed to update availability',
+            response.statusCode ?? 500,
+          ),
+        );
       }
     } on DioException catch (e) {
       return left(_handleDioError(e));
@@ -1144,29 +1346,32 @@ class UserService {
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
         return const ServerFailure('Request timeout', 408);
-        
+
       case DioExceptionType.badResponse:
         final statusCode = error.response?.statusCode ?? 500;
-        final message = error.response?.data['message'] ??
+        final message =
+            error.response?.data['message'] ??
             error.response?.statusMessage ??
             'Server error';
-            
+
         if (statusCode == 401) {
           // Clear preferences on 401 (fire and forget)
           clearAllPreferences().catchError((e) {
-            print('❌ [UserService] Error clearing preferences in _handleDioError: $e');
+            print(
+              '❌ [UserService] Error clearing preferences in _handleDioError: $e',
+            );
           });
           return const UnauthorizedFailure();
         }
-        
+
         return ServerFailure(message, statusCode);
-        
+
       case DioExceptionType.cancel:
         return const UnknownFailure('Request cancelled');
-        
+
       case DioExceptionType.connectionError:
         return const NetworkFailure();
-        
+
       default:
         return UnknownFailure(error.message ?? 'Unknown error');
     }
