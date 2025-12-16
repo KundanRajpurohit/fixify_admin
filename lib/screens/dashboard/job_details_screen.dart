@@ -627,7 +627,7 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Colors.transparent,
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.05),
@@ -642,18 +642,18 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
                       child: ElevatedButton(
                         onPressed: _handleNotInterested,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.grey.shade300,
-                          foregroundColor: Colors.black87,
+                          backgroundColor: Color(0xff9CA3AF),
+                          foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(30),
                           ),
                         ),
                         child: const Text(
                           'Not Interested',
                           style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
@@ -667,14 +667,14 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(30),
                           ),
                         ),
                         child: const Text(
                           'Accept Job',
                           style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
@@ -682,7 +682,7 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
                   ],
                 ),
               )
-            else if (_jobStatus == 'Ongoing')
+            else if (_jobStatus == 'ongoing')
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(

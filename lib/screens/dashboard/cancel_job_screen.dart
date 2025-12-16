@@ -1,13 +1,11 @@
+import 'package:fixify_admin/components/custom_app_bar.dart';
 import 'package:fixify_admin/config/app_colors.dart';
 import 'package:flutter/material.dart';
 
 class CancelJobScreen extends StatefulWidget {
   final Map<String, dynamic> job;
 
-  const CancelJobScreen({
-    super.key,
-    required this.job,
-  });
+  const CancelJobScreen({super.key, required this.job});
 
   @override
   State<CancelJobScreen> createState() => _CancelJobScreenState();
@@ -89,15 +87,12 @@ class _CancelJobScreenState extends State<CancelJobScreen> {
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(30),
                     ),
                   ),
                   child: const Text(
                     'Go to My Jobs',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 ),
               ),
@@ -119,7 +114,8 @@ class _CancelJobScreenState extends State<CancelJobScreen> {
       return;
     }
 
-    if (_selectedReason == 'Other' && _otherReasonController.text.trim().isEmpty) {
+    if (_selectedReason == 'Other' &&
+        _otherReasonController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please provide a reason'),
@@ -137,50 +133,10 @@ class _CancelJobScreenState extends State<CancelJobScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7F8),
+      appBar: CustomAppBar(title: 'Cancel Job', showbackButton: true),
       body: Column(
         children: [
           // Header
-          Container(
-            padding: const EdgeInsets.fromLTRB(16, 50, 16, 16),
-            decoration: BoxDecoration(
-              color: AppColors.secondary.withOpacity(0.4),
-            ),
-            child: Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.black87),
-                  onPressed: () => Navigator.pop(context),
-                ),
-                const Expanded(
-                  child: Text(
-                    'Cancel Job',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                Container(
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                  child: IconButton(
-                    icon: const Icon(
-                      Icons.notifications,
-                      color: Color(0xFF217043),
-                      size: 22,
-                    ),
-                    onPressed: () {
-                      // Handle notifications
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
 
           // Content
           Expanded(
@@ -192,90 +148,142 @@ class _CancelJobScreenState extends State<CancelJobScreen> {
                   const Text(
                     'Please select the reason for cancelling this job. Your feedback helps us improve service quality.',
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: 17,
                       color: Colors.black87,
                       height: 1.5,
                     ),
                   ),
                   const SizedBox(height: 24),
-                  const Text(
-                    'Reasons for Cancellation',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
                   Container(
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.06),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
                     child: Column(
-                      children: _cancellationReasons.map((reason) {
-                        final isSelected = _selectedReason == reason;
-                        final isOther = reason == 'Other';
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Reasons for Cancellation',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Column(
+                            children:
+                                _cancellationReasons.map((reason) {
+                                  final isSelected = _selectedReason == reason;
+                                  final isOther = reason == 'Other';
 
-                        return Column(
-                          children: [
-                            RadioListTile<String>(
-                              title: Text(
-                                reason,
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                              value: reason,
-                              groupValue: _selectedReason,
-                              onChanged: (value) {
-                                setState(() {
-                                  _selectedReason = value;
-                                });
-                              },
-                              activeColor: AppColors.primary,
-                            ),
-                            if (isOther && isSelected)
-                              Padding(
-                                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                                child: TextField(
-                                  controller: _otherReasonController,
-                                  decoration: InputDecoration(
-                                    hintText: 'Write Reason...',
-                                    hintStyle: TextStyle(
-                                      color: Colors.grey.shade400,
-                                    ),
-                                    filled: true,
-                                    fillColor: Colors.grey.shade50,
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                      borderSide: BorderSide(
-                                        color: Colors.grey.shade300,
+                                  return Column(
+                                    children: [
+                                      RadioListTile<String>(
+                                        title: Text(
+                                          reason,
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.black87,
+                                          ),
+                                        ),
+                                        value: reason,
+                                        groupValue: _selectedReason,
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _selectedReason = value;
+                                          });
+                                        },
+                                        activeColor: AppColors.primary,
                                       ),
-                                    ),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                      borderSide: BorderSide(
-                                        color: Colors.grey.shade300,
-                                      ),
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                      borderSide: const BorderSide(
-                                        color: AppColors.primary,
-                                        width: 2,
-                                      ),
-                                    ),
-                                  ),
-                                  maxLines: 3,
-                                ),
-                              ),
-                            if (!isOther || !isSelected)
-                              const Divider(height: 1),
-                          ],
-                        );
-                      }).toList(),
+                                      if (isOther && isSelected)
+                                        Padding(
+                                          padding: const EdgeInsets.fromLTRB(
+                                            16,
+                                            0,
+                                            16,
+                                            16,
+                                          ),
+                                          child: TextField(
+                                            controller: _otherReasonController,
+                                            decoration: InputDecoration(
+                                              hintText: 'Write Reason...',
+                                              hintStyle: TextStyle(
+                                                color: Colors.grey.shade400,
+                                              ),
+                                              filled: true,
+                                              fillColor: Colors.grey.shade50,
+                                              border: OutlineInputBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                                borderSide: BorderSide(
+                                                  color: Colors.grey.shade300,
+                                                ),
+                                              ),
+                                              enabledBorder: OutlineInputBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                                borderSide: BorderSide(
+                                                  color: Colors.grey.shade300,
+                                                ),
+                                              ),
+                                              focusedBorder: OutlineInputBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                                borderSide: const BorderSide(
+                                                  color: AppColors.primary,
+                                                  width: 2,
+                                                ),
+                                              ),
+                                            ),
+                                            maxLines: 3,
+                                          ),
+                                        ),
+                                    ],
+                                  );
+                                }).toList(),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 32),
+                  Container(
+                    decoration: BoxDecoration(color: Colors.transparent),
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: ElevatedButton(
+                        onPressed: _handleSubmit,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                        ),
+                        child: const Text(
+                          'Submit & Cancel Job',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -284,48 +292,8 @@ class _CancelJobScreenState extends State<CancelJobScreen> {
           ),
 
           // Submit Button
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, -2),
-                ),
-              ],
-            ),
-            child: SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton(
-                onPressed: _handleSubmit,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Text(
-                  'Submit & Cancel Job',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
-          ),
         ],
       ),
     );
   }
 }
-
-
-
-
-
-
