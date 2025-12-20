@@ -97,6 +97,68 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
     }
   }
 
+  Future<void> _handleAcceptJob() async {
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      final service = ref.read(userServiceProvider);
+      
+      // Step 1: Accept job
+      final acceptResult = await service.acceptJob(widget.token);
+      
+      acceptResult.fold(
+        (failure) {
+          Navigator.of(context).pop(); // Close loading
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(failure.message),
+              backgroundColor: Colors.red,
+            ),
+          );
+        },
+        (acceptData) async {
+          // Step 2: Assign job
+          final assignResult = await service.assignJob(widget.token);
+          
+          assignResult.fold(
+            (failure) {
+              Navigator.of(context).pop(); // Close loading
+              if (!mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(failure.message),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            },
+            (assignData) {
+              Navigator.of(context).pop(); // Close loading
+              if (!mounted) return;
+              
+              // Show success dialog
+              _showAcceptJobDialog();
+            },
+          );
+        },
+      );
+    } catch (e) {
+      Navigator.of(context).pop(); // Close loading
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   void _showAcceptJobDialog() {
     showDialog(
       context: context,
@@ -263,125 +325,180 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
         serviceType.contains('hour');
   }
 
-  void _showOTPDialog() {
+  Future<void> _handleStartJob() async {
+    // Step 1: Call assign-job API
     showDialog(
       context: context,
       barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      final service = ref.read(userServiceProvider);
+      final assignResult = await service.assignJob(widget.token);
+
+      assignResult.fold(
+        (failure) {
+          Navigator.of(context).pop(); // Close loading
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(failure.message),
+              backgroundColor: Colors.red,
+            ),
+          );
+        },
+        (data) {
+          Navigator.of(context).pop(); // Close loading
+          if (!mounted) return;
+          
+          // Step 2: Show OTP bottom sheet
+          _showOTPBottomSheet(data['data']?['mobile'] ?? jobDetails?['UserMobile'] ?? '');
+        },
+      );
+    } catch (e) {
+      Navigator.of(context).pop(); // Close loading
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  void _showOTPBottomSheet(String mobile) {
+    // Clear previous OTP inputs
+    for (var controller in _otpControllers) {
+      controller.clear();
+    }
+    
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      isDismissible: false,
       builder: (BuildContext context) {
         return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return Dialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+          builder: (context, setSheetState) {
+            return Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
               ),
-              child: Container(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Enter Customer OTP',
-                          style: TextStyle(
-                            fontSize: 20,
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+                left: 24,
+                right: 24,
+                top: 24,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Enter Customer OTP',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Ask the customer to show the OTP and enter it below to start the job.',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.black87,
+                      height: 1.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: List.generate(4, (index) {
+                      return SizedBox(
+                        width: 50,
+                        child: TextField(
+                          controller: _otpControllers[index],
+                          focusNode: _otpFocusNodes[index],
+                          textAlign: TextAlign.center,
+                          keyboardType: TextInputType.number,
+                          maxLength: 1,
+                          style: const TextStyle(
+                            fontSize: 24,
                             fontWeight: FontWeight.bold,
-                            color: Colors.black87,
                           ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () => Navigator.pop(context),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Ask the customer to show the OTP and enter it below to start the job.',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.black87,
-                        height: 1.5,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 24),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: List.generate(4, (index) {
-                        return SizedBox(
-                          width: 50,
-                          child: TextField(
-                            controller: _otpControllers[index],
-                            focusNode: _otpFocusNodes[index],
-                            textAlign: TextAlign.center,
-                            keyboardType: TextInputType.number,
-                            maxLength: 1,
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
+                          decoration: InputDecoration(
+                            counterText: '',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                            decoration: InputDecoration(
-                              counterText: '',
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
+                          ),
+                          onChanged: (value) {
+                            if (value.isNotEmpty && index < 3) {
+                              _otpFocusNodes[index + 1].requestFocus();
+                            }
+                          },
+                        ),
+                      );
+                    }),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Resend via SMS in 00:57',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        final otp = _otpControllers.map((c) => c.text).join();
+                        if (otp.length == 4) {
+                          Navigator.pop(context); // Close bottom sheet
+                          await _handleVerifyOtp(otp, mobile);
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Please enter complete OTP'),
+                              backgroundColor: Colors.red,
                             ),
-                            onChanged: (value) {
-                              if (value.isNotEmpty && index < 3) {
-                                _otpFocusNodes[index + 1].requestFocus();
-                              }
-                            },
-                          ),
-                        );
-                      }),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Resend via SMS in 00:57',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 48,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          final otp = _otpControllers.map((c) => c.text).join();
-                          if (otp.length == 4) {
-                            Navigator.pop(context);
-                            _handleStartJob();
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Please enter complete OTP'),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Text(
-                          'Verify & Start Job',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
+                      ),
+                      child: const Text(
+                        'Verify & Start Job',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 24),
+                ],
               ),
             );
           },
@@ -390,16 +507,71 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
     );
   }
 
-  void _handleStartJob() {
-    setState(() {
-      _jobStatus = 'Ongoing';
-      _isTimerRunning = true;
-      _elapsedTime = Duration.zero;
-    });
-    if (_isHourlyService) {
-      _startTimer();
+  Future<void> _handleVerifyOtp(String otp, String mobile) async {
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      final service = ref.read(userServiceProvider);
+      final result = await service.verifyJobOtp(
+        jobToken: widget.token,
+        mobile: mobile,
+        otp: otp,
+      );
+
+      result.fold(
+        (failure) {
+          Navigator.of(context).pop(); // Close loading
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(failure.message),
+              backgroundColor: Colors.red,
+            ),
+          );
+        },
+        (data) {
+          Navigator.of(context).pop(); // Close loading
+          if (!mounted) return;
+          
+          // Update job status to ongoing
+          setState(() {
+            _jobStatus = 'ongoing';
+            _isTimerRunning = true;
+            _elapsedTime = Duration.zero;
+            if (jobDetails != null) {
+              jobDetails!['work_status'] = 'ongoing';
+            }
+          });
+          
+          // Start timer
+          _startTimer();
+          
+          // Show success dialog
+          _showJobStartedDialog();
+          
+          // Refresh job details after a delay to get updated status
+          Future.delayed(const Duration(seconds: 1), () {
+            if (mounted) {
+              _fetchJobDetails();
+            }
+          });
+        },
+      );
+    } catch (e) {
+      Navigator.of(context).pop(); // Close loading
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
-    _showJobStartedDialog();
   }
 
   void _showJobStartedDialog() {
@@ -464,20 +636,30 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
                           color: Colors.black87,
                         ),
                       ),
-                      // const Spacer(),
                       SizedBox(width: 10.w),
-                      Flexible(
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFF6E5),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: Colors.amber.shade200,
+                            width: 1,
+                          ),
+                        ),
                         child: Text(
                           _formatDuration(_elapsedTime),
                           style: TextStyle(
                             fontSize: 10.sp,
-                            // fontWeight: FontWeight.bold,
-                            color: AppColors.primary,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF704B21),
                           ),
-                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const Spacer(),
                       Switch(
                         value: _isTimerRunning,
                         onChanged: (value) {
@@ -503,7 +685,8 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.of(context).pop();
-                    setState(() {});
+                    // Refresh job details to show updated status
+                    _fetchJobDetails();
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
@@ -570,7 +753,6 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
                 ),
                 color: Colors.white,
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
                       'Running Timer',
@@ -580,14 +762,30 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
                         color: Colors.black87,
                       ),
                     ),
-                    Text(
-                      _formatDuration(_elapsedTime),
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
+                    const SizedBox(width: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFF6E5),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: Colors.amber.shade200,
+                          width: 1,
+                        ),
+                      ),
+                      child: Text(
+                        _formatDuration(_elapsedTime),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF704B21),
+                        ),
                       ),
                     ),
+                    const Spacer(),
                     Switch(
                       value: _isTimerRunning,
                       onChanged: (value) {
@@ -624,6 +822,7 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
 
             // Action Buttons
             if (widget.isNewJob)
+              // New Job Request - Show Accept Job button
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -636,123 +835,120 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
                     ),
                   ],
                 ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: _handleNotInterested,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Color(0xff9CA3AF),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                        ),
-                        child: const Text(
-                          'Not Interested',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: _showAcceptJobDialog,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                        ),
-                        child: const Text(
-                          'Accept Job',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              )
-            else if (_jobStatus == 'ongoing')
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, -2),
-                    ),
-                  ],
-                ),
                 child: SizedBox(
                   width: double.infinity,
                   height: 48,
                   child: ElevatedButton(
-                    onPressed: _handleCompleteJob,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Text(
-                      'Complete Job',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ),
-              )
-            else if (_jobStatus == 'Upcoming')
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Color(0xffF2F6FB),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, -2),
-                    ),
-                  ],
-                ),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: ElevatedButton(
-                    onPressed: _showOTPDialog,
+                    onPressed: _handleAcceptJob,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(35),
+                        borderRadius: BorderRadius.circular(30),
                       ),
                     ),
                     child: const Text(
-                      'Start Job',
+                      'Accept Job',
                       style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
                 ),
+              )
+            else if (!widget.isNewJob)
+              // Assigned Job - Show buttons based on status
+              Builder(
+                builder: (context) {
+                  final status = _jobStatus.toLowerCase();
+                  
+                  // Past or Cancelled - No button
+                  if (status == 'past' || status == 'cancelled') {
+                    return const SizedBox.shrink(); // No button
+                  }
+                  
+                  // Ongoing - Show Complete Job button
+                  if (status == 'ongoing') {
+                    return Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, -2),
+                          ),
+                        ],
+                      ),
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 48,
+                        child: ElevatedButton(
+                          onPressed: _handleCompleteJob,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.orange,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text(
+                            'Complete Job',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+                  
+                  // Upcoming - Show Start Job button
+                  if (status == 'upcoming') {
+                    return Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Color(0xffF2F6FB),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, -2),
+                          ),
+                        ],
+                      ),
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 48,
+                        child: ElevatedButton(
+                          onPressed: _handleStartJob,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(35),
+                            ),
+                          ),
+                          child: const Text(
+                            'Start Job',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+                  
+                  // Default - No button
+                  return const SizedBox.shrink();
+                },
               ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
           ],
         ),
       ),
@@ -819,7 +1015,7 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
           _buildDetailRow(
             icon: 'assets/images/serviceType.png',
             label: 'Service Type',
-            value: jobDetails?['jobType'] ?? "service",
+            value: jobDetails?['ServiceType'] ?? jobDetails?['jobType'] ?? "service",
           ),
           const Divider(height: 24),
           _buildDetailRow(
@@ -893,7 +1089,15 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
   }
 
   Widget _buildJobNotesCard() {
+    final message = jobDetails?['message'];
+    
+    // Only show job notes if message is not null and not empty
+    if (message == null || message.toString().isEmpty) {
+      return const SizedBox.shrink();
+    }
+    
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -918,9 +1122,9 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          const Text(
-            'My home number is 203 — please ring the bell at the door.',
-            style: TextStyle(fontSize: 14, color: Colors.black87, height: 1.5),
+          Text(
+            message.toString(),
+            style: const TextStyle(fontSize: 14, color: Colors.black87, height: 1.5),
           ),
         ],
       ),

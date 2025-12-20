@@ -284,6 +284,7 @@ class _CompleteJobScreenState extends State<CompleteJobScreen> {
   Widget _buildUploadPhotosCard() {
     return Container(
       padding: const EdgeInsets.all(16),
+      width: double.infinity,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -369,6 +370,7 @@ class _CompleteJobScreenState extends State<CompleteJobScreen> {
               padding: const EdgeInsets.all(8.0),
               child: Container(
                 height: 120,
+                width: double.infinity,
                 decoration: BoxDecoration(
                   border: Border.all(
                     color: Colors.grey.shade300,
@@ -457,6 +459,8 @@ class _CompleteJobScreenState extends State<CompleteJobScreen> {
     );
   }
 }
+
+
 
 
 

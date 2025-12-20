@@ -68,13 +68,31 @@ void main() async {
         '/partner/availability/fri',
         '/partner/availability/sat',
         '/partner/availability/sun',
+        '/partner/all-jobs',
+        '/partner/upcoming-jobs',
+        '/partner/cancelled-jobs',
+        '/partner/ongoing-jobs',
+        '/partner/past-jobs',
+        '/partner/assign-upcoming-jobs',
+        '/partner/accept-job',
+        '/partner/assign-job',
+        '/partner/verify-job-otp',
+        '/partner/job-completed',
+        '/partner/submit-job-report',
+        '/partner/rating-customer',
+        '/partner/single-job-details',
+        '/partner/deshbord',
+        '/partner/go-online',
+        '/partner/get-go-online',
+        '/partner/get-data-by-custom-date',
         '/add-to-cart',
         '/get-cart-data',
       ],
     ),
   );
   
-  // Add unauthorized interceptor to handle 401 errors
+  // Add unauthorized interceptor LAST to handle 401 errors from all endpoints
+  // This ensures it catches 401 errors after all other interceptors have processed
   dio.interceptors.add(
     UnauthorizedInterceptor(navigatorKey: navigatorKey),
   );

@@ -995,6 +995,346 @@ class UserService {
   }
 }
 
+  // Get Upcoming Jobs
+  Future<ApiResult<Map<String, dynamic>>> getUpcomingJobs() async {
+    try {
+      print('📦 [UserService] Starting getUpcomingJobs API call');
+      final authToken = await getAuthToken();
+      if (authToken == null) {
+        return left(const UnauthorizedFailure());
+      }
+
+      final response = await _dio.get(
+        ApiConfig.partnerUpcomingJobs,
+        options: Options(headers: {'Authorization': 'Bearer $authToken'}),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return right(response.data);
+      } else {
+        return left(ServerFailure('Failed to fetch upcoming jobs', response.statusCode ?? 500));
+      }
+    } on DioException catch (e) {
+      return left(_handleDioError(e));
+    } catch (e) {
+      return left(UnknownFailure(e.toString()));
+    }
+  }
+
+  // Get Cancelled Jobs
+  Future<ApiResult<Map<String, dynamic>>> getCancelledJobs() async {
+    try {
+      print('📦 [UserService] Starting getCancelledJobs API call');
+      final authToken = await getAuthToken();
+      if (authToken == null) {
+        return left(const UnauthorizedFailure());
+      }
+
+      final response = await _dio.get(
+        ApiConfig.partnerCancelledJobs,
+        options: Options(headers: {'Authorization': 'Bearer $authToken'}),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return right(response.data);
+      } else {
+        return left(ServerFailure('Failed to fetch cancelled jobs', response.statusCode ?? 500));
+      }
+    } on DioException catch (e) {
+      return left(_handleDioError(e));
+    } catch (e) {
+      return left(UnknownFailure(e.toString()));
+    }
+  }
+
+  // Get Ongoing Jobs
+  Future<ApiResult<Map<String, dynamic>>> getOngoingJobs() async {
+    try {
+      print('📦 [UserService] Starting getOngoingJobs API call');
+      final authToken = await getAuthToken();
+      if (authToken == null) {
+        return left(const UnauthorizedFailure());
+      }
+
+      final response = await _dio.get(
+        ApiConfig.partnerOngoingJobs,
+        options: Options(headers: {'Authorization': 'Bearer $authToken'}),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return right(response.data);
+      } else {
+        return left(ServerFailure('Failed to fetch ongoing jobs', response.statusCode ?? 500));
+      }
+    } on DioException catch (e) {
+      return left(_handleDioError(e));
+    } catch (e) {
+      return left(UnknownFailure(e.toString()));
+    }
+  }
+
+  // Get Past Jobs
+  Future<ApiResult<Map<String, dynamic>>> getPastJobs() async {
+    try {
+      print('📦 [UserService] Starting getPastJobs API call');
+      final authToken = await getAuthToken();
+      if (authToken == null) {
+        return left(const UnauthorizedFailure());
+      }
+
+      final response = await _dio.get(
+        ApiConfig.partnerPastJobs,
+        options: Options(headers: {'Authorization': 'Bearer $authToken'}),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return right(response.data);
+      } else {
+        return left(ServerFailure('Failed to fetch past jobs', response.statusCode ?? 500));
+      }
+    } on DioException catch (e) {
+      return left(_handleDioError(e));
+    } catch (e) {
+      return left(UnknownFailure(e.toString()));
+    }
+  }
+
+  // Get Assign Upcoming Jobs (All Assigned Jobs)
+  Future<ApiResult<Map<String, dynamic>>> getAssignUpcomingJobs() async {
+    try {
+      print('📦 [UserService] Starting getAssignUpcomingJobs API call');
+      final authToken = await getAuthToken();
+      if (authToken == null) {
+        return left(const UnauthorizedFailure());
+      }
+
+      final response = await _dio.get(
+        ApiConfig.partnerAssignUpcomingJobs,
+        options: Options(headers: {'Authorization': 'Bearer $authToken'}),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return right(response.data);
+      } else {
+        return left(ServerFailure('Failed to fetch assigned jobs', response.statusCode ?? 500));
+      }
+    } on DioException catch (e) {
+      return left(_handleDioError(e));
+    } catch (e) {
+      return left(UnknownFailure(e.toString()));
+    }
+  }
+
+  // Accept Job
+  Future<ApiResult<Map<String, dynamic>>> acceptJob(String jobToken) async {
+    try {
+      print('✅ [UserService] Starting acceptJob API call');
+      final authToken = await getAuthToken();
+      if (authToken == null) {
+        return left(const UnauthorizedFailure());
+      }
+
+      final formData = FormData.fromMap({'job_token': jobToken});
+
+      final response = await _dio.post(
+        ApiConfig.partnerAcceptJob,
+        data: formData,
+        options: Options(headers: {'Authorization': 'Bearer $authToken'}),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return right(response.data);
+      } else {
+        return left(ServerFailure('Failed to accept job', response.statusCode ?? 500));
+      }
+    } on DioException catch (e) {
+      return left(_handleDioError(e));
+    } catch (e) {
+      return left(UnknownFailure(e.toString()));
+    }
+  }
+
+  // Assign Job
+  Future<ApiResult<Map<String, dynamic>>> assignJob(String jobToken) async {
+    try {
+      print('📋 [UserService] Starting assignJob API call');
+      final authToken = await getAuthToken();
+      if (authToken == null) {
+        return left(const UnauthorizedFailure());
+      }
+
+      final formData = FormData.fromMap({'job_token': jobToken});
+
+      final response = await _dio.post(
+        ApiConfig.partnerAssignJob,
+        data: formData,
+        options: Options(headers: {'Authorization': 'Bearer $authToken'}),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return right(response.data);
+      } else {
+        return left(ServerFailure('Failed to assign job', response.statusCode ?? 500));
+      }
+    } on DioException catch (e) {
+      return left(_handleDioError(e));
+    } catch (e) {
+      return left(UnknownFailure(e.toString()));
+    }
+  }
+
+  // Verify Job OTP
+  Future<ApiResult<Map<String, dynamic>>> verifyJobOtp({
+    required String jobToken,
+    required String mobile,
+    required String otp,
+  }) async {
+    try {
+      print('🔐 [UserService] Starting verifyJobOtp API call');
+      final authToken = await getAuthToken();
+      if (authToken == null) {
+        return left(const UnauthorizedFailure());
+      }
+
+      final formData = FormData.fromMap({
+        'job_token': jobToken,
+        'mobile': mobile,
+        'otp': otp,
+      });
+
+      final response = await _dio.post(
+        ApiConfig.partnerVerifyJobOtp,
+        data: formData,
+        options: Options(headers: {'Authorization': 'Bearer $authToken'}),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return right(response.data);
+      } else {
+        return left(ServerFailure('Failed to verify OTP', response.statusCode ?? 500));
+      }
+    } on DioException catch (e) {
+      return left(_handleDioError(e));
+    } catch (e) {
+      return left(UnknownFailure(e.toString()));
+    }
+  }
+
+  // Job Completed
+  Future<ApiResult<Map<String, dynamic>>> jobCompleted(String jobToken) async {
+    try {
+      print('✅ [UserService] Starting jobCompleted API call');
+      final authToken = await getAuthToken();
+      if (authToken == null) {
+        return left(const UnauthorizedFailure());
+      }
+
+      final formData = FormData.fromMap({'job_token': jobToken});
+
+      final response = await _dio.post(
+        ApiConfig.partnerJobCompleted,
+        data: formData,
+        options: Options(headers: {'Authorization': 'Bearer $authToken'}),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return right(response.data);
+      } else {
+        return left(ServerFailure('Failed to complete job', response.statusCode ?? 500));
+      }
+    } on DioException catch (e) {
+      return left(_handleDioError(e));
+    } catch (e) {
+      return left(UnknownFailure(e.toString()));
+    }
+  }
+
+  // Submit Job Report
+  Future<ApiResult<Map<String, dynamic>>> submitJobReport({
+    required String jobToken,
+    required String prNotes,
+    required List<File> prWorkImgs,
+  }) async {
+    try {
+      print('📝 [UserService] Starting submitJobReport API call');
+      final authToken = await getAuthToken();
+      if (authToken == null) {
+        return left(const UnauthorizedFailure());
+      }
+
+      final formData = FormData.fromMap({
+        'job_token': jobToken,
+        'pr_notes': prNotes,
+      });
+
+      // Add multiple images
+      for (var img in prWorkImgs) {
+        formData.files.add(
+          MapEntry(
+            'pr_work_imgs[]',
+            await MultipartFile.fromFile(
+              img.path,
+              filename: img.path.split(Platform.pathSeparator).last,
+            ),
+          ),
+        );
+      }
+
+      final response = await _dio.post(
+        ApiConfig.partnerSubmitJobReport,
+        data: formData,
+        options: Options(headers: {'Authorization': 'Bearer $authToken'}),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return right(response.data);
+      } else {
+        return left(ServerFailure('Failed to submit job report', response.statusCode ?? 500));
+      }
+    } on DioException catch (e) {
+      return left(_handleDioError(e));
+    } catch (e) {
+      return left(UnknownFailure(e.toString()));
+    }
+  }
+
+  // Rating Customer
+  Future<ApiResult<Map<String, dynamic>>> ratingCustomer({
+    required String jobToken,
+    required String review,
+    required String comment,
+  }) async {
+    try {
+      print('⭐ [UserService] Starting ratingCustomer API call');
+      final authToken = await getAuthToken();
+      if (authToken == null) {
+        return left(const UnauthorizedFailure());
+      }
+
+      final formData = FormData.fromMap({
+        'job_token': jobToken,
+        'review': review,
+        'comment': comment,
+      });
+
+      final response = await _dio.post(
+        ApiConfig.partnerRatingCustomer,
+        data: formData,
+        options: Options(headers: {'Authorization': 'Bearer $authToken'}),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return right(response.data);
+      } else {
+        return left(ServerFailure('Failed to submit rating', response.statusCode ?? 500));
+      }
+    } on DioException catch (e) {
+      return left(_handleDioError(e));
+    } catch (e) {
+      return left(UnknownFailure(e.toString()));
+    }
+  }
+
 
   // Update Notification Setting
   Future<ApiResult<Map<String, dynamic>>> updateNotification(
@@ -1332,6 +1672,126 @@ class UserService {
             response.statusCode ?? 500,
           ),
         );
+      }
+    } on DioException catch (e) {
+      return left(_handleDioError(e));
+    } catch (e) {
+      return left(UnknownFailure(e.toString()));
+    }
+  }
+
+  // Get Dashboard Stats
+  Future<ApiResult<Map<String, dynamic>>> getDashboardStats() async {
+    try {
+      print('📊 [UserService] Starting getDashboardStats API call');
+      final authToken = await getAuthToken();
+      if (authToken == null) {
+        return left(const UnauthorizedFailure());
+      }
+
+      final response = await _dio.get(
+        ApiConfig.partnerDashboard,
+        options: Options(headers: {'Authorization': 'Bearer $authToken'}),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print('✅ [UserService] Dashboard stats fetched successfully');
+        return right(response.data);
+      } else {
+        return left(ServerFailure('Failed to fetch dashboard stats', response.statusCode ?? 500));
+      }
+    } on DioException catch (e) {
+      return left(_handleDioError(e));
+    } catch (e) {
+      return left(UnknownFailure(e.toString()));
+    }
+  }
+
+  // Go Online/Offline
+  Future<ApiResult<Map<String, dynamic>>> goOnline(bool isOnline) async {
+    try {
+      print('🌐 [UserService] Starting goOnline API call');
+      final authToken = await getAuthToken();
+      if (authToken == null) {
+        return left(const UnauthorizedFailure());
+      }
+
+      final formData = FormData.fromMap({
+        'go_online': isOnline ? '1' : '0',
+      });
+
+      final response = await _dio.post(
+        ApiConfig.partnerGoOnline,
+        data: formData,
+        options: Options(headers: {'Authorization': 'Bearer $authToken'}),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print('✅ [UserService] Go online status updated successfully');
+        return right(response.data);
+      } else {
+        return left(ServerFailure('Failed to update online status', response.statusCode ?? 500));
+      }
+    } on DioException catch (e) {
+      return left(_handleDioError(e));
+    } catch (e) {
+      return left(UnknownFailure(e.toString()));
+    }
+  }
+
+  // Get Go Online Status
+  Future<ApiResult<Map<String, dynamic>>> getGoOnlineStatus() async {
+    try {
+      print('📡 [UserService] Starting getGoOnlineStatus API call');
+      final authToken = await getAuthToken();
+      if (authToken == null) {
+        return left(const UnauthorizedFailure());
+      }
+
+      final response = await _dio.get(
+        ApiConfig.partnerGetGoOnline,
+        options: Options(headers: {'Authorization': 'Bearer $authToken'}),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print('✅ [UserService] Go online status fetched successfully');
+        return right(response.data);
+      } else {
+        return left(ServerFailure('Failed to fetch online status', response.statusCode ?? 500));
+      }
+    } on DioException catch (e) {
+      return left(_handleDioError(e));
+    } catch (e) {
+      return left(UnknownFailure(e.toString()));
+    }
+  }
+
+  // Get Data by Custom Date Range
+  Future<ApiResult<Map<String, dynamic>>> getDataByCustomDate({
+    required String startDate,
+    required String endDate,
+  }) async {
+    try {
+      print('📅 [UserService] Starting getDataByCustomDate API call');
+      final authToken = await getAuthToken();
+      if (authToken == null) {
+        return left(const UnauthorizedFailure());
+      }
+
+      final response = await _dio.get(
+        ApiConfig.partnerGetDataByCustomDate,
+        queryParameters: {
+          'start_date': startDate,
+          'end_date': endDate,
+        },
+        options: Options(headers: {'Authorization': 'Bearer $authToken'}),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print('✅ [UserService] Custom date data fetched successfully');
+        return right(response.data);
+      } else {
+        return left(ServerFailure('Failed to fetch custom date data', response.statusCode ?? 500));
       }
     } on DioException catch (e) {
       return left(_handleDioError(e));

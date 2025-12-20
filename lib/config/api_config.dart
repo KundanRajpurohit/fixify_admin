@@ -26,7 +26,18 @@ class ApiConfig {
 
   //Jobs endpoints
   static const String partnerAllJobs = '/partner/all-jobs';
- static String partnerJobDetails(String token) =>
+  static const String partnerUpcomingJobs = '/partner/upcoming-jobs';
+  static const String partnerCancelledJobs = '/partner/cancelled-jobs';
+  static const String partnerOngoingJobs = '/partner/ongoing-jobs';
+  static const String partnerPastJobs = '/partner/past-jobs';
+  static const String partnerAssignUpcomingJobs = '/partner/assign-upcoming-jobs';
+  static const String partnerAcceptJob = '/partner/accept-job';
+  static const String partnerAssignJob = '/partner/assign-job';
+  static const String partnerVerifyJobOtp = '/partner/verify-job-otp';
+  static const String partnerJobCompleted = '/partner/job-completed';
+  static const String partnerSubmitJobReport = '/partner/submit-job-report';
+  static const String partnerRatingCustomer = '/partner/rating-customer';
+  static String partnerJobDetails(String token) =>
     '/partner/single-job-details/$token';
 
 
@@ -40,6 +51,12 @@ class ApiConfig {
   static const String partnerAvailabilityFri = '/partner/availability/fri';
   static const String partnerAvailabilitySat = '/partner/availability/sat';
   static const String partnerAvailabilitySun = '/partner/availability/sun';
+
+  // Dashboard endpoints
+  static const String partnerDashboard = '/partner/deshbord';
+  static const String partnerGoOnline = '/partner/go-online';
+  static const String partnerGetGoOnline = '/partner/get-go-online';
+  static const String partnerGetDataByCustomDate = '/partner/get-data-by-custom-date';
 
   // Google Places API
   static const String googlePlacesApiKey =
