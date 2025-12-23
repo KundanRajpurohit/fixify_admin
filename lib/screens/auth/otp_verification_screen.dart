@@ -1,8 +1,10 @@
 import 'package:fixify_admin/screens/auth/map_screen.dart';
 import 'package:fixify_admin/screens/auth/set_password_screen.dart';
 import 'package:fixify_admin/screens/dashboard/home_screen.dart';
+import 'package:fixify_admin/screens/dashboard/terms_of_service_screen.dart';
 import 'package:fixify_admin/screens/onboarding/location_permission_screen.dart';
 import 'package:fixify_admin/services/user_service.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:page_transition/page_transition.dart';
@@ -633,19 +635,30 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
                   // Terms and conditions
                   RichText(
                     textAlign: TextAlign.center,
-                    text: const TextSpan(
-                      style: TextStyle(fontSize: 14, color: Colors.black87),
+                    text: TextSpan(
+                      style: const TextStyle(fontSize: 14, color: Colors.black87),
                       children: [
-                        TextSpan(
+                        const TextSpan(
                           text:
                               'By verifying your phone number, you accept our ',
                         ),
                         TextSpan(
                           text: 'Term and Conditions',
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: Color(0xFF217043),
                             fontWeight: FontWeight.w600,
+                            decoration: TextDecoration.underline,
                           ),
+                          recognizer: TapGestureRecognizer()
+                            ..onTap = () {
+                              Navigator.push(
+                                context,
+                                PageTransition(
+                                  type: PageTransitionType.rightToLeft,
+                                  child: const TermsOfServiceScreen(),
+                                ),
+                              );
+                            },
                         ),
                       ],
                     ),
