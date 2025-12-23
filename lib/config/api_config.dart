@@ -59,6 +59,20 @@ class ApiConfig {
   static const String partnerGetDataByCustomDate = '/partner/get-data-by-custom-date';
   static const String partnerVendorList = '/partner/vendor-list';
 
+  // Earnings and Transaction endpoints
+  static const String partnerBookingTransactionDaily = '/partner/booking-transaction-daily';
+  static const String partnerBookingTransactionWeekly = '/partner/booking-transaction-weekly';
+  static const String partnerBookingTransactionMonth = '/partner/booking-transaction-month';
+  static const String partnerTransactionHistory = '/partner/transaction-history';
+
+  // Withdrawal endpoints
+  static const String partnerCheckoutIndex = '/partner/checkout-index';
+  static const String partnerCheckoutStore = '/partner/checkout-store';
+
+  // Notification endpoints
+  static const String partnerNotifications = '/partner/notifications';
+  static const String partnerMarkNotificationAsRead = '/partner/notifications/mark-as-read';
+
 
 
   // Google Places API

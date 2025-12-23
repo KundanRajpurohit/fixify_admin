@@ -1,44 +1,34 @@
 import 'package:fixify_admin/components/custom_app_bar.dart';
 import 'package:fixify_admin/config/app_colors.dart';
 import 'package:fixify_admin/models/bank_model.dart';
+import 'package:fixify_admin/models/earnings_model.dart';
+import 'package:fixify_admin/providers/location_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class WithdrawEarningsScreen extends StatefulWidget {
+class WithdrawEarningsScreen extends ConsumerStatefulWidget {
   const WithdrawEarningsScreen({super.key});
 
   @override
-  State<WithdrawEarningsScreen> createState() => _WithdrawEarningsScreenState();
+  ConsumerState<WithdrawEarningsScreen> createState() => _WithdrawEarningsScreenState();
 }
 
-class _WithdrawEarningsScreenState extends State<WithdrawEarningsScreen> {
+class _WithdrawEarningsScreenState extends ConsumerState<WithdrawEarningsScreen> {
   final _amountController = TextEditingController();
-  String? _selectedBankAccount;
+  String? _selectedBankAccountId;
   bool _isSubmitting = false;
+  bool _isLoading = true;
+  String? _errorMessage;
 
-  // Sample bank accounts
-  final List<Map<String, dynamic>> _bankAccounts = [
-    {
-      'id': '1',
-      'bankName': 'HDFC Bank',
-      'accountHolderName': 'Dhaval Paghadal',
-      'accountNumber': '12345678904421',
-      'ifscCode': 'HDFC00017782',
-    },
-    {
-      'id': '2',
-      'bankName': 'ICICI Bank',
-      'accountHolderName': 'Dhaval Paghadal',
-      'accountNumber': '12345678904421',
-      'ifscCode': 'ICIC0000785',
-    },
-  ];
+  CheckoutIndexResponse? _checkoutData;
+  int? _minimumWithdrawal;
+  int? _maximumWithdrawal;
 
   @override
   void initState() {
     super.initState();
-    _selectedBankAccount =
-        _bankAccounts.isNotEmpty ? _bankAccounts[0]['id'] : null;
+    _loadCheckoutData();
   }
 
   @override
@@ -47,11 +37,77 @@ class _WithdrawEarningsScreenState extends State<WithdrawEarningsScreen> {
     super.dispose();
   }
 
+  Future<void> _loadCheckoutData() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final userService = ref.read(userServiceProvider);
+      final result = await userService.getCheckoutIndex();
+
+      result.fold(
+        (failure) {
+          if (mounted) {
+            setState(() {
+              _errorMessage = failure.message;
+              _isLoading = false;
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(failure.message),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        },
+        (data) {
+          if (mounted) {
+            setState(() {
+              _checkoutData = data;
+              _isLoading = false;
+              if (data.bankAccounts.isNotEmpty) {
+                _selectedBankAccountId = data.bankAccounts[0].id?.toString();
+              }
+              // Parse rules from HTML (basic extraction)
+              _parseRulesFromHtml(data.ruleLimits);
+            });
+          }
+        },
+      );
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'An error occurred: $e';
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  void _parseRulesFromHtml(String html) {
+    // Basic parsing - extract min/max amounts from HTML
+    final minMatch = RegExp(r'Minimum withdrawal: ₹(\d+)').firstMatch(html);
+    final maxMatch = RegExp(r'Maximum per withdrawal: ₹(\d+)').firstMatch(html);
+    
+    if (minMatch != null) {
+      _minimumWithdrawal = int.tryParse(minMatch.group(1) ?? '');
+    }
+    if (maxMatch != null) {
+      _maximumWithdrawal = int.tryParse(maxMatch.group(1) ?? '');
+    }
+
+    // Defaults if not found
+    _minimumWithdrawal ??= 500;
+    _maximumWithdrawal ??= 10000;
+  }
+
   double get _withdrawalAmount {
     return double.tryParse(_amountController.text.replaceAll(',', '')) ?? 0.0;
   }
 
-  double get _platformFee => 0.0; // No platform fee
+  double get _platformFee => (_checkoutData?.platformFee ?? 0).toDouble();
   double get _willReceive => _withdrawalAmount - _platformFee;
 
   void _showSuccessDialog() {
@@ -91,7 +147,7 @@ class _WithdrawEarningsScreenState extends State<WithdrawEarningsScreen> {
               ),
               const SizedBox(height: 12),
               Text(
-                'Your withdrawal request of ${_amountController.text} has been received and is under review. You\'ll receive the amount in 1-2 business days.',
+                'Your withdrawal request of ₹${_amountController.text} has been received and is under review. You\'ll receive the amount in 1-2 business days.',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontSize: 14,
@@ -106,9 +162,7 @@ class _WithdrawEarningsScreenState extends State<WithdrawEarningsScreen> {
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.of(context).pop(); // Close dialog
-                    Navigator.of(
-                      context,
-                    ).pop(); // Go back to earnings dashboard
+                    Navigator.of(context).pop(); // Go back to earnings dashboard
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
@@ -142,27 +196,27 @@ class _WithdrawEarningsScreenState extends State<WithdrawEarningsScreen> {
     }
 
     final amount = _withdrawalAmount;
-    if (amount < 500) {
+    if (amount < (_minimumWithdrawal ?? 500)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Minimum withdrawal amount is ₹500'),
+        SnackBar(
+          content: Text('Minimum withdrawal amount is ₹${_minimumWithdrawal ?? 500}'),
           backgroundColor: Colors.red,
         ),
       );
       return;
     }
 
-    if (amount > 10000) {
+    if (amount > (_maximumWithdrawal ?? 10000)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Maximum withdrawal amount is ₹10,000'),
+        SnackBar(
+          content: Text('Maximum withdrawal amount is ₹${_maximumWithdrawal ?? 10000}'),
           backgroundColor: Colors.red,
         ),
       );
       return;
     }
 
-    if (_selectedBankAccount == null) {
+    if (_selectedBankAccountId == null || _checkoutData == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please select a bank account'),
@@ -172,20 +226,57 @@ class _WithdrawEarningsScreenState extends State<WithdrawEarningsScreen> {
       return;
     }
 
+    // Find the selected bank account
+    final selectedAccount = _checkoutData!.bankAccounts.firstWhere(
+      (account) => account.id?.toString() == _selectedBankAccountId,
+      orElse: () => _checkoutData!.bankAccounts[0],
+    );
+
     setState(() {
       _isSubmitting = true;
     });
 
-    // Simulate API call
-    await Future.delayed(const Duration(milliseconds: 500));
+    try {
+      final userService = ref.read(userServiceProvider);
+      final result = await userService.submitWithdrawalRequest(
+        accountNumber: selectedAccount.accountNumber,
+        withdrawAmountRequest: amount.toInt().toString(),
+      );
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    setState(() {
-      _isSubmitting = false;
-    });
-
-    _showSuccessDialog();
+      result.fold(
+        (failure) {
+          setState(() {
+            _isSubmitting = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(failure.message),
+              backgroundColor: Colors.red,
+            ),
+          );
+        },
+        (data) {
+          setState(() {
+            _isSubmitting = false;
+          });
+          _amountController.clear();
+          _showSuccessDialog();
+        },
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isSubmitting = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override
@@ -193,86 +284,109 @@ class _WithdrawEarningsScreenState extends State<WithdrawEarningsScreen> {
     return Scaffold(
       appBar: CustomAppBar(title: 'Withdraw Earnings', showbackButton: true),
       backgroundColor: const Color(0xFFF5F7F8),
-      body: Column(
-        children: [
-          // Header
-
-          // Content
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Withdrawal Rules
-                  _buildRulesCard(),
-                  const SizedBox(height: 16),
-                  // Select Bank Account
-                  _buildBankAccountSelection(),
-                  const SizedBox(height: 16),
-                  // Enter Amount
-                  _buildAmountInput(),
-                  const SizedBox(height: 16),
-                  // Summary
-                  _buildSummaryCard(),
-                ],
+      body: _isLoading
+          ? const Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
               ),
-            ),
-          ),
-
-          // Request Withdrawal Button
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Color(0xFFF5F7F8),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, -2),
-                ),
-              ],
-            ),
-            child: SizedBox(
-              width: double.infinity,
-              height: 55,
-              child: ElevatedButton(
-                onPressed: _isSubmitting ? null : _handleWithdraw,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
+            )
+          : _errorMessage != null && _checkoutData == null
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        _errorMessage!,
+                        style: const TextStyle(color: Colors.red),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: _loadCheckoutData,
+                        child: const Text('Retry'),
+                      ),
+                    ],
                   ),
-                ),
-                child:
-                    _isSubmitting
-                        ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              Colors.white,
+                )
+              : Column(
+                  children: [
+                    // Content
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Withdrawal Rules
+                            _buildRulesCard(),
+                            const SizedBox(height: 16),
+                            // Select Bank Account
+                            _buildBankAccountSelection(),
+                            const SizedBox(height: 16),
+                            // Enter Amount
+                            _buildAmountInput(),
+                            const SizedBox(height: 16),
+                            // Summary
+                            _buildSummaryCard(),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    // Request Withdrawal Button
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF5F7F8),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, -2),
+                          ),
+                        ],
+                      ),
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 55,
+                        child: ElevatedButton(
+                          onPressed: _isSubmitting ? null : _handleWithdraw,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
                             ),
                           ),
-                        )
-                        : const Text(
-                          'Request Withdrawal',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          child: _isSubmitting
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white,
+                                    ),
+                                  ),
+                                )
+                              : const Text(
+                                  'Request Withdrawal',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
                         ),
-              ),
-            ),
-          ),
-        ],
-      ),
+                      ),
+                    ),
+                  ],
+                ),
     );
   }
 
   Widget _buildRulesCard() {
+    if (_checkoutData == null) return const SizedBox.shrink();
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -298,13 +412,42 @@ class _WithdrawEarningsScreenState extends State<WithdrawEarningsScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          _buildRuleItem('Minimum withdrawal: ₹500'),
-          _buildRuleItem('Maximum per withdrawal: ₹10,000'),
-          _buildRuleItem('Daily limit: 2 withdrawals per day'),
-          _buildRuleItem('Processing Time: 1-2 business days'),
+          // Parse HTML and display rules
+          if (_checkoutData!.ruleLimits.isNotEmpty)
+            ..._parseRulesToList(_checkoutData!.ruleLimits)
+          else
+            ...[
+              _buildRuleItem('Minimum withdrawal: ₹${_minimumWithdrawal ?? 500}'),
+              _buildRuleItem('Maximum per withdrawal: ₹${_maximumWithdrawal ?? 10000}'),
+              _buildRuleItem('Daily limit: 2 withdrawals per day'),
+              _buildRuleItem('Processing Time: 1-2 business days'),
+            ],
         ],
       ),
     );
+  }
+
+  List<Widget> _parseRulesToList(String html) {
+    // Simple HTML parsing to extract list items
+    final List<Widget> rules = [];
+    final regex = RegExp(r'<li>(.*?)</li>');
+    final matches = regex.allMatches(html);
+    
+    for (final match in matches) {
+      final text = match.group(1)?.replaceAll(RegExp(r'<[^>]*>'), '') ?? '';
+      if (text.isNotEmpty) {
+        rules.add(_buildRuleItem(text));
+      }
+    }
+
+    return rules.isEmpty
+        ? [
+            _buildRuleItem('Minimum withdrawal: ₹${_minimumWithdrawal ?? 500}'),
+            _buildRuleItem('Maximum per withdrawal: ₹${_maximumWithdrawal ?? 10000}'),
+            _buildRuleItem('Daily limit: 2 withdrawals per day'),
+            _buildRuleItem('Processing Time: 1-2 business days'),
+          ]
+        : rules;
   }
 
   Widget _buildRuleItem(String text) {
@@ -338,6 +481,27 @@ class _WithdrawEarningsScreenState extends State<WithdrawEarningsScreen> {
   }
 
   Widget _buildBankAccountSelection() {
+    if (_checkoutData == null || _checkoutData!.bankAccounts.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: const Text(
+          'No bank accounts found. Please add a bank account first.',
+          style: TextStyle(color: Colors.grey),
+        ),
+      );
+    }
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -363,38 +527,36 @@ class _WithdrawEarningsScreenState extends State<WithdrawEarningsScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          ..._bankAccounts.map((account) {
-            final isSelected = _selectedBankAccount == account['id'];
+          ..._checkoutData!.bankAccounts.map((account) {
+            final isSelected = _selectedBankAccountId == account.id?.toString();
             return Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: GestureDetector(
                 onTap: () {
                   setState(() {
-                    _selectedBankAccount = account['id'];
+                    _selectedBankAccountId = account.id?.toString();
                   });
                 },
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color:
-                        isSelected
-                            ? AppColors.secondary.withOpacity(0.1)
-                            : Colors.grey.shade50,
+                    color: isSelected
+                        ? AppColors.secondary.withOpacity(0.1)
+                        : Colors.grey.shade50,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color:
-                          isSelected ? AppColors.primary : Colors.grey.shade300,
+                      color: isSelected ? AppColors.primary : Colors.grey.shade300,
                       width: isSelected ? 2 : 1,
                     ),
                   ),
                   child: Row(
                     children: [
                       Radio<String>(
-                        value: account['id'],
-                        groupValue: _selectedBankAccount,
+                        value: account.id?.toString() ?? '',
+                        groupValue: _selectedBankAccountId,
                         onChanged: (value) {
                           setState(() {
-                            _selectedBankAccount = value;
+                            _selectedBankAccountId = value;
                           });
                         },
                         activeColor: AppColors.primary,
@@ -415,7 +577,7 @@ class _WithdrawEarningsScreenState extends State<WithdrawEarningsScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              account['bankName'],
+                              account.bankName,
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
@@ -424,7 +586,7 @@ class _WithdrawEarningsScreenState extends State<WithdrawEarningsScreen> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              account['accountHolderName'],
+                              account.accountHolderName,
                               style: TextStyle(
                                 fontSize: 14,
                                 color: Colors.grey.shade600,
@@ -432,7 +594,7 @@ class _WithdrawEarningsScreenState extends State<WithdrawEarningsScreen> {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              'Ac No. : **** ${account['accountNumber'].toString().substring(account['accountNumber'].toString().length - 4)}',
+                              'Ac No. : ${account.maskedAccountNumber}',
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey.shade600,
@@ -483,7 +645,7 @@ class _WithdrawEarningsScreenState extends State<WithdrawEarningsScreen> {
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             decoration: InputDecoration(
-              hintText: 'Enter amount (₹500 - ₹10,000)',
+              hintText: 'Enter amount (₹${_minimumWithdrawal ?? 500} - ₹${_maximumWithdrawal ?? 10000})',
               prefixText: '₹ ',
               filled: true,
               fillColor: Colors.grey.shade50,
@@ -582,8 +744,3 @@ class _WithdrawEarningsScreenState extends State<WithdrawEarningsScreen> {
     );
   }
 }
-
-
-
-
-

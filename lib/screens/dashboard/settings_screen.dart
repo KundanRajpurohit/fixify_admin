@@ -3,6 +3,8 @@ import 'package:fixify_admin/providers/location_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../components/custom_app_bar.dart';
+
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
@@ -164,60 +166,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7F8),
+      appBar: CustomAppBar(title: 'Settings', showbackButton: false),
       body: Column(
         children: [
           // Header
-          Container(
-            padding: const EdgeInsets.fromLTRB(16, 50, 16, 16),
-            decoration: BoxDecoration(
-              color: AppColors.secondary.withOpacity(0.4),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Setting',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-                Stack(
-                  children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        color: AppColors.secondary.withOpacity(0.3),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: IconButton(
-                        icon: const Icon(
-                          Icons.notifications,
-                          color: Color(0xFF217043),
-                          size: 22,
-                        ),
-                        onPressed: () {
-                          // Handle notifications
-                        },
-                      ),
-                    ),
-                    Positioned(
-                      right: 8,
-                      top: 8,
-                      child: Container(
-                        width: 8,
-                        height: 8,
-                        decoration: const BoxDecoration(
-                          color: AppColors.primary,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
 
           // Content
           Expanded(

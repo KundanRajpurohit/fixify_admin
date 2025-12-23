@@ -184,58 +184,58 @@ class _PhoneVerificationScreenState
                       color: Colors.black87,
                     ),
                   ),
-                  GestureDetector(
-                    onTap: () {
-                      // Skip to main app screen
-                      Navigator.pushReplacement(
-                        context,
-                        PageTransition(
-                          type: PageTransitionType.fade,
-                          duration: const Duration(milliseconds: 100),
-                          child: const HomePageScreen(),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 8,
-                          horizontal: 20), // No padding for compact button
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: const Color(0xFFD1D5DB),
-                          width: 1,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'Skip',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: AppColors.textPrimary,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          SizedBox(width: 4),
-                          Icon(
-                            Icons.arrow_forward,
-                            color: AppColors.textPrimary,
-                            size: 16,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                  // GestureDetector(
+                  //   onTap: () {
+                  //     // Skip to main app screen
+                  //     Navigator.pushReplacement(
+                  //       context,
+                  //       PageTransition(
+                  //         type: PageTransitionType.fade,
+                  //         duration: const Duration(milliseconds: 100),
+                  //         child: const HomePageScreen(),
+                  //       ),
+                  //     );
+                  //   },
+                  //   child: Container(
+                  //     padding: const EdgeInsets.symmetric(
+                  //         vertical: 8,
+                  //         horizontal: 20), // No padding for compact button
+                  //     decoration: BoxDecoration(
+                  //       color: Colors.white,
+                  //       borderRadius: BorderRadius.circular(20),
+                  //       border: Border.all(
+                  //         color: const Color(0xFFD1D5DB),
+                  //         width: 1,
+                  //       ),
+                  //       boxShadow: [
+                  //         BoxShadow(
+                  //           color: Colors.black.withOpacity(0.1),
+                  //           blurRadius: 4,
+                  //           offset: const Offset(0, 2),
+                  //         ),
+                  //       ],
+                  //     ),
+                  //     child: const Row(
+                  //       mainAxisSize: MainAxisSize.min,
+                  //       children: [
+                  //         Text(
+                  //           'Skip',
+                  //           style: TextStyle(
+                  //             fontSize: 14,
+                  //             color: AppColors.textPrimary,
+                  //             fontWeight: FontWeight.w600,
+                  //           ),
+                  //         ),
+                  //         SizedBox(width: 4),
+                  //         Icon(
+                  //           Icons.arrow_forward,
+                  //           color: AppColors.textPrimary,
+                  //           size: 16,
+                  //         ),
+                  //       ],
+                  //     ),
+                  //   ),
+                  // ),
                 ],
               ),
             ),

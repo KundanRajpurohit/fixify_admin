@@ -29,6 +29,16 @@ android {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
+    signingConfigs {
+        create("release") {
+            // TODO: Add your own signing config for the release build.
+            // For now, using debug signing config
+            storeFile = file("fixifyadmin.jks")
+            storePassword = "Secure@123"
+            keyAlias = "fixifyadmin"
+            keyPassword = "Secure@123"
+        }
+    }
 
     buildTypes {
         release {

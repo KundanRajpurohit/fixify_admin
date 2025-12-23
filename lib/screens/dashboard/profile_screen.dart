@@ -5,6 +5,7 @@ import 'package:fixify_admin/providers/location_provider.dart'
     show userServiceProvider;
 import 'package:fixify_admin/screens/dashboard/bank_accounts_screen.dart';
 import 'package:fixify_admin/screens/dashboard/edit_profile_screen.dart';
+import 'package:fixify_admin/screens/dashboard/my_documents_screen.dart';
 import 'package:fixify_admin/screens/dashboard/privacy_policy_screen.dart';
 import 'package:fixify_admin/screens/dashboard/terms_of_service_screen.dart';
 import 'package:fixify_admin/screens/dashboard/vendor_list_page.dart';
@@ -186,9 +187,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   context,
                   PageTransition(
                     type: PageTransitionType.rightToLeft,
-                    child: const EditProfileScreen(),
+                    child: EditProfileScreen(profileData: _profileData),
                   ),
-                );
+                ).then((shouldReload) {
+                  if (shouldReload == true) {
+                    _loadProfile();
+                  }
+                });
               },
               child: Container(
                 padding: const EdgeInsets.symmetric(
@@ -263,47 +268,58 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final servicesLicenseVerified =
         _profileData?['services_license_verification'] ?? false;
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.15),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          PageTransition(
+            type: PageTransitionType.rightToLeft,
+            child: const MyDocumentsScreen(),
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'My Document\'s',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.15),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'My Document\'s',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
                 ),
-              ),
-              const Icon(Icons.chevron_right, color: Colors.grey),
-            ],
-          ),
-          const SizedBox(height: 16),
-          _buildDocumentItem('Aadhaar Card', nationalIdVerified),
-          const Divider(height: 24),
-          _buildDocumentItem('Address Proof', proofNationalIdVerified),
-          const Divider(height: 24),
-          _buildDocumentItem(
-            'Service License (if applicable)',
-            servicesLicenseVerified,
-          ),
-        ],
+                const Icon(Icons.chevron_right, color: Colors.grey),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _buildDocumentItem('Aadhaar Card', nationalIdVerified),
+            const Divider(height: 24),
+            _buildDocumentItem('Address Proof', proofNationalIdVerified),
+            const Divider(height: 24),
+            _buildDocumentItem(
+              'Service License (if applicable)',
+              servicesLicenseVerified,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -606,18 +622,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               );
             },
           ),
-          const Divider(height: 24),
-          _buildToggleItem(
-            icon: Icons.lock,
-            title: 'Screen Lock',
-            value: _screenLockEnabled,
-            onChanged: (value) {
-              setState(() {
-                _screenLockEnabled = value;
-              });
-              // TODO: Update screen lock setting via API
-            },
-          ),
+          // const Divider(height: 24),
+          // _buildToggleItem(
+          //   icon: Icons.lock,
+          //   title: 'Screen Lock',
+          //   value: _screenLockEnabled,
+          //   onChanged: (value) {
+          //     setState(() {
+          //       _screenLockEnabled = value;
+          //     });
+          //     // TODO: Update screen lock setting via API
+          //   },
+          // ),
         ],
       ),
     );

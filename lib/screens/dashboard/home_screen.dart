@@ -1,7 +1,10 @@
+import 'package:fixify_admin/components/custom_app_bar.dart';
 import 'package:fixify_admin/providers/location_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:page_transition/page_transition.dart';
+import 'dashboard_screen.dart';
 
 class HomeDashboardScreen extends ConsumerStatefulWidget {
   const HomeDashboardScreen({super.key});
@@ -190,47 +193,12 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF6F7F9),
-      appBar: AppBar(
-        backgroundColor: _lightGreen,
-        automaticallyImplyLeading: false,
-        elevation: 0,
-        title: const Text(
-          'Dashboard',
-          style: TextStyle(
-            color: Colors.black87,
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.06),
-                  blurRadius: 8,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: IconButton(
-              icon: const Icon(Icons.notifications_none, color: _green),
-              onPressed: () {},
-            ),
-          ),
-        ],
+      appBar: CustomAppBar(
+        title: 'Dashboard',
+        showbackButton: false,
       ),
       body: Column(
         children: [
-          // thin light-green strip under appbar like design
-          Container(
-            height: 24,
-            width: double.infinity,
-            color: _lightGreen,
-          ),
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -495,8 +463,15 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
             ),
             trailing: const Icon(Icons.chevron_right, color: Colors.grey),
             onTap: () {
-              // Navigate to My Jobs screen
-              // This will be handled by the bottom navigation
+              // Navigate to My Jobs screen (index 1)
+              Navigator.pushReplacement(
+                context,
+                PageTransition(
+                  type: PageTransitionType.fade,
+                  duration: const Duration(milliseconds: 300),
+                  child: const HomePageScreen(initialIndex: 1),
+                ),
+              );
             },
           ),
         ],
