@@ -7,6 +7,8 @@ import 'package:fixify_admin/screens/dashboard/bank_accounts_screen.dart';
 import 'package:fixify_admin/screens/dashboard/edit_profile_screen.dart';
 import 'package:fixify_admin/screens/dashboard/privacy_policy_screen.dart';
 import 'package:fixify_admin/screens/dashboard/terms_of_service_screen.dart';
+import 'package:fixify_admin/screens/dashboard/vendor_list_page.dart';
+import 'package:fixify_admin/screens/onboarding/get_started_screen.dart';
 import 'package:fixify_admin/screens/settings/earnings_dashboard_screen.dart';
 import 'package:fixify_admin/screens/settings/revieW_page.dart';
 import 'package:fixify_admin/screens/settings/transaction_history.dart';
@@ -421,16 +423,34 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
         ],
       ),
-      child: _buildMenuItem(
-        icon: Icons.star,
-        title: 'My Rating & Reviews',
-        onTap: () {
-          // Navigate to rating & reviews
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const RatingPage()),
-          );
-        },
+      child: Column(
+        children: [
+          _buildMenuItem(
+            icon: Icons.star,
+            title: 'My Rating & Reviews',
+            onTap: () {
+              // Navigate to rating & reviews
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const RatingPage()),
+              );
+            },
+          ),
+          Divider(),
+          _buildMenuItem(
+            icon: Icons.holiday_village,
+            title: 'Our Vendors',
+            onTap: () {
+              // Navigate to vendor list
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const VendorListScreen(),
+                ),
+              );
+            },
+          ),
+        ],
       ),
     );
   }
@@ -697,12 +717,28 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     if (mounted) {
                       result.fold(
                         (failure) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Logout failed: ${failure.message}',
+                              ),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
                           // Even if API fails, we've cleared preferences
                           print(
                             '⚠️ [ProfileScreen] Logout API failed but preferences cleared',
                           );
                         },
                         (data) {
+                          Navigator.of(context).pushAndRemoveUntil(
+                            PageTransition(
+                              type: PageTransitionType.fade,
+                              duration: const Duration(milliseconds: 300),
+                              child: const GetStartedScreen(),
+                            ),
+                            (route) => false,
+                          );
                           print('✅ [ProfileScreen] Logout successful');
                         },
                       );

@@ -1,68 +1,67 @@
 // API Configuration
 class ApiConfig {
   static const String baseUrl = 'https://admin.fixify.expert/api';
-  
-  // User endpoints
-  static const String defaultAddress = '/user/default-address';
-  static const String sendOtp = '/user/send-otp';
-  static const String verifyOtp = '/user/verify-otp';
-  static const String userProfile = '/user/profile';
-  static const String updateProfile = '/user/profile/update';
-  static const String profileImageUpload = '/user/profile-image/upload';
-  static const String profileImageRemove = '/user/profile-image/remove';
-  static const String logout = '/user/logout';
-  static const String deleteAccount = '/user/delete-account';
-  
-  // Address management endpoints
-  static const String showAllAddress = '/user/show-all-address';
-  static const String addAddress = '/user/add-address';
-  static const String editAddress = '/user/edit-address';
-  static const String updateDefaultAddress = '/user/update-default-address';
-  static const String deleteAddress = '/user/delete-address';
-  
-  // Categories endpoints
-  static const String categories = '/categories';
-  static const String productsByCategoryId = '/products-by-category-id';
-  static const String productsBySubCategoryId = '/products-by-sub-category-id';
-  static const String productDetailsById = '/product-details-by-id';
-  static const String topServices = '/top-services';
+
+  // Partner endpoints
+  static const String partnerLogin = '/partner/login';
+  static const String partnerRegister = '/partner/register';
+  static const String partnerProfile = '/partner/profile';
+  static const String partnerUpdateProfile = '/partner/update-profile';
+  static const String partnerUploadImage = '/partner/upload-image';
+  static const String partnerLogout = '/partner/logout';
+  static const String partnerUpdateNotification =
+      '/partner/update-notification';
+  static const String partnerAddDefaultAddress = '/partner/add-default-address';
+  static const String partnerUploadDocuments = '/partner/upload-documents';
+  static const String partnerSendOtp = '/partner/send-otp';
+  static const String partnerVerifyOtp = '/partner/verify-otp';
+  static const String verifyOtp = '/partner/verify-otp';
+  static const String partnerPageDetail = '/partner/page-detail';
+
+  // Bank Account endpoints
+  static const String partnerBankAll = '/partner/bank/all';
+  static const String partnerBankStore = '/partner/bank/store';
+  static const String partnerBankUpdate = '/partner/bank/update';
+  static const String partnerBankDelete = '/partner/bank/delete';
+
+  //Jobs endpoints
+  static const String partnerAllJobs = '/partner/all-jobs';
+  static const String partnerUpcomingJobs = '/partner/upcoming-jobs';
+  static const String partnerCancelledJobs = '/partner/cancelled-jobs';
+  static const String partnerOngoingJobs = '/partner/ongoing-jobs';
+  static const String partnerPastJobs = '/partner/past-jobs';
+  static const String partnerAssignUpcomingJobs = '/partner/assign-upcoming-jobs';
+  static const String partnerAcceptJob = '/partner/accept-job';
+  static const String partnerAssignJob = '/partner/assign-job';
+  static const String partnerVerifyJobOtp = '/partner/verify-job-otp';
+  static const String partnerJobCompleted = '/partner/job-completed';
+  static const String partnerSubmitJobReport = '/partner/submit-job-report';
+  static const String partnerRatingCustomer = '/partner/rating-customer';
+  static String partnerJobDetails(String token) =>
+    '/partner/single-job-details/$token';
 
 
-  // Notifications endpoints
-  static const String getNotification = '/get-notification';
-  static const String markNotificationRead = '/notifications/read';
 
-  //cart endpoints
-  static const String addToCart = '/add-to-cart';
-  static const String showCart = '/get-cart-data';
-  
-  // Subscription endpoints
-  static const String subscriptionAll = '/subscription/all';
-  static const String subscriptionActivePlan = '/subscription-active-plan';
-  static const String subscriptionOrderId = '/subscription/order-id';
-  static const String subscriptionTransactionStore = '/subscription/transaction-store';
-  static const String subscriptionTransactionFailed = '/subscription/transaction-failed';
-  
-  // Search endpoints
-  static const String search = '/search';
-  static const String storeSearch = '/store-search';
-  static const String getSearch = '/get-search';
+  // Availability endpoints
+  static const String partnerGetAvailability = '/partner/get-availability';
+  static const String partnerAvailabilityMon = '/partner/availability/mon';
+  static const String partnerAvailabilityTue = '/partner/availability/tue';
+  static const String partnerAvailabilityWed = '/partner/availability/wed';
+  static const String partnerAvailabilityThu = '/partner/availability/thu';
+  static const String partnerAvailabilityFri = '/partner/availability/fri';
+  static const String partnerAvailabilitySat = '/partner/availability/sat';
+  static const String partnerAvailabilitySun = '/partner/availability/sun';
 
-  // Offers
-  static const String latestOfferBanner = '/get-latest-offer-banner';
-  
-  // Booking endpoints
-  static const String bookingCheckout = '/booking/checkout';
-  static const String bookingOrderId = '/booking/order-id';
-  static const String bookingTransactionStore = '/booking/transaction-store';
-  static const String bookingTransactionFailed = '/booking/transaction-failed';
-  static const String bookingCancel = '/booking/cancel';
-  static const String bookingAll = '/booking/all';
-  static const String bookingReschedule = '/booking/reschedule';
-  
-  // Coupon endpoints
-  static const String getAllCoupons = '/get-all-coupons';
-  
+  // Dashboard endpoints
+  static const String partnerDashboard = '/partner/deshbord';
+  static const String partnerGoOnline = '/partner/go-online';
+  static const String partnerGetGoOnline = '/partner/get-go-online';
+  static const String partnerGetDataByCustomDate = '/partner/get-data-by-custom-date';
+  static const String partnerVendorList = '/partner/vendor-list';
+
+
+
   // Google Places API
-  static const String googlePlacesApiKey = 'AIzaSyBbcUzWiQgeXfzUrFgbOMyOzCLU1nbaJBE';
+  static const String googlePlacesApiKey =
+      'AIzaSyBbcUzWiQgeXfzUrFgbOMyOzCLU1nbaJBE';
 }

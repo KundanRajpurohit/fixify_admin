@@ -1,16 +1,190 @@
+import 'package:fixify_admin/providers/location_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
-class HomeDashboardScreen extends StatefulWidget {
+class HomeDashboardScreen extends ConsumerStatefulWidget {
   const HomeDashboardScreen({super.key});
 
   @override
-  State<HomeDashboardScreen> createState() => _HomeDashboardScreenState();
+  ConsumerState<HomeDashboardScreen> createState() => _HomeDashboardScreenState();
 }
 
-class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
+class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
   static const Color _green = Color(0xFF2F6F3E);
   static const Color _lightGreen = Color(0xFFE6F6E7);
-  bool _isOnline = true;
+  bool _isOnline = false;
+  bool _isLoading = true;
+  bool _isLoadingCustomDate = false;
+  
+  // Dashboard stats
+  Map<String, dynamic>? _dashboardData;
+  
+  // Custom date range data
+  DateTime? _startDate;
+  DateTime? _endDate;
+  Map<String, dynamic>? _customDateData;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDashboardData();
+    _loadOnlineStatus();
+    // Set default date range (last 10 days)
+    _endDate = DateTime.now();
+    _startDate = _endDate!.subtract(const Duration(days: 10));
+    _loadCustomDateData();
+  }
+
+  Future<void> _loadDashboardData() async {
+    setState(() => _isLoading = true);
+    
+    final service = ref.read(userServiceProvider);
+    final result = await service.getDashboardStats();
+
+    result.fold(
+      (failure) {
+        if (!mounted) return;
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(failure.message),
+            backgroundColor: Colors.red,
+          ),
+        );
+      },
+      (data) {
+        if (!mounted) return;
+        setState(() {
+          _dashboardData = data;
+          _isLoading = false;
+        });
+      },
+    );
+  }
+
+  Future<void> _loadOnlineStatus() async {
+    final service = ref.read(userServiceProvider);
+    final result = await service.getGoOnlineStatus();
+
+    result.fold(
+      (failure) {
+        if (!mounted) return;
+        // Don't show error, just use default value
+      },
+      (data) {
+        if (!mounted) return;
+        setState(() {
+          _isOnline = data['go_online'] == 1 || data['online'] == true;
+        });
+      },
+    );
+  }
+
+  Future<void> _toggleOnlineStatus(bool value) async {
+    setState(() => _isOnline = value);
+    
+    final service = ref.read(userServiceProvider);
+    final result = await service.goOnline(value);
+
+    result.fold(
+      (failure) {
+        if (!mounted) return;
+        setState(() => _isOnline = !value); // Revert on error
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(failure.message),
+            backgroundColor: Colors.red,
+          ),
+        );
+      },
+      (data) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(value ? 'You are now online' : 'You are now offline'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _loadCustomDateData() async {
+    if (_startDate == null || _endDate == null) return;
+    
+    setState(() => _isLoadingCustomDate = true);
+    
+    final service = ref.read(userServiceProvider);
+    final startDateStr = DateFormat('yyyy-MM-dd').format(_startDate!);
+    final endDateStr = DateFormat('yyyy-MM-dd').format(_endDate!);
+    
+    final result = await service.getDataByCustomDate(
+      startDate: startDateStr,
+      endDate: endDateStr,
+    );
+
+    result.fold(
+      (failure) {
+        if (!mounted) return;
+        setState(() => _isLoadingCustomDate = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(failure.message),
+            backgroundColor: Colors.red,
+          ),
+        );
+      },
+      (data) {
+        if (!mounted) return;
+        setState(() {
+          _customDateData = data;
+          _isLoadingCustomDate = false;
+        });
+      },
+    );
+  }
+
+  Future<void> _selectDateRange() async {
+    final DateTimeRange? picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now(),
+      initialDateRange: _startDate != null && _endDate != null
+          ? DateTimeRange(start: _startDate!, end: _endDate!)
+          : null,
+    );
+    
+    if (picked != null) {
+      setState(() {
+        _startDate = picked.start;
+        _endDate = picked.end;
+      });
+      _loadCustomDateData();
+    }
+  }
+
+  String _formatTrendText(Map<String, dynamic>? data) {
+    if (data == null) return 'No change';
+    
+    final percentage = data['percentage_change'] ?? 0;
+    final trend = data['trend'] ?? 'no_change';
+    
+    if (trend == 'no_change' || percentage == 0) {
+      return 'No change';
+    }
+    
+    final symbol = trend == 'up' ? '↑' : '↓';
+    final color = trend == 'up' ? Colors.green : Colors.red;
+    
+    return '$symbol ${percentage.abs()}% vs Yesterday';
+  }
+
+  Color _getTrendColor(Map<String, dynamic>? data) {
+    if (data == null) return Colors.grey;
+    final trend = data['trend'] ?? 'no_change';
+    return trend == 'up' ? Colors.green : trend == 'down' ? Colors.red : Colors.grey;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,10 +194,6 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
         backgroundColor: _lightGreen,
         automaticallyImplyLeading: false,
         elevation: 0,
-        // leading: IconButton(
-        //   icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black87),
-        //   onPressed: () => Navigator.pop(context),
-        // ),
         title: const Text(
           'Dashboard',
           style: TextStyle(
@@ -62,42 +232,51 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
             color: _lightGreen,
           ),
           Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _statCard(
-                          title: "Today's Booking",
-                          value: '04',
-                          trendText: '↑ 40%  vs Yesterday',
-                          trendColor: Colors.green,
-                          chartColor: Colors.green,
-                        ),
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : RefreshIndicator(
+                    onRefresh: () async {
+                      await _loadDashboardData();
+                      await _loadOnlineStatus();
+                      await _loadCustomDateData();
+                    },
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+                      child: Column(
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _statCard(
+                                  title: "Today's Booking",
+                                  value: _dashboardData?['booking']?['today']?.toString() ?? '0',
+                                  trendText: _formatTrendText(_dashboardData?['booking']),
+                                  trendColor: _getTrendColor(_dashboardData?['booking']),
+                                  chartColor: _getTrendColor(_dashboardData?['booking']),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _statCard(
+                                  title: "Today's Earnings",
+                                  value: '₹${_dashboardData?['earning']?['today']?.toString() ?? '0.00'}',
+                                  trendText: _formatTrendText(_dashboardData?['earning']),
+                                  trendColor: _getTrendColor(_dashboardData?['earning']),
+                                  chartColor: _getTrendColor(_dashboardData?['earning']),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          _performanceCard(),
+                          const SizedBox(height: 12),
+                          _quickActionCard(),
+                          const SizedBox(height: 12),
+                          _earningsSummaryCard(),
+                        ],
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _statCard(
-                          title: "Today's Earnings",
-                          value: '₹120.00',
-                          trendText: '↓ 10%  vs Yesterday',
-                          trendColor: Colors.red,
-                          chartColor: Colors.red,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                  const SizedBox(height: 12),
-                  _performanceCard(),
-                  const SizedBox(height: 12),
-                  _quickActionCard(),
-                  const SizedBox(height: 12),
-                  _earningsSummaryCard(),
-                ],
-              ),
-            ),
           ),
         ],
       ),
@@ -167,6 +346,11 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
   }
 
   Widget _performanceCard() {
+    final performance = _dashboardData?['performance'];
+    final score = performance?['today_score']?.toString() ?? '0';
+    final trendText = _formatTrendText(performance);
+    final trendColor = _getTrendColor(performance);
+    
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 10),
       width: double.infinity,
@@ -193,21 +377,21 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            '4.5',
-            style: TextStyle(
+          Text(
+            score,
+            style: const TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.w700,
               color: Colors.black87,
             ),
           ),
           const SizedBox(height: 6),
-          const Text(
-            '↑ 20%  vs Yesterday',
+          Text(
+            trendText,
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w500,
-              color: Colors.green,
+              color: trendColor,
             ),
           ),
           const SizedBox(height: 10),
@@ -215,7 +399,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
             height: 36,
             width: double.infinity,
             child: CustomPaint(
-              painter: _SimpleCurvePainter(Colors.green),
+              painter: _SimpleCurvePainter(trendColor),
             ),
           ),
         ],
@@ -279,7 +463,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
               Switch(
                 activeColor: _green,
                 value: _isOnline,
-                onChanged: (v) => setState(() => _isOnline = v),
+                onChanged: _toggleOnlineStatus,
               ),
             ],
           ),
@@ -310,7 +494,10 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
               ),
             ),
             trailing: const Icon(Icons.chevron_right, color: Colors.grey),
-            onTap: () {},
+            onTap: () {
+              // Navigate to My Jobs screen
+              // This will be handled by the bottom navigation
+            },
           ),
         ],
       ),
@@ -318,6 +505,14 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
   }
 
   Widget _earningsSummaryCard() {
+    final totalEarning = _customDateData?['total_earning']?.toString() ?? '0';
+    final completedJobs = _customDateData?['completed_jobs']?.toString() ?? '0';
+    final completedEarning = _customDateData?['completed_earning']?.toString() ?? '0';
+    
+    final dateRangeText = _startDate != null && _endDate != null
+        ? '${DateFormat('dd MMM yyyy').format(_startDate!)} To ${DateFormat('dd MMM yyyy').format(_endDate!)}'
+        : 'Select Date Range';
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
@@ -347,10 +542,10 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                 ),
               ),
               const SizedBox(width: 4),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  '01 Jan 2025 To 10 Jan 2025',
-                  style: TextStyle(
+                  dateRangeText,
+                  style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
                     color: Colors.black87,
@@ -358,9 +553,8 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                 ),
               ),
               IconButton(
-                icon:
-                    const Icon(Icons.calendar_today_outlined, size: 18),
-                onPressed: () {},
+                icon: const Icon(Icons.calendar_today_outlined, size: 18),
+                onPressed: _selectDateRange,
               ),
             ],
           ),
@@ -380,11 +574,11 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
             ),
             child: Row(
               children: [
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      const Text(
                         'Total Earnings',
                         style: TextStyle(
                           fontSize: 13,
@@ -392,10 +586,10 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-                      SizedBox(height: 4),
+                      const SizedBox(height: 4),
                       Text(
-                        '₹6,000',
-                        style: TextStyle(
+                        '₹$totalEarning',
+                        style: const TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.w700,
                           color: Colors.white,
@@ -423,10 +617,10 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(color: Colors.grey.shade200),
                   ),
-                  child: const Column(
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      const Text(
                         'Total Completed\nJobs',
                         style: TextStyle(
                           fontSize: 12,
@@ -434,10 +628,10 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                           color: Colors.black87,
                         ),
                       ),
-                      SizedBox(height: 6),
+                      const SizedBox(height: 6),
                       Text(
-                        '08',
-                        style: TextStyle(
+                        completedJobs,
+                        style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w700,
                           color: Colors.black87,
@@ -461,21 +655,21 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
                     ),
                     border: Border.all(color: Colors.amber.shade100),
                   ),
-                  child: const Column(
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Total Incentives\nToday\'s',
+                      const Text(
+                        'Completed\nEarnings',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
                           color: Colors.black87,
                         ),
                       ),
-                      SizedBox(height: 6),
+                      const SizedBox(height: 6),
                       Text(
-                        '₹600',
-                        style: TextStyle(
+                        '₹$completedEarning',
+                        style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w700,
                           color: Colors.black87,
@@ -518,5 +712,5 @@ class _SimpleCurvePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _SimpleCurvePainter oldDelegate) =>
-      oldDelegate.color != color;
+      oldDelegate.color != oldDelegate.color;
 }
