@@ -1,3 +1,6 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -31,20 +34,28 @@ android {
     }
     signingConfigs {
         create("release") {
-            // TODO: Add your own signing config for the release build.
-            // For now, using debug signing config
-            storeFile = file("fixifyadmin.jks")
-            storePassword = "Secure@123"
-            keyAlias = "fixifyadmin"
-            keyPassword = "Secure@123"
+            val keystorePropertiesFile = rootProject.file("key.properties")
+            val keystoreProperties = Properties()
+            if (keystorePropertiesFile.exists()) {
+                keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+                val storeFilePath = keystoreProperties["storeFile"] as String
+                storeFile = file(if (storeFilePath.startsWith("/")) storeFilePath else "../$storeFilePath")
+                storePassword = keystoreProperties["storePassword"] as String
+                keyAlias = keystoreProperties["keyAlias"] as String
+                keyPassword = keystoreProperties["keyPassword"] as String
+            } else {
+                // Fallback to direct configuration if key.properties doesn't exist
+                storeFile = file("../keystore/fixifyadmin.jks")
+                storePassword = "Secure@123"
+                keyAlias = "fixifyadmin"
+                keyPassword = "Secure@123"
+            }
         }
     }
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 }
