@@ -873,6 +873,86 @@ class UserService {
     }
   }
 
+  // Update Mobile Number
+  Future<ApiResult<Map<String, dynamic>>> updateMobile({
+    required String mobile,
+  }) async {
+    try {
+      print('📱 [UserService] Starting updateMobile API call');
+      print('📝 [UserService] Request data:');
+      print('   - mobile: $mobile');
+      print('🌐 [UserService] API endpoint: ${ApiConfig.partnerUpdateMobile}');
+
+      final authToken = await getAuthToken();
+      if (authToken == null) {
+        print('❌ [UserService] No authorization token found');
+        return left(const UnauthorizedFailure());
+      }
+
+      final formData = FormData.fromMap({
+        'mobile': mobile,
+      });
+
+      final response = await _dio.post(
+        ApiConfig.partnerUpdateMobile,
+        data: formData,
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print('✅ [UserService] Mobile update request sent successfully');
+        return right(response.data);
+      } else {
+        return left(
+          ServerFailure('Failed to update mobile', response.statusCode ?? 500),
+        );
+      }
+    } on DioException catch (e) {
+      return left(_handleDioError(e));
+    } catch (e) {
+      return left(UnknownFailure(e.toString()));
+    }
+  }
+
+  // Verify Mobile OTP
+  Future<ApiResult<Map<String, dynamic>>> verifyMobileOtp({
+    required String otp,
+  }) async {
+    try {
+      print('🔐 [UserService] Starting verifyMobileOtp API call');
+      print('📝 [UserService] Request data:');
+      print('   - otp: $otp');
+      print('🌐 [UserService] API endpoint: ${ApiConfig.partnerMobileOtpVerify}');
+
+      final authToken = await getAuthToken();
+      if (authToken == null) {
+        print('❌ [UserService] No authorization token found');
+        return left(const UnauthorizedFailure());
+      }
+
+      final formData = FormData.fromMap({
+        'otp': otp,
+      });
+
+      final response = await _dio.post(
+        ApiConfig.partnerMobileOtpVerify,
+        data: formData,
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print('✅ [UserService] Mobile OTP verified successfully');
+        return right(response.data);
+      } else {
+        return left(
+          ServerFailure('Failed to verify OTP', response.statusCode ?? 500),
+        );
+      }
+    } on DioException catch (e) {
+      return left(_handleDioError(e));
+    } catch (e) {
+      return left(UnknownFailure(e.toString()));
+    }
+  }
+
   // Upload Partner Image
   Future<ApiResult<Map<String, dynamic>>> uploadPartnerImage(File image) async {
     try {

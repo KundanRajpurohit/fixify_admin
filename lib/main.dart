@@ -95,6 +95,8 @@ void main() async {
         '/partner/checkout-store',
         '/partner/notifications',
         '/partner/notifications/mark-as-read',
+        '/partner/update-mobile',
+        '/partner/mobile-otp-verify',
       ],
     ),
   );

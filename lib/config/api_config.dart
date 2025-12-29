@@ -73,6 +73,10 @@ class ApiConfig {
   static const String partnerNotifications = '/partner/notifications';
   static const String partnerMarkNotificationAsRead = '/partner/notifications/mark-as-read';
 
+  // Mobile update endpoints
+  static const String partnerUpdateMobile = '/partner/update-mobile';
+  static const String partnerMobileOtpVerify = '/partner/mobile-otp-verify';
+
 
 
   // Google Places API
