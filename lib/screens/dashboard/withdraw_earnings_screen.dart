@@ -243,7 +243,7 @@ class _WithdrawEarningsScreenState extends ConsumerState<WithdrawEarningsScreen>
         withdrawAmountRequest: amount.toInt().toString(),
       );
 
-      if (!mounted) return;
+    if (!mounted) return;
 
       result.fold(
         (failure) {
@@ -258,11 +258,11 @@ class _WithdrawEarningsScreenState extends ConsumerState<WithdrawEarningsScreen>
           );
         },
         (data) {
-          setState(() {
-            _isSubmitting = false;
-          });
+    setState(() {
+      _isSubmitting = false;
+    });
           _amountController.clear();
-          _showSuccessDialog();
+    _showSuccessDialog();
         },
       );
     } catch (e) {
@@ -309,78 +309,78 @@ class _WithdrawEarningsScreenState extends ConsumerState<WithdrawEarningsScreen>
                   ),
                 )
               : Column(
-                  children: [
-                    // Content
-                    Expanded(
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Withdrawal Rules
-                            _buildRulesCard(),
-                            const SizedBox(height: 16),
-                            // Select Bank Account
-                            _buildBankAccountSelection(),
-                            const SizedBox(height: 16),
-                            // Enter Amount
-                            _buildAmountInput(),
-                            const SizedBox(height: 16),
-                            // Summary
-                            _buildSummaryCard(),
-                          ],
-                        ),
-                      ),
-                    ),
+        children: [
+          // Content
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Withdrawal Rules
+                  _buildRulesCard(),
+                  const SizedBox(height: 16),
+                  // Select Bank Account
+                  _buildBankAccountSelection(),
+                  const SizedBox(height: 16),
+                  // Enter Amount
+                  _buildAmountInput(),
+                  const SizedBox(height: 16),
+                  // Summary
+                  _buildSummaryCard(),
+                ],
+              ),
+            ),
+          ),
 
-                    // Request Withdrawal Button
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
+          // Request Withdrawal Button
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
                         color: const Color(0xFFF5F7F8),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 10,
-                            offset: const Offset(0, -2),
-                          ),
-                        ],
-                      ),
-                      child: SizedBox(
-                        width: double.infinity,
-                        height: 55,
-                        child: ElevatedButton(
-                          onPressed: _isSubmitting ? null : _handleWithdraw,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, -2),
+                ),
+              ],
+            ),
+            child: SizedBox(
+              width: double.infinity,
+              height: 55,
+              child: ElevatedButton(
+                onPressed: _isSubmitting ? null : _handleWithdraw,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                ),
+                          child: _isSubmitting
+                        ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
                             ),
                           ),
-                          child: _isSubmitting
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.white,
-                                    ),
-                                  ),
-                                )
-                              : const Text(
-                                  'Request Withdrawal',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
+                        )
+                        : const Text(
+                          'Request Withdrawal',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
-                    ),
-                  ],
-                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -419,8 +419,8 @@ class _WithdrawEarningsScreenState extends ConsumerState<WithdrawEarningsScreen>
             ...[
               _buildRuleItem('Minimum withdrawal: ₹${_minimumWithdrawal ?? 500}'),
               _buildRuleItem('Maximum per withdrawal: ₹${_maximumWithdrawal ?? 10000}'),
-              _buildRuleItem('Daily limit: 2 withdrawals per day'),
-              _buildRuleItem('Processing Time: 1-2 business days'),
+          _buildRuleItem('Daily limit: 2 withdrawals per day'),
+          _buildRuleItem('Processing Time: 1-2 business days'),
             ],
         ],
       ),
@@ -541,8 +541,8 @@ class _WithdrawEarningsScreenState extends ConsumerState<WithdrawEarningsScreen>
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? AppColors.secondary.withOpacity(0.1)
-                        : Colors.grey.shade50,
+                            ? AppColors.secondary.withOpacity(0.1)
+                            : Colors.grey.shade50,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: isSelected ? AppColors.primary : Colors.grey.shade300,

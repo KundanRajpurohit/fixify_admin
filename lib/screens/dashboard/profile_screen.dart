@@ -1,5 +1,6 @@
 import 'package:fixify_admin/components/custom_app_bar.dart';
 import 'package:fixify_admin/config/app_colors.dart';
+import 'package:fixify_admin/main.dart' show navigatorKey;
 import 'package:fixify_admin/providers/auth_provider.dart';
 import 'package:fixify_admin/providers/location_provider.dart'
     show userServiceProvider;
@@ -9,7 +10,7 @@ import 'package:fixify_admin/screens/dashboard/my_documents_screen.dart';
 import 'package:fixify_admin/screens/dashboard/privacy_policy_screen.dart';
 import 'package:fixify_admin/screens/dashboard/terms_of_service_screen.dart';
 import 'package:fixify_admin/screens/dashboard/vendor_list_page.dart';
-import 'package:fixify_admin/screens/onboarding/get_started_screen.dart';
+import 'package:fixify_admin/screens/auth/phone_verification_screen.dart';
 import 'package:fixify_admin/screens/settings/earnings_dashboard_screen.dart';
 import 'package:fixify_admin/screens/settings/revieW_page.dart';
 import 'package:fixify_admin/screens/settings/transaction_history.dart';
@@ -726,37 +727,32 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     final userService = ref.read(userServiceProvider);
                     final result = await userService.partnerLogout();
 
-                    // Always clear auth state and navigate, regardless of API result
+                    // Always clear auth state, regardless of API result
                     await ref.read(authProvider.notifier).logout();
 
-                    // Navigation will be handled by auth state change
-                    if (mounted) {
-                      result.fold(
-                        (failure) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Logout failed: ${failure.message}',
-                              ),
-                              backgroundColor: Colors.red,
-                            ),
-                          );
-                          // Even if API fails, we've cleared preferences
-                          print(
-                            '⚠️ [ProfileScreen] Logout API failed but preferences cleared',
-                          );
-                        },
-                        (data) {
-                          Navigator.of(context).pushAndRemoveUntil(
-                            PageTransition(
-                              type: PageTransitionType.fade,
-                              duration: const Duration(milliseconds: 300),
-                              child: const GetStartedScreen(),
-                            ),
-                            (route) => false,
-                          );
-                          print('✅ [ProfileScreen] Logout successful');
-                        },
+                    // Always navigate to login screen, regardless of API result
+                    result.fold(
+                      (failure) {
+                        // Even if API fails, we've cleared preferences - navigate to login
+                        print(
+                          '⚠️ [ProfileScreen] Logout API failed but preferences cleared - navigating to login',
+                        );
+                      },
+                      (data) {
+                        print('✅ [ProfileScreen] Logout successful - navigating to login');
+                      },
+                    );
+                    
+                    // Navigate to PhoneVerificationScreen (login screen) using global navigator key
+                    // This is safer than using context after dialog is closed
+                    if (navigatorKey.currentState != null) {
+                      navigatorKey.currentState!.pushAndRemoveUntil(
+                        PageTransition(
+                          type: PageTransitionType.fade,
+                          duration: const Duration(milliseconds: 300),
+                          child: const PhoneVerificationScreen(),
+                        ),
+                        (route) => false,
                       );
                     }
                   },

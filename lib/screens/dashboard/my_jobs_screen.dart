@@ -519,7 +519,7 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen>
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    "Service Requested",
+                  job.title,
                     style: TextStyle(fontSize: 15, color: Colors.black87),
                   ),
                   const SizedBox(height: 10),

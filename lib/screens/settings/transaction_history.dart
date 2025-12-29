@@ -201,20 +201,20 @@ class _TransactionHistoryScreenState
                   ),
                 )
               : Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: ListView(
-                    children: [
-                      const SizedBox(height: 18),
-                      const Text(
-                        'View all your completed payouts and earnings.',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                      ),
-                      const SizedBox(height: 24),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: ListView(
+          children: [
+            const SizedBox(height: 18),
+            const Text(
+              'View all your completed payouts and earnings.',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            ),
+            const SizedBox(height: 24),
                       _buildTransactionList(),
-                      const SizedBox(height: 16),
-                    ],
-                  ),
-                ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
     );
   }
 
@@ -296,8 +296,8 @@ class _TransactionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final borderColor = item.type == TransactionType.credit
-        ? const Color(0xFF1EC37F)
-        : const Color(0xFFFF5B5B);
+            ? const Color(0xFF1EC37F)
+            : const Color(0xFFFF5B5B);
 
     return Container(
       decoration: BoxDecoration(

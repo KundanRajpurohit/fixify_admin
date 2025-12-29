@@ -1,11 +1,11 @@
 class JobModel {
   final String username;
   final String address;
-  final String? price;
+  final int? price;
   final String workStatus;
   final String dateTime;
   final String token;
-
+  final String  title;
   JobModel({
     required this.username,
     required this.address,
@@ -13,6 +13,7 @@ class JobModel {
     required this.workStatus,
     required this.dateTime,
     required this.token,
+    required this.title,
   });
 
   factory JobModel.fromJson(Map<String, dynamic> json) {
@@ -23,6 +24,7 @@ class JobModel {
       workStatus: json['work_status'] ?? "",
       dateTime: json['date_time'] ?? "",
       token: json['token'] ?? "",
+      title:json['title']??"",
     );
   }
 }
