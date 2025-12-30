@@ -247,11 +247,58 @@ class UserService {
     }
   }
 
+  // Fetch list of services
+  Future<ApiResult<List<String>>> fetchServices() async {
+    try {
+      print('🔍 [UserService] Starting fetchServices API call');
+      print('🌐 [UserService] API endpoint: ${ApiConfig.partnerListServices}');
+      print(
+        '🔗 [UserService] Full URL: ${ApiConfig.baseUrl}${ApiConfig.partnerListServices}',
+      );
+
+      final response = await http.get(
+        Uri.parse('${ApiConfig.baseUrl}${ApiConfig.partnerListServices}'),
+      );
+
+      print('📥 [UserService] Services Response received:');
+      print('   - Status Code: ${response.statusCode}');
+      print('   - Response Body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['status'] == true && data['data'] != null) {
+          final List<dynamic> servicesData = data['data'];
+          final List<String> services = servicesData
+              .map((service) => service['title'] as String)
+              .toList();
+          print('✅ [UserService] Services fetched successfully: $services');
+          return right(services);
+        } else {
+          print('❌ [UserService] Services fetch failed - invalid response');
+          return left(ServerFailure(
+            data['message'] ?? 'Failed to fetch services',
+            response.statusCode,
+          ));
+        }
+      } else {
+        print('❌ [UserService] Services HTTP Error: ${response.statusCode}');
+        return left(ServerFailure(
+          'Failed to fetch services',
+          response.statusCode,
+        ));
+      }
+    } catch (e) {
+      print('❌ [UserService] Services fetch error: $e');
+      return left(UnknownFailure(e.toString()));
+    }
+  }
+
   // Partner Registration
   Future<ApiResult<Map<String, dynamic>>> partnerRegister({
     required String name,
     required String mobile,
     required String email,
+    String? services,
     File? image,
   }) async {
     try {
@@ -260,6 +307,7 @@ class UserService {
       print('   - name: $name');
       print('   - mobile: $mobile');
       print('   - email: $email');
+      print('   - services: ${services ?? "null"}');
       print('   - image: ${image?.path ?? "null"}');
       print('🌐 [UserService] API endpoint: ${ApiConfig.partnerRegister}');
       print(
@@ -270,6 +318,7 @@ class UserService {
         'name': name,
         'mobile': mobile,
         'email': email,
+        if (services != null) 'services': services,
         if (image != null)
           'image': await MultipartFile.fromFile(
             image.path,

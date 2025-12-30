@@ -38,11 +38,71 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
   final _phoneNumberController = TextEditingController();
   final _emailController = TextEditingController();
 
+  // Services state
+  List<String> _services = [];
+  String? _selectedService;
+  bool _isLoadingServices = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Load services after the first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadServices();
+    });
+  }
+
   @override
   void dispose() {
     _firstNameController.dispose();
     _lastNameController.dispose();
+    _phoneNumberController.dispose();
+    _emailController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadServices() async {
+    setState(() {
+      _isLoadingServices = true;
+    });
+
+    try {
+      final userService = ref.read(userServiceProvider);
+      final result = await userService.fetchServices();
+
+      if (!mounted) return;
+
+      result.fold(
+        (failure) {
+          setState(() {
+            _isLoadingServices = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to load services: ${failure.message}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        },
+        (services) {
+          setState(() {
+            _services = services;
+            _isLoadingServices = false;
+          });
+        },
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoadingServices = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error loading services: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   Future<void> _saveAccount() async {
@@ -87,15 +147,31 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
       // Use phone number as entered (API expects just the number without dial code)
       final mobileNumber = phoneNumber.replaceAll(RegExp(r'[^\d]'), ''); // Remove any non-digits
 
+      // Validate service selection
+      if (_selectedService == null || _selectedService!.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please select a service'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+
       print('📝 [CreateProfile] Registering partner:');
       print('   - name: $fullName');
       print('   - mobile: $mobileNumber');
       print('   - email: $email');
+      print('   - services: $_selectedService');
 
       final result = await userService.partnerRegister(
         name: fullName,
         mobile: mobileNumber,
         email: email,
+        services: _selectedService,
         image: _profileImage,
       );
 
@@ -211,6 +287,8 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                       _phoneNumberController,
                       _emailController,
                     ),
+                    const SizedBox(height: 20),
+                    _buildServicesCard(),
                     SizedBox(height:15.h),
                     SizedBox(
                       width: double.infinity,
@@ -573,6 +651,119 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
               }
               return null;
             },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildServicesCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 18,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Service',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.shade200),
+              color: Colors.grey.shade50,
+            ),
+            child: DropdownButtonFormField<String>(
+              value: _selectedService,
+              decoration: InputDecoration(
+                hintText: 'Select a service',
+                hintStyle: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey.shade600,
+                ),
+                filled: true,
+                fillColor: Colors.grey.shade50,
+                // contentPadding: const EdgeInsets.symmetric(
+                //   horizontal: 16,
+                //   vertical: 16,
+                // ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey.shade200),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(
+                    color: Color(0xFF217043),
+                    width: 2,
+                  ),
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey.shade200),
+                ),
+                prefixIcon: const Icon(
+                  Icons.work_outline,
+                  color: Color(0xFF217043),
+                  size: 22,
+                ),
+              ),
+              items: _services.map((service) {
+                return DropdownMenuItem<String>(
+                  value: service,
+                  child: Text(
+                    service,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Colors.black87,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                );
+              }).toList(),
+              onChanged: _isLoadingServices
+                  ? null
+                  : (value) {
+                      setState(() {
+                        _selectedService = value;
+                      });
+                    },
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please select a service';
+                }
+                return null;
+              },
+              icon: Icon(
+                Icons.keyboard_arrow_down,
+                color: Colors.grey.shade600,
+                size: 24,
+              ),
+              dropdownColor: Colors.white,
+              style: const TextStyle(
+                fontSize: 16,
+                color: Colors.black87,
+              ),
+              isExpanded: true,
+              menuMaxHeight: 300,
+            ),
           ),
         ],
       ),

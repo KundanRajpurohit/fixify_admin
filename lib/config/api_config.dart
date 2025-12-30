@@ -77,6 +77,9 @@ class ApiConfig {
   static const String partnerUpdateMobile = '/partner/update-mobile';
   static const String partnerMobileOtpVerify = '/partner/mobile-otp-verify';
 
+  // Services endpoints
+  static const String partnerListServices = '/partner/list-services';
+
 
 
   // Google Places API
