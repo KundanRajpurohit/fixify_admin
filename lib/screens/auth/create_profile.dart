@@ -676,7 +676,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Service',
+            'Service/Profession',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,
