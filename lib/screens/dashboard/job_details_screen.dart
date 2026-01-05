@@ -1037,7 +1037,7 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
           _buildDetailRow(
             icon: 'assets/images/payment.png',
             label: 'Payment',
-            value: jobDetails?['price'] ?? "0",
+            value: (jobDetails?['price'] ?? 0).toString(),
           ),
         ],
       ),
