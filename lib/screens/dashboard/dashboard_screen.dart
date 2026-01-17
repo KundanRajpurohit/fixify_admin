@@ -24,13 +24,7 @@ class HomePageScreen extends StatefulWidget {
 
 class _HomePageScreenState extends State<HomePageScreen> {
   late int _selectedIndex;
-
-  final List<Widget> _screens = [
-    const HomeDashboardScreen(),
-    const MyJobsScreen(),
-    const SettingsScreen(),
-    const ProfileScreen(),
-  ];
+  final ValueNotifier<int> _tabNotifier = ValueNotifier<int>(0);
 
   final List<IconData> _icons = [
     FontAwesomeIcons.house,
@@ -45,6 +39,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
   void initState() {
     super.initState();
     _selectedIndex = widget.initialIndex;
+    _tabNotifier.value = _selectedIndex;
   }
 
   void _onItemTapped(int index) {
@@ -52,10 +47,17 @@ class _HomePageScreenState extends State<HomePageScreen> {
     setState(() {
       _selectedIndex = index;
     });
+    _tabNotifier.value = index;
   }
 
   @override
   Widget build(BuildContext context) {
+    final screens = [
+      HomeDashboardScreen(tabNotifier: _tabNotifier),
+      MyJobsScreen(),
+      const SettingsScreen(),
+      const ProfileScreen(),
+    ];
     return Scaffold(
       body: WillPopScope(
         onWillPop: () async {
@@ -63,7 +65,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
           SystemNavigator.pop();
           return false;
         },
-        child: IndexedStack(index: _selectedIndex, children: _screens),
+        child: IndexedStack(index: _selectedIndex, children: screens),
       ),
       bottomNavigationBar: SafeArea(
         child: Container(
@@ -168,9 +170,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
                   scale: isSelected ? 1.0 : 1.0,
                   child: Row(
                     children: [
-                      SizedBox(
-                        width: !isSelected ? 0 : 6,
-                      ),
+                      SizedBox(width: !isSelected ? 0 : 6),
                       Icon(
                         icon,
                         color: isSelected ? Colors.white : Colors.grey.shade400,
@@ -185,9 +185,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
               duration: const Duration(milliseconds: 300),
               width: isSelected ? 3 : 0,
             ),
-            SizedBox(
-              width: !isSelected ? 0 : 6,
-            ),
+            SizedBox(width: !isSelected ? 0 : 6),
             AnimatedDefaultTextStyle(
               duration: const Duration(milliseconds: 300),
               style: TextStyle(

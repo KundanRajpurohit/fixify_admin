@@ -116,7 +116,7 @@ class _CustomAppBarState extends ConsumerState<CustomAppBar> {
                             Icons.arrow_back_ios,
                             color: Colors.black,
                           ),
-                          onPressed: () => Navigator.pop(context),
+                          onPressed: () => Navigator.pop(context, true),
                         )
                         : const SizedBox.shrink(),
                     Text(

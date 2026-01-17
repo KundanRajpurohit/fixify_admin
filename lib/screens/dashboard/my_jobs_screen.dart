@@ -1,4 +1,3 @@
-
 import 'package:fixify_admin/components/custom_app_bar.dart';
 import 'package:fixify_admin/config/app_colors.dart';
 import 'package:fixify_admin/dio/resulr.dart';
@@ -17,7 +16,7 @@ class MyJobsScreen extends ConsumerStatefulWidget {
 }
 
 class _MyJobsScreenState extends ConsumerState<MyJobsScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late TabController _tabController;
   String _selectedNewJobFilter = 'All Jobs';
   String _selectedAssignedJobFilter = 'All Assigned Jobs';
@@ -28,9 +27,13 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen>
 
   // New Job Request filters
   final List<String> _newJobFilters = ['All Jobs', 'Upcoming', 'Cancelled'];
-  
+
   // Assigned Job filters
-  final List<String> _assignedJobFilters = ['All Assigned Jobs', 'Ongoing', 'Past'];
+  final List<String> _assignedJobFilters = [
+    'All Assigned Jobs',
+    'Ongoing',
+    'Past',
+  ];
 
   Map<String, dynamic> getStatusStyle(String status) {
     switch (status.toLowerCase()) {
@@ -187,14 +190,17 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+
     _tabController = TabController(length: 2, vsync: this);
     _loadNewJobs();
+
     _tabController.addListener(() {
       if (_selectedTabIndex != _tabController.index) {
         setState(() {
           _selectedTabIndex = _tabController.index;
         });
-        // Load jobs when tab changes
+
         if (_selectedTabIndex == 0) {
           _loadNewJobs();
         } else {
@@ -206,8 +212,20 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen>
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _tabController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      if (_selectedTabIndex == 0) {
+        _loadNewJobs();
+      } else {
+        _loadAssignedJobs();
+      }
+    }
   }
 
   void _showNewJobFilterDialog() {
@@ -221,28 +239,31 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen>
           padding: const EdgeInsets.symmetric(vertical: 20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            children: _newJobFilters.map((filter) {
-              final isSelected = _selectedNewJobFilter == filter;
-              return ListTile(
-                title: Text(
-                  filter,
-                  style: TextStyle(
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                    color: isSelected ? AppColors.primary : Colors.black87,
-                  ),
-                ),
-                trailing: isSelected
-                    ? Icon(Icons.check, color: AppColors.primary)
-                    : null,
-                onTap: () {
-                  setState(() {
-                    _selectedNewJobFilter = filter;
-                  });
-                  Navigator.pop(context);
-                  _loadNewJobs();
-                },
-              );
-            }).toList(),
+            children:
+                _newJobFilters.map((filter) {
+                  final isSelected = _selectedNewJobFilter == filter;
+                  return ListTile(
+                    title: Text(
+                      filter,
+                      style: TextStyle(
+                        fontWeight:
+                            isSelected ? FontWeight.bold : FontWeight.normal,
+                        color: isSelected ? AppColors.primary : Colors.black87,
+                      ),
+                    ),
+                    trailing:
+                        isSelected
+                            ? Icon(Icons.check, color: AppColors.primary)
+                            : null,
+                    onTap: () {
+                      setState(() {
+                        _selectedNewJobFilter = filter;
+                      });
+                      Navigator.pop(context);
+                      _loadNewJobs();
+                    },
+                  );
+                }).toList(),
           ),
         );
       },
@@ -260,28 +281,31 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen>
           padding: const EdgeInsets.symmetric(vertical: 20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            children: _assignedJobFilters.map((filter) {
-              final isSelected = _selectedAssignedJobFilter == filter;
-              return ListTile(
-                title: Text(
-                  filter,
-                  style: TextStyle(
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                    color: isSelected ? AppColors.primary : Colors.black87,
-                  ),
-                ),
-                trailing: isSelected
-                    ? Icon(Icons.check, color: AppColors.primary)
-                    : null,
-                onTap: () {
-                  setState(() {
-                    _selectedAssignedJobFilter = filter;
-                  });
-                  Navigator.pop(context);
-                  _loadAssignedJobs();
-                },
-              );
-            }).toList(),
+            children:
+                _assignedJobFilters.map((filter) {
+                  final isSelected = _selectedAssignedJobFilter == filter;
+                  return ListTile(
+                    title: Text(
+                      filter,
+                      style: TextStyle(
+                        fontWeight:
+                            isSelected ? FontWeight.bold : FontWeight.normal,
+                        color: isSelected ? AppColors.primary : Colors.black87,
+                      ),
+                    ),
+                    trailing:
+                        isSelected
+                            ? Icon(Icons.check, color: AppColors.primary)
+                            : null,
+                    onTap: () {
+                      setState(() {
+                        _selectedAssignedJobFilter = filter;
+                      });
+                      Navigator.pop(context);
+                      _loadAssignedJobs();
+                    },
+                  );
+                }).toList(),
           ),
         );
       },
@@ -325,9 +349,10 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen>
               children: [
                 Expanded(
                   child: GestureDetector(
-                    onTap: _selectedTabIndex == 0
-                        ? _showNewJobFilterDialog
-                        : _showAssignedJobFilterDialog,
+                    onTap:
+                        _selectedTabIndex == 0
+                            ? _showNewJobFilterDialog
+                            : _showAssignedJobFilterDialog,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
@@ -397,15 +422,16 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen>
             ),
             const SizedBox(height: 20),
             ElevatedButton.icon(
-              onPressed: _isLoading
-                  ? null
-                  : () {
-                      if (isNewJob) {
-                        _loadNewJobs();
-                      } else {
-                        _loadAssignedJobs();
-                      }
-                    },
+              onPressed:
+                  _isLoading
+                      ? null
+                      : () {
+                        if (isNewJob) {
+                          _loadNewJobs();
+                        } else {
+                          _loadAssignedJobs();
+                        }
+                      },
               icon: const Icon(Icons.refresh),
               label: Text(_isLoading ? 'Refreshing...' : 'Refresh'),
               style: ElevatedButton.styleFrom(
@@ -475,18 +501,22 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen>
   Widget _buildJobCard(JobModel job, bool isNewJob) {
     final status = getStatusStyle(job.workStatus);
     return GestureDetector(
-      onTap: () {
-        Navigator.push(
+      onTap: () async {
+        final shouldRefresh = await Navigator.push<bool>(
           context,
           PageTransition(
             type: PageTransitionType.rightToLeft,
-            duration: const Duration(milliseconds: 300),
-            child: JobDetailsScreen(
-              token: job.token,
-              isNewJob: isNewJob,
-            ),
+            child: JobDetailsScreen(token: job.token, isNewJob: isNewJob),
           ),
         );
+
+        if (shouldRefresh == true) {
+          if (_selectedTabIndex == 0) {
+            _loadNewJobs();
+          } else {
+            _loadAssignedJobs();
+          }
+        }
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
@@ -519,7 +549,7 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen>
                   ),
                   const SizedBox(height: 4),
                   Text(
-                  job.title,
+                    job.title,
                     style: TextStyle(fontSize: 15, color: Colors.black87),
                   ),
                   const SizedBox(height: 10),

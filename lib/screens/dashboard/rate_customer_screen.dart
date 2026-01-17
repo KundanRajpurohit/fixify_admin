@@ -1,19 +1,18 @@
 import 'package:fixify_admin/config/app_colors.dart';
+import 'package:fixify_admin/providers/location_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class RateCustomerScreen extends StatefulWidget {
+class RateCustomerScreen extends ConsumerStatefulWidget {
   final Map<String, dynamic> job;
 
-  const RateCustomerScreen({
-    super.key,
-    required this.job,
-  });
+  const RateCustomerScreen({super.key, required this.job});
 
   @override
-  State<RateCustomerScreen> createState() => _RateCustomerScreenState();
+  ConsumerState<RateCustomerScreen> createState() => _RateCustomerScreenState();
 }
 
-class _RateCustomerScreenState extends State<RateCustomerScreen> {
+class _RateCustomerScreenState extends ConsumerState<RateCustomerScreen> {
   int _rating = 0;
   final _commentController = TextEditingController();
   bool _isSubmitting = false;
@@ -82,8 +81,8 @@ class _RateCustomerScreenState extends State<RateCustomerScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          '₹199',
+                        Text(
+                          "₹ ${widget.job['price'] ?? 199}",
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -91,7 +90,7 @@ class _RateCustomerScreenState extends State<RateCustomerScreen> {
                           ),
                         ),
                         Text(
-                          '4:15 PM',
+                          widget.job['date_time'] ?? '4:15 PM',
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.grey.shade600,
@@ -105,15 +104,12 @@ class _RateCustomerScreenState extends State<RateCustomerScreen> {
                       children: [
                         const Text(
                           'Payout Received',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.black87,
-                          ),
+                          style: TextStyle(fontSize: 14, color: Colors.black87),
                         ),
                         Row(
                           children: [
-                            const Text(
-                              '#256425',
+                            Text(
+                              widget.job['ServiceID'] ?? '2R0RU4DBRO',
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
@@ -134,7 +130,7 @@ class _RateCustomerScreenState extends State<RateCustomerScreen> {
                     Row(
                       children: [
                         Text(
-                          widget.job['jobType'] ?? 'Service',
+                          widget.job['ServiceType'] ?? 'Service',
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.grey.shade600,
@@ -153,7 +149,7 @@ class _RateCustomerScreenState extends State<RateCustomerScreen> {
                   onPressed: () {
                     Navigator.of(context).pop(); // Close dialog
                     Navigator.of(context).pop(); // Go back to job details
-                    Navigator.of(context).pop(); // Go back to my jobs
+                    Navigator.of(context).pop(true); // Go back to my jobs
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
@@ -164,10 +160,7 @@ class _RateCustomerScreenState extends State<RateCustomerScreen> {
                   ),
                   child: const Text(
                     'Go to Job Details',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 ),
               ),
@@ -189,20 +182,59 @@ class _RateCustomerScreenState extends State<RateCustomerScreen> {
       return;
     }
 
+    if (_commentController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please add a comment'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     setState(() {
       _isSubmitting = true;
     });
 
-    // Simulate API call
-    await Future.delayed(const Duration(milliseconds: 500));
+    try {
+      print("job token: ${widget.job.toString()}");
+      final userService = ref.read(userServiceProvider);
+      final result = await userService.ratingCustomer(
+        jobToken: widget.job['token'], // 🔑 important
+        review: _rating.toDouble().toString(), // backend-safe
+        comment: _commentController.text.trim(),
+      );
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    setState(() {
-      _isSubmitting = false;
-    });
-
-    _showJobCompletedDialog();
+      result.fold(
+        (failure) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(failure.message),
+              backgroundColor: Colors.red,
+            ),
+          );
+        },
+        (success) {
+          _showJobCompletedDialog();
+        },
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Something went wrong. Please try again.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
+    }
   }
 
   @override
@@ -305,13 +337,16 @@ class _RateCustomerScreenState extends State<RateCustomerScreen> {
                                 });
                               },
                               child: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 4,
+                                ),
                                 child: Icon(
                                   Icons.star,
                                   size: 40,
-                                  color: index < _rating
-                                      ? Colors.amber
-                                      : Colors.grey.shade300,
+                                  color:
+                                      index < _rating
+                                          ? Colors.amber
+                                          : Colors.grey.shade300,
                                 ),
                               ),
                             );
@@ -351,20 +386,28 @@ class _RateCustomerScreenState extends State<RateCustomerScreen> {
                           controller: _commentController,
                           maxLines: 5,
                           decoration: InputDecoration(
-                            hintText: 'Share anything important about your experience...',
+                            hintText:
+                                'Share anything important about your experience...',
                             filled: true,
                             fillColor: Colors.grey.shade50,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.grey.shade300),
+                              borderSide: BorderSide(
+                                color: Colors.grey.shade300,
+                              ),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.grey.shade300),
+                              borderSide: BorderSide(
+                                color: Colors.grey.shade300,
+                              ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                              borderSide: const BorderSide(
+                                color: AppColors.primary,
+                                width: 2,
+                              ),
                             ),
                           ),
                         ),
@@ -401,22 +444,25 @@ class _RateCustomerScreenState extends State<RateCustomerScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: _isSubmitting
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                child:
+                    _isSubmitting
+                        ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
+                          ),
+                        )
+                        : const Text(
+                          'Submit',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      )
-                    : const Text(
-                        'Submit',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
               ),
             ),
           ),
@@ -425,15 +471,3 @@ class _RateCustomerScreenState extends State<RateCustomerScreen> {
     );
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-

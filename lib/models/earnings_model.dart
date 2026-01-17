@@ -21,7 +21,8 @@ class BookingTransactionDailyResponse {
   });
 
   factory BookingTransactionDailyResponse.fromJson(Map<String, dynamic> json) {
-    final dataList = (json['data'] as List<dynamic>?)
+    final dataList =
+        (json['data'] as List<dynamic>?)
             ?.map((item) => BookingTransactionItem.fromJson(item))
             .toList() ??
         [];
@@ -60,7 +61,8 @@ class BookingTransactionWeeklyResponse {
   });
 
   factory BookingTransactionWeeklyResponse.fromJson(Map<String, dynamic> json) {
-    final dataList = (json['data'] as List<dynamic>?)
+    final dataList =
+        (json['data'] as List<dynamic>?)
             ?.map((item) => BookingTransactionItem.fromJson(item))
             .toList() ??
         [];
@@ -97,8 +99,11 @@ class BookingTransactionMonthlyResponse {
     required this.data,
   });
 
-  factory BookingTransactionMonthlyResponse.fromJson(Map<String, dynamic> json) {
-    final dataList = (json['data'] as List<dynamic>?)
+  factory BookingTransactionMonthlyResponse.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final dataList =
+        (json['data'] as List<dynamic>?)
             ?.map((item) => BookingTransactionItem.fromJson(item))
             .toList() ??
         [];
@@ -138,7 +143,7 @@ class BookingTransactionItem {
     return BookingTransactionItem(
       username: json['username'] ?? '',
       address: json['address'] ?? '',
-      price: json['price'] ?? '',
+      price: json['price']?.toString() ?? '',
       workStatus: json['work_status'] ?? '',
       dateTime: json['date_time'],
       bookingId: json['booking_id'] ?? '',
@@ -167,7 +172,7 @@ class TransactionHistoryResponse {
 
   factory TransactionHistoryResponse.fromJson(Map<String, dynamic> json) {
     final dataList = (json['data'] as List<dynamic>?) ?? [];
-    
+
     // Check if items are withdrawal transactions (have transaction_id and requested_withdraw_amount)
     final List<WithdrawalTransactionItem> withdrawals = [];
     final List<TransactionHistoryItem> regularTransactions = [];
@@ -175,7 +180,8 @@ class TransactionHistoryResponse {
     for (final item in dataList) {
       if (item is Map<String, dynamic>) {
         // Check if it's a withdrawal transaction (has transaction_id and requested_withdraw_amount)
-        if (item.containsKey('transaction_id') && item.containsKey('requested_withdraw_amount')) {
+        if (item.containsKey('transaction_id') &&
+            item.containsKey('requested_withdraw_amount')) {
           withdrawals.add(WithdrawalTransactionItem.fromJson(item));
         } else {
           // Try to parse as regular transaction
@@ -221,27 +227,37 @@ class TransactionHistoryItem {
     final title = json['title'] ?? json['transaction_title'] ?? '';
     final amount = json['amount'] ?? json['transaction_amount'] ?? '';
     final amountStr = amount.toString();
-    final isCredit = title.toLowerCase().contains('payout received') ||
+    final isCredit =
+        title.toLowerCase().contains('payout received') ||
         title.toLowerCase().contains('credit') ||
         title.toLowerCase().contains('received') ||
         (!amountStr.startsWith('-') && amountStr.isNotEmpty);
 
     return TransactionHistoryItem(
       amount: amountStr,
-      time: json['time'] ?? json['transaction_time'] ?? json['created_at'] ?? '',
+      time:
+          json['time'] ?? json['transaction_time'] ?? json['created_at'] ?? '',
       title: title,
-      subTitle: json['sub_title'] ?? json['subTitle'] ?? json['description'] ?? json['subtitle'] ?? '',
-      txnId: json['txn_id'] ?? json['txnId'] ?? json['transaction_id'] ?? json['id'] ?? '',
-      date: json['date'] ?? json['transaction_date'] ?? json['created_at'] ?? '',
+      subTitle:
+          json['sub_title'] ??
+          json['subTitle'] ??
+          json['description'] ??
+          json['subtitle'] ??
+          '',
+      txnId:
+          json['txn_id'] ??
+          json['txnId'] ??
+          json['transaction_id'] ??
+          json['id'] ??
+          '',
+      date:
+          json['date'] ?? json['transaction_date'] ?? json['created_at'] ?? '',
       type: isCredit ? TransactionType.credit : TransactionType.debit,
     );
   }
 }
 
-enum TransactionType {
-  credit,
-  debit,
-}
+enum TransactionType { credit, debit }
 
 // Withdrawal Models
 class CheckoutIndexResponse {
@@ -260,7 +276,8 @@ class CheckoutIndexResponse {
   });
 
   factory CheckoutIndexResponse.fromJson(Map<String, dynamic> json) {
-    final bankAccountsList = (json['data'] as List<dynamic>?)
+    final bankAccountsList =
+        (json['data'] as List<dynamic>?)
             ?.map((item) => BankAccount.fromJson(item))
             .toList() ??
         [];
@@ -320,7 +337,8 @@ class WithdrawalTransactionItem {
       if (json['requested_withdraw_amount'] is int) {
         requestedAmount = json['requested_withdraw_amount'] as int;
       } else if (json['requested_withdraw_amount'] is String) {
-        requestedAmount = int.tryParse(json['requested_withdraw_amount'] as String) ?? 0;
+        requestedAmount =
+            int.tryParse(json['requested_withdraw_amount'] as String) ?? 0;
       } else if (json['requested_withdraw_amount'] is num) {
         requestedAmount = (json['requested_withdraw_amount'] as num).toInt();
       }
@@ -332,7 +350,8 @@ class WithdrawalTransactionItem {
       if (json['approve_withdraw_amount'] is int) {
         approveAmount = json['approve_withdraw_amount'] as int;
       } else if (json['approve_withdraw_amount'] is String) {
-        approveAmount = int.tryParse(json['approve_withdraw_amount'] as String) ?? 0;
+        approveAmount =
+            int.tryParse(json['approve_withdraw_amount'] as String) ?? 0;
       } else if (json['approve_withdraw_amount'] is num) {
         approveAmount = (json['approve_withdraw_amount'] as num).toInt();
       }
@@ -356,7 +375,8 @@ class WithdrawalTransactionItem {
       } else if (json['platform_fee'] is int) {
         platformFee = (json['platform_fee'] as int) != 0;
       } else if (json['platform_fee'] is String) {
-        platformFee = json['platform_fee'] == 'true' || json['platform_fee'] == '1';
+        platformFee =
+            json['platform_fee'] == 'true' || json['platform_fee'] == '1';
       }
     }
 
@@ -375,7 +395,7 @@ class WithdrawalTransactionItem {
     );
   }
 
-  TransactionType get type => TransactionType.debit; // Withdrawals are always debit
+  TransactionType get type =>
+      TransactionType.debit; // Withdrawals are always debit
   String get amount => '₹$requestedWithdrawAmount';
 }
-

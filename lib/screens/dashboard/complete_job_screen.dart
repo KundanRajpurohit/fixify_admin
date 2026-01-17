@@ -1,23 +1,23 @@
 import 'package:fixify_admin/config/app_colors.dart';
+import 'package:fixify_admin/dio/resulr.dart';
+import 'package:fixify_admin/providers/location_provider.dart';
 import 'package:fixify_admin/screens/dashboard/rate_customer_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:page_transition/page_transition.dart';
 
-class CompleteJobScreen extends StatefulWidget {
+class CompleteJobScreen extends ConsumerStatefulWidget {
   final Map<String, dynamic> job;
 
-  const CompleteJobScreen({
-    super.key,
-    required this.job,
-  });
+  const CompleteJobScreen({super.key, required this.job});
 
   @override
-  State<CompleteJobScreen> createState() => _CompleteJobScreenState();
+  ConsumerState<CompleteJobScreen> createState() => _CompleteJobScreenState();
 }
 
-class _CompleteJobScreenState extends State<CompleteJobScreen> {
+class _CompleteJobScreenState extends ConsumerState<CompleteJobScreen> {
   final _formKey = GlobalKey<FormState>();
   final _notesController = TextEditingController();
   final List<File> _selectedImages = [];
@@ -75,24 +75,67 @@ class _CompleteJobScreenState extends State<CompleteJobScreen> {
       _isSubmitting = true;
     });
 
-    // Simulate API call
-    await Future.delayed(const Duration(milliseconds: 500));
+    try {
+      final userService = ref.read(userServiceProvider);
+      // 1️⃣ Submit Job Report (notes + images)
+      final reportResult = await userService.submitJobReport(
+        jobToken: widget.job['token'],
+        prNotes: _notesController.text.trim(),
+        prWorkImgs: _selectedImages,
+      );
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    setState(() {
-      _isSubmitting = false;
-    });
+      await reportResult.fold(
+        (failure) async {
+          throw failure;
+        },
+        (_) async {
+          // 2️⃣ Mark Job as Completed
+          final completeResult = await userService.jobCompleted(
+            widget.job['token'],
+          );
 
-    // Navigate to rate customer screen
-    Navigator.push(
-      context,
-      PageTransition(
-        type: PageTransitionType.rightToLeft,
-        duration: const Duration(milliseconds: 300),
-        child: RateCustomerScreen(job: widget.job),
-      ),
-    );
+          await completeResult.fold(
+            (failure) async {
+              throw failure;
+            },
+            (_) async {
+              // 3️⃣ Navigate to Rate Customer screen
+              if (!mounted) return;
+
+              Navigator.push(
+                context,
+                PageTransition(
+                  type: PageTransitionType.rightToLeft,
+                  duration: const Duration(milliseconds: 300),
+                  child: RateCustomerScreen(job: widget.job),
+                ),
+              );
+            },
+          );
+        },
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            e is ApiFailure
+                ? e.message
+                : 'Something went wrong. Please try again.',
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
+    }
   }
 
   @override
@@ -142,7 +185,7 @@ class _CompleteJobScreenState extends State<CompleteJobScreen> {
                 ],
               ),
             ),
-      
+
             // Content
             Expanded(
               child: SingleChildScrollView(
@@ -165,7 +208,7 @@ class _CompleteJobScreenState extends State<CompleteJobScreen> {
                 ),
               ),
             ),
-      
+
             // Submit Button
             Container(
               padding: const EdgeInsets.all(16),
@@ -191,22 +234,25 @@ class _CompleteJobScreenState extends State<CompleteJobScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: _isSubmitting
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  child:
+                      _isSubmitting
+                          ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
+                            ),
+                          )
+                          : const Text(
+                            'Submit',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                        )
-                      : const Text(
-                          'Submit',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
                 ),
               ),
             ),
@@ -310,10 +356,7 @@ class _CompleteJobScreenState extends State<CompleteJobScreen> {
           const SizedBox(height: 4),
           Text(
             'Add clear photos of the completed work.',
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey.shade600,
-            ),
+            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
           ),
           const SizedBox(height: 16),
           // Selected Images Grid
@@ -383,11 +426,7 @@ class _CompleteJobScreenState extends State<CompleteJobScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      Icons.camera_alt,
-                      color: AppColors.primary,
-                      size: 32,
-                    ),
+                    Icon(Icons.camera_alt, color: AppColors.primary, size: 32),
                     const SizedBox(height: 8),
                     Text(
                       'Add Photo',
@@ -450,7 +489,10 @@ class _CompleteJobScreenState extends State<CompleteJobScreen> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                borderSide: const BorderSide(
+                  color: AppColors.primary,
+                  width: 2,
+                ),
               ),
             ),
           ),
@@ -459,17 +501,3 @@ class _CompleteJobScreenState extends State<CompleteJobScreen> {
     );
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-

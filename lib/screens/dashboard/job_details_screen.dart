@@ -210,7 +210,7 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.of(context).pop(); // Close dialog
-                    Navigator.of(context).pop(); // Go back to My Jobs
+                    Navigator.of(context).pop(true); // Go back to My Jobs
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
@@ -691,7 +691,7 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
                 height: 48,
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.of(context).pop();
+                    Navigator.of(context).pop(true);
                     // Refresh job details to show updated status
                     _fetchJobDetails();
                   },
@@ -1079,7 +1079,7 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
           _buildDetailRowWithAction(
             icon: Icons.phone,
             label: 'Contact Number',
-            value: jobDetails?['UserMobile'],
+            value: jobDetails?['UserMobile'] ?? "Not Available",
             actionText: 'Call Now',
             onAction: () => _makePhoneCall('+918535544156'),
           ),
