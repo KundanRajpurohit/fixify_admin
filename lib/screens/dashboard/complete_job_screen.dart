@@ -501,3 +501,4 @@ class _CompleteJobScreenState extends ConsumerState<CompleteJobScreen> {
     );
   }
 }
+

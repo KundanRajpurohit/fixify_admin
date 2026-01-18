@@ -107,7 +107,7 @@ class _WithdrawEarningsScreenState extends ConsumerState<WithdrawEarningsScreen>
     return double.tryParse(_amountController.text.replaceAll(',', '')) ?? 0.0;
   }
 
-  double get _platformFee => (_checkoutData?.platformFee ?? 0).toDouble();
+  double get _platformFee => _withdrawalAmount * 0.15; // 15% platform fee
   double get _willReceive => _withdrawalAmount - _platformFee;
 
   void _showSuccessDialog() {
@@ -706,8 +706,8 @@ class _WithdrawEarningsScreenState extends ConsumerState<WithdrawEarningsScreen>
           ),
           const Divider(height: 24),
           _buildSummaryRow(
-            'Platform Fee',
-            '₹${_platformFee.toStringAsFixed(0)}',
+            'Platform Fee (15%)',
+            '₹${_platformFee.toStringAsFixed(2)}',
           ),
           const Divider(height: 24),
           _buildSummaryRow(

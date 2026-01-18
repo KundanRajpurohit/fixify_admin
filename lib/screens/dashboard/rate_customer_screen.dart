@@ -471,3 +471,4 @@ class _RateCustomerScreenState extends ConsumerState<RateCustomerScreen> {
     );
   }
 }
+
