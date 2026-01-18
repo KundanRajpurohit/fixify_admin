@@ -1,12 +1,11 @@
 import 'dart:io';
-
 import 'package:file_picker/file_picker.dart';
 import 'package:fixify_admin/components/custom_app_bar.dart';
 import 'package:fixify_admin/config/app_colors.dart';
+import 'package:fixify_admin/helpers/translate_helper.dart';
 import 'package:fixify_admin/providers/location_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:page_transition/page_transition.dart';
 
 class MyDocumentsScreen extends ConsumerStatefulWidget {
   const MyDocumentsScreen({super.key});
@@ -74,7 +73,7 @@ class _MyDocumentsScreenState extends ConsumerState<MyDocumentsScreen> {
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${e.toString()}'),
+            content: Text('${ref.t('common.error')}: ${e.toString()}'),
             backgroundColor: Colors.red,
           ),
         );
@@ -112,8 +111,8 @@ class _MyDocumentsScreenState extends ConsumerState<MyDocumentsScreen> {
   Future<void> _submitDocuments() async {
     if (!_hasChanges) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select at least one document to upload.'),
+         SnackBar(
+          content: Text(ref.t('dashboard.please_select_at_least_one_document')),
           backgroundColor: Colors.orange,
         ),
       );
@@ -177,7 +176,7 @@ class _MyDocumentsScreenState extends ConsumerState<MyDocumentsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7F8),
-      appBar: CustomAppBar(title: 'My Document\'s', showbackButton: true),
+      appBar: CustomAppBar(title: ref.t('profile.my_documents'), showbackButton: true),
       body: _isLoading
           ? const Center(
               child: CircularProgressIndicator(
@@ -654,7 +653,7 @@ class _MyDocumentsScreenState extends ConsumerState<MyDocumentsScreen> {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              child: Text(hasImage || showSelectedFile ? 'Change' : 'Upload'),
+              child: Text(hasImage || showSelectedFile ? ref.t('common.edit') : ref.t('auth.upload')),
             ),
           ),
         ],

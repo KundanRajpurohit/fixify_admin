@@ -1,5 +1,6 @@
 import 'package:fixify_admin/config/app_colors.dart';
 import 'package:fixify_admin/dio/resulr.dart';
+import 'package:fixify_admin/helpers/translate_helper.dart';
 import 'package:fixify_admin/providers/location_provider.dart';
 import 'package:fixify_admin/screens/dashboard/rate_customer_screen.dart';
 import 'package:flutter/material.dart';
@@ -62,9 +63,9 @@ class _CompleteJobScreenState extends ConsumerState<CompleteJobScreen> {
     }
 
     if (_selectedImages.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please upload at least one photo'),
+        ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(ref.t('dashboard.please_upload_at_least_one_photo')),
           backgroundColor: Colors.red,
         ),
       );
@@ -124,7 +125,7 @@ class _CompleteJobScreenState extends ConsumerState<CompleteJobScreen> {
           content: Text(
             e is ApiFailure
                 ? e.message
-                : 'Something went wrong. Please try again.',
+                : ref.t('common.try_again'),
           ),
           backgroundColor: Colors.red,
         ),
@@ -157,10 +158,10 @@ class _CompleteJobScreenState extends ConsumerState<CompleteJobScreen> {
                     icon: const Icon(Icons.arrow_back, color: Colors.black87),
                     onPressed: () => Navigator.pop(context),
                   ),
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      'Complete Job',
-                      style: TextStyle(
+                      ref.t('dashboard.complete_job'),
+                      style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                         color: Colors.black87,
@@ -246,9 +247,9 @@ class _CompleteJobScreenState extends ConsumerState<CompleteJobScreen> {
                               ),
                             ),
                           )
-                          : const Text(
-                            'Submit',
-                            style: TextStyle(
+                          : Text(
+                            ref.t('common.submit'),
+                            style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
                             ),
@@ -279,19 +280,19 @@ class _CompleteJobScreenState extends ConsumerState<CompleteJobScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Instruction',
-            style: TextStyle(
+          Text(
+            ref.t('auth.instruction'),
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
               color: Colors.black87,
             ),
           ),
           const SizedBox(height: 12),
-          _buildInstructionItem('Maximum file size: 25 MB per document'),
-          _buildInstructionItem('Supported formats: JPG, PNG, PDF'),
-          _buildInstructionItem('Make sure documents are clear and readable'),
-          _buildInstructionItem('Avoid blurry or low-resolution images'),
+          _buildInstructionItem(ref.t('auth.maximum_file_size')),
+          _buildInstructionItem(ref.t('auth.supported_formats')),
+          _buildInstructionItem(ref.t('auth.make_sure_documents')),
+          _buildInstructionItem(ref.t('auth.avoid_blurry')),
         ],
       ),
     );
@@ -345,9 +346,9 @@ class _CompleteJobScreenState extends ConsumerState<CompleteJobScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Upload Job Photos',
-            style: TextStyle(
+          Text(
+            ref.t('dashboard.upload_job_photos'),
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
               color: Colors.black87,
@@ -355,7 +356,7 @@ class _CompleteJobScreenState extends ConsumerState<CompleteJobScreen> {
           ),
           const SizedBox(height: 4),
           Text(
-            'Add clear photos of the completed work.',
+            ref.t('dashboard.add_clear_photos'),
             style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
           ),
           const SizedBox(height: 16),
@@ -429,7 +430,7 @@ class _CompleteJobScreenState extends ConsumerState<CompleteJobScreen> {
                     Icon(Icons.camera_alt, color: AppColors.primary, size: 32),
                     const SizedBox(height: 8),
                     Text(
-                      'Add Photo',
+                      ref.t('dashboard.add_photo'),
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey.shade700,
@@ -463,9 +464,9 @@ class _CompleteJobScreenState extends ConsumerState<CompleteJobScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Notes',
-            style: TextStyle(
+          Text(
+            ref.t('dashboard.notes'),
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
               color: Colors.black87,
@@ -476,7 +477,7 @@ class _CompleteJobScreenState extends ConsumerState<CompleteJobScreen> {
             controller: _notesController,
             maxLines: 5,
             decoration: InputDecoration(
-              hintText: 'Write notes (if any).',
+              hintText: ref.t('dashboard.write_notes'),
               filled: true,
               fillColor: Colors.grey.shade50,
               border: OutlineInputBorder(

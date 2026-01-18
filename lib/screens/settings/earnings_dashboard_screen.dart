@@ -1,5 +1,6 @@
 import 'package:fixify_admin/components/custom_app_bar.dart';
 import 'package:fixify_admin/config/app_colors.dart';
+import 'package:fixify_admin/helpers/translate_helper.dart';
 import 'package:fixify_admin/models/earnings_model.dart';
 import 'package:fixify_admin/providers/location_provider.dart';
 import 'package:fixify_admin/screens/dashboard/withdraw_earnings_screen.dart';
@@ -19,7 +20,11 @@ class EarningsDashboardScreen extends ConsumerStatefulWidget {
 class _EarningsDashboardScreenState
     extends ConsumerState<EarningsDashboardScreen> {
   int _selectedFilter = 0; // 0: Daily, 1: Weekly, 2: Monthly
-  final List<String> _filters = ['Daily', 'Weekly', 'Monthly'];
+  List<String> get _filters => [
+    ref.t('dashboard.daily'),
+    ref.t('dashboard.weekly'),
+    ref.t('dashboard.monthly'),
+  ];
 
   bool _isLoading = false;
   String? _errorMessage;
@@ -241,7 +246,7 @@ class _EarningsDashboardScreenState
       firstDate: DateTime(2000),
       lastDate: now,
       initialDatePickerMode: DatePickerMode.year,
-      helpText: 'Select Month',
+      helpText: ref.t('dashboard.select_month'),
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
@@ -318,7 +323,7 @@ class _EarningsDashboardScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(title: 'Earnings Dashboard', showbackButton: true),
+      appBar: CustomAppBar(title: ref.t('profile.earnings_dashboard'), showbackButton: true),
       backgroundColor: const Color(0xFFF5F7F8),
       body: SafeArea(
         child: _isLoading && _transactionItems.isEmpty

@@ -1,7 +1,8 @@
 import 'package:fixify_admin/providers/auth_provider.dart';
+import 'package:fixify_admin/providers/language_provider.dart';
+import 'package:fixify_admin/screens/auth/initial_language_selection_screen.dart';
 import 'package:fixify_admin/screens/auth/phone_verification_screen.dart';
 import 'package:fixify_admin/screens/dashboard/dashboard_screen.dart';
-import 'package:fixify_admin/screens/dashboard/home_screen.dart';
 import 'package:fixify_admin/screens/onboarding/onboarding_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -43,8 +44,33 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     // Navigate after 3 seconds
     Future.delayed(const Duration(seconds: 3), () {
       if (!mounted) return;
-      _navigateBasedOnAuthState();
+      _checkLanguageAndNavigate();
     });
+  }
+
+  Future<void> _checkLanguageAndNavigate() async {
+    // First check if language has been selected
+    final languageNotifier = ref.read(languageProvider.notifier);
+    final hasSelectedLanguage = await languageNotifier.hasLanguageBeenSelected();
+
+    if (!hasSelectedLanguage) {
+      // Navigate to language selection screen
+      print('🌐 [SplashScreen] No language selected - Navigating to InitialLanguageSelectionScreen');
+      if (!mounted) return;
+      
+      Navigator.pushReplacement(
+        context,
+        PageTransition(
+          type: PageTransitionType.fade,
+          duration: const Duration(milliseconds: 500),
+          child: const InitialLanguageSelectionScreen(),
+        ),
+      );
+      return;
+    }
+
+    // Language is selected, proceed with auth-based navigation
+    _navigateBasedOnAuthState();
   }
 
   void _navigateBasedOnAuthState() {

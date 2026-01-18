@@ -1,12 +1,14 @@
+import 'package:fixify_admin/helpers/translate_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'home_screen.dart';
 import 'my_jobs_screen.dart';
 import 'profile_screen.dart';
 import 'settings_screen.dart';
 
-class HomePageScreen extends StatefulWidget {
+class HomePageScreen extends ConsumerStatefulWidget {
   final int initialIndex;
   final String? userId;
   final String? sessionId;
@@ -19,10 +21,10 @@ class HomePageScreen extends StatefulWidget {
   });
 
   @override
-  State<HomePageScreen> createState() => _HomePageScreenState();
+  ConsumerState<HomePageScreen> createState() => _HomePageScreenState();
 }
 
-class _HomePageScreenState extends State<HomePageScreen> {
+class _HomePageScreenState extends ConsumerState<HomePageScreen> {
   late int _selectedIndex;
   final ValueNotifier<int> _tabNotifier = ValueNotifier<int>(0);
 
@@ -33,7 +35,12 @@ class _HomePageScreenState extends State<HomePageScreen> {
     FontAwesomeIcons.user,
   ];
 
-  final List<String> _labels = ['Home', 'My Jobs', 'Settings', 'Profile'];
+  List<String> get _labels => [
+    ref.t('dashboard.home'),
+    ref.t('dashboard.my_jobs'),
+    ref.t('dashboard.settings'),
+    ref.t('dashboard.profile'),
+  ];
 
   @override
   void initState() {

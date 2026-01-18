@@ -1,20 +1,22 @@
 import 'package:fixify_admin/config/app_colors.dart';
+import 'package:fixify_admin/helpers/translate_helper.dart';
 import 'package:fixify_admin/screens/auth/create_profile.dart';
 import 'package:fixify_admin/screens/auth/phone_verification_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:page_transition/page_transition.dart';
 import 'location_permission_screen.dart';
 
-class GetStartedScreen extends StatefulWidget {
+class GetStartedScreen extends ConsumerStatefulWidget {
   const GetStartedScreen({super.key});
 
   @override
-  State<GetStartedScreen> createState() => _GetStartedScreenState();
+  ConsumerState<GetStartedScreen> createState() => _GetStartedScreenState();
 }
 
-class _GetStartedScreenState extends State<GetStartedScreen>
+class _GetStartedScreenState extends ConsumerState<GetStartedScreen>
     with TickerProviderStateMixin {
   late AnimationController _topAnimationController;
   late AnimationController _middleAnimationController;
@@ -172,9 +174,9 @@ class _GetStartedScreenState extends State<GetStartedScreen>
                 ),
                 child: Column(
                   children: [
-                    const Text(
-                      'FIXIFY',
-                      style: TextStyle(
+                    Text(
+                      ref.t('app.name'),
+                      style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
                         color: AppColors.textPrimary,
@@ -182,9 +184,9 @@ class _GetStartedScreenState extends State<GetStartedScreen>
                       textAlign: TextAlign.center,
                     ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.3),
                     const SizedBox(height: 15),
-                    const Text(
-                          'Join our platform as a trusted service partner and grow your business with more bookings, easy management, and fast payments.',
-                          style: TextStyle(
+                    Text(
+                          ref.t('onboarding.join_platform'),
+                          style: const TextStyle(
                             fontSize: 16,
                             color: AppColors.textSecondary,
                             height: 1.5,
@@ -217,9 +219,9 @@ class _GetStartedScreenState extends State<GetStartedScreen>
                           ),
                           elevation: 3,
                         ),
-                        child: const Text(
-                          'Create Account',
-                          style: TextStyle(
+                        child: Text(
+                          ref.t('onboarding.create_account'),
+                          style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
                           ),
@@ -231,7 +233,7 @@ class _GetStartedScreenState extends State<GetStartedScreen>
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          'Already have an account? ',
+                          '${ref.t('onboarding.already_have_account')} ',
                           style: TextStyle(
                             fontSize: 16,
                             color: AppColors.textSecondary,
@@ -252,7 +254,7 @@ class _GetStartedScreenState extends State<GetStartedScreen>
                             );
                           },
                           child: Text(
-                            'Log In',
+                            ref.t('onboarding.log_in'),
                             style: TextStyle(
                               fontSize: 16,
                               color: AppColors.primary,

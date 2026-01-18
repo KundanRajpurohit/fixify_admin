@@ -1,4 +1,5 @@
 import 'package:fixify_admin/components/custom_app_bar.dart';
+import 'package:fixify_admin/helpers/translate_helper.dart';
 import 'package:fixify_admin/providers/location_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -126,7 +127,7 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen>
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(value ? 'You are now online' : 'You are now offline'),
+            content: Text(value ? ref.t('dashboard.go_online_success') : ref.t('dashboard.go_offline_success')),
             backgroundColor: Colors.green,
           ),
         );
@@ -187,19 +188,19 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen>
   }
 
   String _formatTrendText(Map<String, dynamic>? data) {
-    if (data == null) return 'No change';
+    if (data == null) return ref.t('dashboard.no_change');
 
     final percentage = data['percentage_change'] ?? 0;
     final trend = data['trend'] ?? 'no_change';
 
     if (trend == 'no_change' || percentage == 0) {
-      return 'No change';
+      return ref.t('dashboard.no_change');
     }
 
     final symbol = trend == 'up' ? '↑' : '↓';
     final color = trend == 'up' ? Colors.green : Colors.red;
 
-    return '$symbol ${percentage.abs()}% vs Yesterday';
+    return '$symbol ${percentage.abs()}% ${ref.t('dashboard.vs_yesterday')}';
   }
 
   Color _getTrendColor(Map<String, dynamic>? data) {
@@ -216,7 +217,7 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF6F7F9),
-      appBar: CustomAppBar(title: 'Dashboard', showbackButton: false),
+      appBar: CustomAppBar(title: ref.t('dashboard.dashboard'), showbackButton: false),
       body: Column(
         children: [
           Expanded(
@@ -237,7 +238,7 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen>
                               children: [
                                 Expanded(
                                   child: _statCard(
-                                    title: "Today's Booking",
+                                    title: ref.t('dashboard.todays_booking'),
                                     value:
                                         _dashboardData?['booking']?['today']
                                             ?.toString() ??
@@ -256,7 +257,7 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen>
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: _statCard(
-                                    title: "Today's Earnings",
+                                    title: ref.t('dashboard.todays_earnings'),
                                     value:
                                         '₹${_dashboardData?['earning']?['today']?.toString() ?? '0.00'}',
                                     trendText: _formatTrendText(
@@ -371,9 +372,9 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Performance Score',
-            style: TextStyle(
+          Text(
+            ref.t('dashboard.performance_score'),
+            style: const TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w500,
               color: Colors.black87,
@@ -426,9 +427,9 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Quick Action',
-            style: TextStyle(
+          Text(
+            ref.t('dashboard.quick_action'),
+            style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w700,
               color: Colors.black87,
@@ -451,10 +452,10 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen>
                 ),
               ),
               const SizedBox(width: 12),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'Go Online',
-                  style: TextStyle(
+                  ref.t('dashboard.go_online'),
+                  style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                     color: Colors.black87,
@@ -486,9 +487,9 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen>
                 color: Color(0xFF4A6CF7),
               ),
             ),
-            title: const Text(
-              'View Jobs',
-              style: TextStyle(
+            title: Text(
+              ref.t('dashboard.view_jobs'),
+              style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
                 color: Colors.black87,
@@ -521,7 +522,7 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen>
     final dateRangeText =
         _startDate != null && _endDate != null
             ? '${DateFormat('dd MMM yyyy').format(_startDate!)} To ${DateFormat('dd MMM yyyy').format(_endDate!)}'
-            : 'Select Date Range';
+            : ref.t('dashboard.select_date_range');
 
     return Container(
       width: double.infinity,
@@ -543,9 +544,9 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen>
           // Date row
           Row(
             children: [
-              const Text(
-                'Date:',
-                style: TextStyle(
+              Text(
+                ref.t('dashboard.date'),
+                style: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                   color: Colors.black54,
@@ -588,9 +589,9 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Total Earnings',
-                        style: TextStyle(
+                      Text(
+                        ref.t('dashboard.total_earnings'),
+                        style: const TextStyle(
                           fontSize: 13,
                           color: Colors.white70,
                           fontWeight: FontWeight.w500,
@@ -635,9 +636,9 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Total Completed\nJobs',
-                        style: TextStyle(
+                      Text(
+                        ref.t('dashboard.total_completed_jobs'),
+                        style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
                           color: Colors.black87,
@@ -675,9 +676,9 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Completed\nEarnings',
-                        style: TextStyle(
+                      Text(
+                        ref.t('dashboard.completed_earnings'),
+                        style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
                           color: Colors.black87,

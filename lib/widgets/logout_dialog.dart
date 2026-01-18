@@ -1,8 +1,10 @@
 
 import 'package:fixify_admin/config/app_colors.dart';
+import 'package:fixify_admin/helpers/translate_helper.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class LogoutDialog extends StatelessWidget {
+class LogoutDialog extends ConsumerWidget {
   final VoidCallback onLogout;
   final VoidCallback onCancel;
 
@@ -13,7 +15,7 @@ class LogoutDialog extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Dialog(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
@@ -45,9 +47,9 @@ class LogoutDialog extends StatelessWidget {
             const SizedBox(height: 20),
             
             // Title
-            const Text(
-              'Are you sure you want to logout?',
-              style: TextStyle(
+            Text(
+              ref.t('profile.logout_message'),
+              style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: Colors.black,
@@ -58,9 +60,9 @@ class LogoutDialog extends StatelessWidget {
             const SizedBox(height: 12),
             
             // Message
-            const Text(
-              'You\'ll be signed out from your account and will need to log in again to access your bookings and profile.',
-              style: TextStyle(
+            Text(
+              ref.t('profile.logout_description'),
+              style: const TextStyle(
                 fontSize: 14,
                 color: Colors.grey,
                 height: 1.4,
@@ -83,9 +85,9 @@ class LogoutDialog extends StatelessWidget {
                         color: Colors.grey.shade100,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Text(
-                        'Cancel',
-                        style: TextStyle(
+                      child: Text(
+                        ref.t('common.cancel'),
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                           color: Colors.grey,
@@ -108,9 +110,9 @@ class LogoutDialog extends StatelessWidget {
                         color: AppColors.primary,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Text(
-                        'Logout',
-                        style: TextStyle(
+                      child: Text(
+                        ref.t('profile.logout'),
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,

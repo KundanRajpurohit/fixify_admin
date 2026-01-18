@@ -1,5 +1,6 @@
 import 'package:fixify_admin/components/custom_app_bar.dart';
 import 'package:fixify_admin/config/app_colors.dart';
+import 'package:fixify_admin/helpers/translate_helper.dart';
 import 'package:fixify_admin/providers/location_provider.dart';
 import 'package:fixify_admin/screens/dashboard/cancel_job_screen.dart';
 import 'package:fixify_admin/screens/dashboard/complete_job_screen.dart';
@@ -36,7 +37,7 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
     switch (status.toLowerCase()) {
       case "upcoming":
         return {
-          "label": "Upcoming",
+          "label": ref.t('dashboard.upcoming'),
           "bg": Color(0xffF2F6FB),
           "text": Color(0xFF214370),
           "border": Color(0xFFC2DAF0),
@@ -44,7 +45,7 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
 
       case "ongoing":
         return {
-          "label": "Ongoing",
+          "label": ref.t('dashboard.ongoing'),
           "bg": Color(0xffFBF6F2),
           "text": Color(0xFF704B21),
           "border": Color(0xFFF0E4C2),
@@ -52,7 +53,7 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
 
       case "past":
         return {
-          "label": "Past",
+          "label": ref.t('dashboard.past'),
           "bg": Color(0xffF2FBF2),
           "text": Color(0xFF257021),
           "border": Color(0xFFC2F0C7),
@@ -60,7 +61,7 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
 
       case "cancelled":
         return {
-          "label": "Cancelled",
+          "label": ref.t('dashboard.cancelled'),
           "bg": Color(0xffF5F5F5),
           "text": Color(0xFF434343),
           "border": Color(0xFFDFDFDF),
@@ -68,7 +69,7 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
 
       default:
         return {
-          "label": "Unknown",
+          "label": ref.t('common.unknown'),
           "bg": Color(0xffF5F5F5),
           "text": Color(0xFF434343),
           "border": Color(0xFFDFDFDF),
@@ -88,8 +89,8 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Unable to make phone call'),
+          SnackBar(
+            content: Text(ref.t('dashboard.unable_to_make_phone_call')),
             backgroundColor: Colors.red,
           ),
         );
@@ -616,10 +617,10 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              const Text(
-                'OTP verified successfully. The timer has started and now you can begin work.',
+              Text(
+                ref.t('dashboard.otp_verified_timer_started'),
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 14,
                   color: Colors.black87,
                   height: 1.5,
@@ -636,7 +637,7 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
                   child: Row(
                     children: [
                       Text(
-                        'Running Timer',
+                        ref.t('dashboard.running_timer'),
                         style: TextStyle(
                           fontSize: 12.sp,
                           fontWeight: FontWeight.w600,
@@ -749,7 +750,7 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
         backgroundColor: const Color(0xFFF5F7F8),
         body: Column(
           children: [
-            CustomAppBar(title: 'Job Details', showbackButton: true),
+            CustomAppBar(title: ref.t('dashboard.job_details'), showbackButton: true),
 
             // Timer (only for hourly services when job is ongoing)
             if (_jobStatus == 'ongoing' && _isHourlyService)
@@ -761,9 +762,9 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
                 color: Colors.white,
                 child: Row(
                   children: [
-                    const Text(
-                      'Running Timer',
-                      style: TextStyle(
+                    Text(
+                      ref.t('dashboard.running_timer'),
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                         color: Colors.black87,
@@ -854,9 +855,9 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
                         borderRadius: BorderRadius.circular(30),
                       ),
                     ),
-                    child: const Text(
-                      'Accept Job',
-                      style: TextStyle(
+                    child: Text(
+                      ref.t('dashboard.accept_job'),
+                      style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                       ),
@@ -901,9 +902,9 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
                               borderRadius: BorderRadius.circular(30),
                             ),
                           ),
-                          child: const Text(
-                            'Complete Job',
-                            style: TextStyle(
+                          child: Text(
+                            ref.t('dashboard.complete_job'),
+                            style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
                             ),
@@ -939,9 +940,9 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
                               borderRadius: BorderRadius.circular(35),
                             ),
                           ),
-                          child: const Text(
-                            'Start Job',
-                            style: TextStyle(
+                          child: Text(
+                            ref.t('dashboard.start_job'),
+                            style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
                             ),
@@ -983,9 +984,9 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Service Details',
-                style: TextStyle(
+              Text(
+                ref.t('dashboard.service_details'),
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
                   color: Colors.black87,
@@ -1015,13 +1016,13 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
           const SizedBox(height: 16),
           _buildDetailRow(
             icon: 'assets/images/serviceId.png',
-            label: 'Service Id',
+            label: ref.t('dashboard.service_id'),
             value: jobDetails?['ServiceID'] ?? "service",
           ),
           const Divider(height: 24),
           _buildDetailRow(
             icon: 'assets/images/serviceType.png',
-            label: 'Service Type',
+            label: ref.t('dashboard.service_type'),
             value:
                 jobDetails?['ServiceType'] ??
                 jobDetails?['jobType'] ??
@@ -1030,13 +1031,13 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
           const Divider(height: 24),
           _buildDetailRow(
             icon: 'assets/images/calendar 2.png',
-            label: 'Time & Date',
+            label: ref.t('dashboard.time_date'),
             value: jobDetails?['date_time'],
           ),
           const Divider(height: 24),
           _buildDetailRow(
             icon: 'assets/images/payment.png',
-            label: 'Payment',
+            label: ref.t('dashboard.payment'),
             value: (jobDetails?['price'] ?? 0).toString(),
           ),
         ],
@@ -1061,9 +1062,9 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Customer Details',
-            style: TextStyle(
+          Text(
+            ref.t('dashboard.customer_information'),
+            style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,
               color: Colors.black87,
@@ -1072,23 +1073,23 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
           const SizedBox(height: 16),
           _buildDetailRow(
             icon: 'assets/images/person.png',
-            label: 'Name',
+            label: ref.t('dashboard.name'),
             value: jobDetails?['UserName'] ?? "Customer Name",
           ),
           const Divider(height: 24),
           _buildDetailRowWithAction(
             icon: Icons.phone,
-            label: 'Contact Number',
+            label: ref.t('dashboard.contact_number'),
             value: jobDetails?['UserMobile'] ?? "Not Available",
-            actionText: 'Call Now',
+            actionText: ref.t('dashboard.call_now'),
             onAction: () => _makePhoneCall('+918535544156'),
           ),
           const Divider(height: 24),
           _buildDetailRowWithAction(
             icon: Icons.location_on,
-            label: 'Address',
+            label: ref.t('dashboard.address'),
             value: jobDetails?['UserAddress'],
-            actionText: 'View Map',
+            actionText: ref.t('dashboard.view_map'),
             onAction: () {
               // Handle view map
             },

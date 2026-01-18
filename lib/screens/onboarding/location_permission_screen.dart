@@ -1,20 +1,22 @@
 
 import 'package:fixify_admin/config/app_colors.dart';
+import 'package:fixify_admin/helpers/translate_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../auth/map_screen.dart';
 
-class LocationPermissionScreen extends StatefulWidget {
+class LocationPermissionScreen extends ConsumerStatefulWidget {
   const LocationPermissionScreen({super.key});
 
   @override
-  State<LocationPermissionScreen> createState() =>
+  ConsumerState<LocationPermissionScreen> createState() =>
       _LocationPermissionScreenState();
 }
 
-class _LocationPermissionScreenState extends State<LocationPermissionScreen> {
+class _LocationPermissionScreenState extends ConsumerState<LocationPermissionScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -70,9 +72,9 @@ class _LocationPermissionScreenState extends State<LocationPermissionScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text(
-                      'Allow Location to Continue',
-                      style: TextStyle(
+                    Text(
+                      ref.t('onboarding.allow_location'),
+                      style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
                         color: Colors.black,
@@ -80,9 +82,9 @@ class _LocationPermissionScreenState extends State<LocationPermissionScreen> {
                       textAlign: TextAlign.center,
                     ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.3),
                     const SizedBox(height: 15),
-                    const Text(
-                      'We are available in selected locations, please allow your location',
-                      style: TextStyle(
+                    Text(
+                      ref.t('onboarding.location_description'),
+                      style: const TextStyle(
                         fontSize: 16,
                         color: Colors.black87,
                         height: 1.5,
@@ -108,9 +110,9 @@ class _LocationPermissionScreenState extends State<LocationPermissionScreen> {
                           ),
                           elevation: 3,
                         ),
-                        child: const Text(
-                          'Allow Location to Continue',
-                          style: TextStyle(
+                        child: Text(
+                          ref.t('onboarding.allow_location'),
+                          style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                           ),
@@ -129,9 +131,9 @@ class _LocationPermissionScreenState extends State<LocationPermissionScreen> {
                           ),
                         );
                       },
-                      child: const Text(
-                        'Select Location Manually',
-                        style: TextStyle(
+                      child: Text(
+                        ref.t('onboarding.select_location_manually'),
+                        style: const TextStyle(
                           color: Color(0xFF217043),
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
@@ -175,16 +177,14 @@ class _LocationPermissionScreenState extends State<LocationPermissionScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Location Permission Required'),
-          content: const Text(
-            'FIXIFY needs location access to find nearby service providers. Please allow location access in your device settings.',
-          ),
+          title: Text(ref.t('onboarding.location_permission_required')),
+          content: Text(ref.t('onboarding.location_permission_needed_message')),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: const Text('Cancel'),
+              child: Text(ref.t('common.cancel')),
             ),
             TextButton(
               onPressed: () {
@@ -198,14 +198,14 @@ class _LocationPermissionScreenState extends State<LocationPermissionScreen> {
                   ),
                 );
               },
-              child: const Text('Select Manually'),
+              child: Text(ref.t('onboarding.select_manually')),
             ),
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
                 openAppSettings();
               },
-              child: const Text('Open Settings'),
+              child: Text(ref.t('auth.open_settings')),
             ),
           ],
         );

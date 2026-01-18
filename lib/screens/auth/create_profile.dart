@@ -1,17 +1,16 @@
 import 'dart:io';
 
 import 'package:fixify_admin/config/app_colors.dart';
+import 'package:fixify_admin/helpers/translate_helper.dart';
 import 'package:fixify_admin/providers/auth_provider.dart';
 import 'package:fixify_admin/screens/auth/country_picker_screen.dart';
 import 'package:fixify_admin/screens/auth/otp_verification_screen.dart';
-import 'package:fixify_admin/services/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:page_transition/page_transition.dart';
-
 import '../../providers/location_provider.dart';
 
 class CreateAccountScreen extends ConsumerStatefulWidget {
@@ -79,7 +78,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
           });
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Failed to load services: ${failure.message}'),
+              content: Text('${ref.t('auth.failed_to_load_services')}: ${failure.message}'),
               backgroundColor: Colors.red,
             ),
           );
@@ -98,7 +97,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error loading services: ${e.toString()}'),
+          content: Text('${ref.t('auth.error_loading_services')}: ${e.toString()}'),
           backgroundColor: Colors.red,
         ),
       );
@@ -114,8 +113,8 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
     final email = _emailController.text.trim();
     if (email.isNotEmpty && !email.contains('@')) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter a valid email address'),
+         SnackBar(
+          content: Text(ref.t('auth.please_enter_valid_email')),
           backgroundColor: Colors.red,
         ),
       );
@@ -126,8 +125,8 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
     final phoneNumber = _phoneNumberController.text.trim();
     if (phoneNumber.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter your phone number'),
+         SnackBar(
+          content: Text(ref.t('auth.please_enter_phone')),
           backgroundColor: Colors.red,
         ),
       );
@@ -150,8 +149,8 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
       // Validate service selection
       if (_selectedService == null || _selectedService!.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please select a service'),
+           SnackBar(
+            content: Text(ref.t('auth.please_select_service')),
             backgroundColor: Colors.red,
           ),
         );
@@ -243,9 +242,9 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
           icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black87),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Create Account',
-          style: TextStyle(
+        title: Text(
+          ref.t('auth.create_account'),
+          style: const TextStyle(
             color: Colors.black87,
             fontSize: 20,
             fontWeight: FontWeight.bold,
@@ -312,9 +311,9 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                                   valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                                 ),
                               )
-                            : const Text(
-                                'Continue',
-                                style: TextStyle(
+                            : Text(
+                                ref.t('common.continue'),
+                                style: const TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -418,9 +417,9 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
             ),
           ),
           const SizedBox(height: 24),
-          const Text(
-            'First Name',
-            style: TextStyle(
+          Text(
+            ref.t('auth.first_name'),
+            style: const TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w500,
               color: Colors.black87,
@@ -431,7 +430,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
             controller: _firstNameController,
             textCapitalization: TextCapitalization.words,
             decoration: InputDecoration(
-              hintText: 'Enter your first name',
+              hintText: ref.t('auth.enter_first_name'),
               filled: true,
               fillColor: Colors.grey.shade50,
               enabledBorder: OutlineInputBorder(
@@ -449,15 +448,15 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
             ),
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
-                return 'Please enter your first name';
+                return ref.t('auth.please_enter_first_name');
               }
               return null;
             },
           ),
           const SizedBox(height: 18),
-          const Text(
-            'Last Name',
-            style: TextStyle(
+          Text(
+            ref.t('auth.last_name'),
+            style: const TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w500,
               color: Colors.black87,
@@ -468,7 +467,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
             controller: _lastNameController,
             textCapitalization: TextCapitalization.words,
             decoration: InputDecoration(
-              hintText: 'Enter your last name',
+              hintText: ref.t('auth.enter_last_name'),
               filled: true,
               fillColor: Colors.grey.shade50,
               enabledBorder: OutlineInputBorder(
@@ -486,7 +485,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
             ),
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
-                return 'Please enter your last name';
+                return ref.t('auth.please_enter_last_name');
               }
               return null;
             },
@@ -520,9 +519,9 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Contact Information',
-                style: TextStyle(
+              Text(
+                ref.t('auth.contact_information'),
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
                   color: Colors.black87,
@@ -531,9 +530,9 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
             ],
           ),
           const SizedBox(height: 10),
-          const Text(
-            'Phone Number',
-            style: TextStyle(
+          Text(
+            ref.t('auth.phone_number'),
+            style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.normal,
               color: Colors.black87,
@@ -599,7 +598,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                     controller: phoneController,
 
                     decoration: InputDecoration(
-                      hintText: '00 000 00000',
+                      hintText: '00 000 00000', // Phone format hint
                       filled: true,
                       fillColor: Colors.grey.shade50,
                       border: InputBorder.none,
@@ -607,7 +606,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                     keyboardType: TextInputType.phone,
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
-                        return 'Please enter your phone number';
+                        return ref.t('auth.please_enter_phone');
                       }
                       return null;
                     },
@@ -617,9 +616,9 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
             ),
           ),
           const SizedBox(height: 10),
-          const Text(
-            'Email Address',
-            style: TextStyle(
+          Text(
+            ref.t('auth.email'),
+            style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.normal,
               color: Colors.black87,
@@ -630,7 +629,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
             controller: emailController,
             keyboardType: TextInputType.emailAddress,
             decoration: InputDecoration(
-              hintText: 'Enter email ',
+              hintText: ref.t('auth.enter_email'),
               filled: true,
               fillColor: Colors.grey.shade50,
               enabledBorder: OutlineInputBorder(
@@ -644,10 +643,10 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
             ),
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
-                return 'Please enter your email';
+                return ref.t('auth.please_enter_email');
               }
               if (!value.contains('@')) {
-                return 'Please enter a valid email address';
+                return ref.t('auth.please_enter_valid_email');
               }
               return null;
             },
@@ -675,9 +674,9 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Service/Profession',
-            style: TextStyle(
+          Text(
+            ref.t('auth.service_profession'),
+            style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,
               color: Colors.black87,
@@ -693,7 +692,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
             child: DropdownButtonFormField<String>(
               value: _selectedService,
               decoration: InputDecoration(
-                hintText: 'Select a service',
+                hintText: ref.t('auth.select_service'),
                 hintStyle: TextStyle(
                   fontSize: 16,
                   color: Colors.grey.shade600,
@@ -747,7 +746,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                     },
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please select a service';
+                  return ref.t('auth.please_select_service');
                 }
                 return null;
               },
@@ -792,7 +791,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
               ),
               ListTile(
                 leading: const Icon(Icons.photo_library_outlined),
-                title: const Text('Choose from Gallery'),
+                title: Text(ref.t('auth.choose_from_gallery')),
                 onTap: () {
                   Navigator.pop(ctx);
                   _pickProfileImage(ImageSource.gallery);
@@ -800,7 +799,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
               ),
               ListTile(
                 leading: const Icon(Icons.photo_camera_outlined),
-                title: const Text('Take a Photo'),
+                title: Text(ref.t('auth.take_a_photo')),
                 onTap: () {
                   Navigator.pop(ctx);
                   _pickProfileImage(ImageSource.camera);
@@ -812,9 +811,9 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                     Icons.delete_outline,
                     color: Colors.redAccent,
                   ),
-                  title: const Text(
-                    'Remove Photo',
-                    style: TextStyle(color: Colors.redAccent),
+                  title: Text(
+                    ref.t('auth.remove_photo'),
+                    style: const TextStyle(color: Colors.redAccent),
                   ),
                   onTap: () {
                     Navigator.pop(ctx);
@@ -857,8 +856,8 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
         SnackBar(
           content: Text(
             file == null
-                ? 'No image selected'
-                : 'Profile photo updated (local only)',
+                ? ref.t('auth.no_image_selected')
+                : ref.t('auth.profile_photo_updated'),
           ),
           backgroundColor: file == null ? Colors.red : Colors.green,
         ),
@@ -871,8 +870,8 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Image selection failed'),
+         SnackBar(
+          content: Text(ref.t('auth.image_selection_failed')),
           backgroundColor: Colors.red,
         ),
       );
@@ -885,8 +884,8 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Profile photo removed (local only)'),
+       SnackBar(
+        content: Text(ref.t('auth.profile_photo_removed')),
         backgroundColor: Colors.green,
       ),
     );

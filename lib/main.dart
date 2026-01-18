@@ -3,10 +3,13 @@ import 'package:fixify_admin/config/api_config.dart';
 import 'package:fixify_admin/dio/auth_interceptor.dart';
 import 'package:fixify_admin/dio/unauth_interceptor.dart';
 import 'package:fixify_admin/providers/auth_provider.dart';
+import 'package:fixify_admin/providers/language_provider.dart';
 import 'package:fixify_admin/providers/location_provider.dart';
 import 'package:fixify_admin/screens/auth/splash_screen.dart';
+import 'package:fixify_admin/services/translation_service.dart';
 import 'package:fixify_admin/services/user_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -23,6 +26,26 @@ void main() async {
     print('SharedPreferences initialized successfully');
   } catch (e) {
     print('Failed to initialize SharedPreferences: $e');
+  }
+
+  // Initialize translations
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final languageCode = prefs.getString('app_language') ?? 'en';
+    final language = AppLanguage.values.firstWhere(
+      (lang) => lang.code == languageCode,
+      orElse: () => AppLanguage.english,
+    );
+    await TranslationService.loadTranslations(language);
+    print('Translations loaded for language: ${language.code}');
+  } catch (e) {
+    print('Failed to load translations: $e');
+    // Load English as fallback
+    try {
+      await TranslationService.loadTranslations(AppLanguage.english);
+    } catch (e2) {
+      print('Failed to load English translations: $e2');
+    }
   }
 
   // Initialize Dio and UserService
@@ -121,11 +144,13 @@ void main() async {
   );
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Always use English locale for Material widgets (they don't support Hindi),
+    // but our custom TranslationService will handle Hindi for app content
     return ScreenUtilInit(
       designSize: const Size(375, 812), // iPhone X design size
       minTextAdapt: true,
@@ -141,6 +166,15 @@ class MyApp extends StatelessWidget {
             useMaterial3: true,
             fontFamily: 'Roboto',
           ),
+          locale: const Locale('en'), // Always use English for Material widgets
+          supportedLocales: const [
+            Locale('en'),
+          ],
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
           home: const AuthWrapper(),
           debugShowCheckedModeBanner: false,
         );

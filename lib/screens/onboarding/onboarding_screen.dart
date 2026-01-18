@@ -1,41 +1,40 @@
 import 'package:fixify_admin/components/curved_TopClipper.dart';
 import 'package:fixify_admin/components/segmented_rings.dart';
 import 'package:fixify_admin/config/app_colors.dart';
+import 'package:fixify_admin/helpers/translate_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:page_transition/page_transition.dart';
 import 'get_started_screen.dart';
 
-class OnboardingScreen extends StatefulWidget {
+class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
 
   @override
-  State<OnboardingScreen> createState() => _OnboardingScreenState();
+  ConsumerState<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
-class _OnboardingScreenState extends State<OnboardingScreen> {
+class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
-  final List<OnboardingPage> _pages = [
+  List<OnboardingPage> get _pages => [
     OnboardingPage(
-      title: "Manage Your Work Easily",
-      description:
-          "Get real-time service requests, track job details, and manage your schedule — all in one simple and reliable dashboard.",
-      illustration: _BookingServicesIllustration(),
+      title: ref.t('onboarding.manage_work_easily'),
+      description: ref.t('onboarding.manage_work_description'),
+      illustration:  _BookingServicesIllustration(),
     ),
     OnboardingPage(
-      title: "Secure & Instant Earnings",
-      description:
-          "Complete tasks, update job status, and receive payments quickly with full transparency on your earnings and performance.",
-      illustration: _SkilledProfessionalsIllustration(),
+      title: ref.t('onboarding.secure_instant_earnings'),
+      description: ref.t('onboarding.secure_earnings_description'),
+      illustration:  _SkilledProfessionalsIllustration(),
     ),
     OnboardingPage(
-      title: "Get Help Whenever You Need",
-      description:
-          "Access quick support, report issues, and get guidance so you can focus on delivering great service without interruptions.",
-      illustration: _PaymentIllustration(),
+      title: ref.t('onboarding.get_help_whenever'),
+      description: ref.t('onboarding.get_help_description'),
+      illustration:  _PaymentIllustration(),
     ),
   ];
 
@@ -58,9 +57,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       // Navigate to main app
                       _navigateToMainApp();
                     },
-                    child: const Text(
-                      'Skip',
-                      style: TextStyle(
+                    child: Text(
+                      ref.t('onboarding.skip'),
+                      style: const TextStyle(
                         color: AppColors.textSecondary,
                         fontSize: 16,
                         fontWeight: FontWeight.w500,

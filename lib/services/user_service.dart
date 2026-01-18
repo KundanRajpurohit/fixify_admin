@@ -6,8 +6,6 @@ import 'dart:convert';
 import 'dart:io';
 import '../config/api_config.dart';
 import '../dio/resulr.dart';
-import '../models/booking_model.dart';
-import '../models/bank_model.dart';
 import '../models/earnings_model.dart';
 import '../models/notification_model.dart';
 

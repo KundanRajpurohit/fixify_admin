@@ -1,7 +1,11 @@
 import 'package:fixify_admin/config/app_colors.dart';
+import 'package:fixify_admin/helpers/translate_helper.dart';
+import 'package:fixify_admin/providers/language_provider.dart';
 import 'package:fixify_admin/providers/location_provider.dart';
+import 'package:fixify_admin/screens/settings/language_selection_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:page_transition/page_transition.dart';
 
 import '../../components/custom_app_bar.dart';
 
@@ -57,7 +61,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             });
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Failed to load availability: ${failure.message}'),
+                content: Text('${ref.t('settings.failed_to_load_availability')}: ${failure.message}'),
                 backgroundColor: Colors.red,
               ),
             );
@@ -93,7 +97,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${e.toString()}'),
+            content: Text('${ref.t('common.error')}: ${e.toString()}'),
             backgroundColor: Colors.red,
           ),
         );
@@ -122,7 +126,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             });
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Failed to update availability: ${failure.message}'),
+                content: Text('${ref.t('settings.failed_to_update_availability')}: ${failure.message}'),
                 backgroundColor: Colors.red,
                 duration: const Duration(seconds: 2),
               ),
@@ -137,7 +141,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             // Show success message briefly
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('${day} availability updated'),
+                content: Text('${ref.t('settings.availability_updated').replaceAll('{day}', ref.t('settings.${day.toLowerCase()}'))}'),
                 backgroundColor: Colors.green,
                 duration: const Duration(seconds: 1),
               ),
@@ -154,7 +158,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${e.toString()}'),
+            content: Text('${ref.t('common.error')}: ${e.toString()}'),
             backgroundColor: Colors.red,
           ),
         );
@@ -166,7 +170,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7F8),
-      appBar: CustomAppBar(title: 'Settings', showbackButton: false),
+      appBar: CustomAppBar(title: ref.t('settings.settings'), showbackButton: false),
       body: Column(
         children: [
           // Header
@@ -183,6 +187,92 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       children: [
+                        // Language Selection Card
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              PageTransition(
+                                type: PageTransitionType.rightToLeft,
+                                duration: const Duration(milliseconds: 300),
+                                child: const LanguageSelectionScreen(),
+                              ),
+                            ).then((shouldReload) {
+                              if (shouldReload == true) {
+                                // Reload or rebuild if needed
+                                setState(() {});
+                              }
+                            });
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(20),
+                            margin: const EdgeInsets.only(bottom: 16),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.05),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(
+                                  children: [
+                                    Container(
+                                      width: 40,
+                                      height: 40,
+                                      decoration: BoxDecoration(
+                                        color: AppColors.secondary.withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: const Icon(
+                                        Icons.language,
+                                        color: AppColors.primary,
+                                        size: 24,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          ref.t('settings.language'),
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.black87,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Consumer(
+                                          builder: (context, ref, child) {
+                                            final currentLanguage = ref.watch(languageProvider);
+                                            return Text(
+                                              currentLanguage.name,
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                color: Colors.grey.shade600,
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                Icon(
+                                  Icons.chevron_right,
+                                  color: Colors.grey.shade400,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                         // Set Weekly Availability Card
                         Container(
                           padding: const EdgeInsets.all(20),
@@ -200,9 +290,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
-                                'Set Weekly Availability',
-                                style: TextStyle(
+                              Text(
+                                ref.t('settings.set_weekly_availability'),
+                                style: const TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.black87,
@@ -241,7 +331,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                         // Day Name
                                         Expanded(
                                           child: Text(
-                                            _getDayShortName(day),
+                                            ref.t('settings.${day.toLowerCase()}'),
                                             style: const TextStyle(
                                               fontSize: 16,
                                               fontWeight: FontWeight.w500,

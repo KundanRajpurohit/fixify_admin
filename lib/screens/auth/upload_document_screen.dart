@@ -1,8 +1,8 @@
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:fixify_admin/helpers/translate_helper.dart';
 import 'package:fixify_admin/screens/auth/docuent_submitted_screen.dart';
-import 'package:fixify_admin/services/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -54,12 +54,10 @@ class _UploadDocumentsScreenState extends ConsumerState<UploadDocumentsScreen> {
   Future<void> _submit() async {
     if (!_canSubmit) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Please upload Aadhaar Card and Address Proof before submitting.',
+          SnackBar(
+            content: Text(ref.t('auth.upload_aadhaar')),
+            backgroundColor: Colors.red,
           ),
-          backgroundColor: Colors.red,
-        ),
       );
       return;
     }
@@ -127,9 +125,9 @@ class _UploadDocumentsScreenState extends ConsumerState<UploadDocumentsScreen> {
           icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black87),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Upload Documents',
-          style: TextStyle(
+        title: Text(
+          ref.t('auth.upload_documents'),
+          style: const TextStyle(
             color: Colors.black87,
             fontSize: 20,
             fontWeight: FontWeight.w600,
@@ -147,21 +145,21 @@ class _UploadDocumentsScreenState extends ConsumerState<UploadDocumentsScreen> {
                   _buildInstructionCard(),
                   const SizedBox(height: 20),
                   _buildDocumentSection(
-                    title: 'Aadhaar Card',
+                    title: ref.t('auth.aadhaar_card'),
                     hint: 'JPG, PNG, PDF',
                     selectedFile: _aadhaarFile?.path.split('/').last,
                     onUpload: () => _pickFileFor('aadhaar'),
                   ),
                   const SizedBox(height: 12),
                   _buildDocumentSection(
-                    title: 'Address Proof',
+                    title: ref.t('auth.address_proof'),
                     hint: 'JPG, PNG, PDF',
                     selectedFile: _addressFile?.path.split('/').last,
                     onUpload: () => _pickFileFor('address'),
                   ),
                   const SizedBox(height: 12),
                   _buildDocumentSection(
-                    title: 'Service License (if applicable)',
+                    title: ref.t('auth.service_license_if_applicable'),
                     hint: 'JPG, PNG, PDF',
                     selectedFile: _licenseFile?.path.split('/').last,
                     onUpload: () => _pickFileFor('license'),
@@ -196,7 +194,7 @@ class _UploadDocumentsScreenState extends ConsumerState<UploadDocumentsScreen> {
                                   ),
                                 ),
                               )
-                              : const Text('Submit Documents'),
+                              : Text(ref.t('auth.submit_documents')),
                     ),
                   ),
                 ],
@@ -223,25 +221,25 @@ class _UploadDocumentsScreenState extends ConsumerState<UploadDocumentsScreen> {
           ),
         ],
       ),
-      child: const Column(
+      child:  Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Instruction',
-            style: TextStyle(
+            ref.t('auth.instruction'),
+            style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,
               color: Colors.black87,
             ),
           ),
           SizedBox(height: 10),
-          _BulletText('Maximum file size: 25 MB per document'),
+          _BulletText(ref.t('auth.maximum_file_size')),
           SizedBox(height: 4),
-          _BulletText('Supported formats: JPG, PNG, PDF'),
+          _BulletText(ref.t('auth.supported_formats')),
           SizedBox(height: 4),
-          _BulletText('Make sure documents are clear and readable'),
+          _BulletText(ref.t('auth.make_sure_documents')),
           SizedBox(height: 4),
-          _BulletText('Avoid blurry or low-resolution images'),
+          _BulletText(ref.t('auth.avoid_blurry')),
         ],
       ),
     );
@@ -326,7 +324,7 @@ class _UploadDocumentsScreenState extends ConsumerState<UploadDocumentsScreen> {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  child: const Text('Upload'),
+                  child: Text(ref.t('auth.upload')),
                 ),
               ),
             ],

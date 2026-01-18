@@ -1,5 +1,5 @@
-import 'package:fixify_admin/components/custom_app_bar.dart';
 import 'package:fixify_admin/config/app_colors.dart';
+import 'package:fixify_admin/helpers/translate_helper.dart';
 import 'package:fixify_admin/models/bank_model.dart';
 import 'package:fixify_admin/providers/location_provider.dart';
 import 'package:fixify_admin/screens/dashboard/add_edit_bank_account_screen.dart';
@@ -41,7 +41,7 @@ class _BankAccountsScreenState extends ConsumerState<BankAccountsScreen> {
             });
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Failed to load bank accounts: ${failure.message}'),
+                content: Text('${ref.t('dashboard.failed_to_load_bank_accounts')}: ${failure.message}'),
                 backgroundColor: Colors.red,
               ),
             );
@@ -77,19 +77,19 @@ class _BankAccountsScreenState extends ConsumerState<BankAccountsScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Bank Account'),
-        content: const Text('Are you sure you want to delete this bank account?'),
+        title: Text(ref.t('dashboard.delete_bank_account')),
+        content: Text(ref.t('dashboard.delete_bank_account_confirmation')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(ref.t('common.cancel')),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(
               foregroundColor: Colors.red,
             ),
-            child: const Text('Delete'),
+            child: Text(ref.t('common.delete')),
           ),
         ],
       ),
@@ -115,8 +115,8 @@ class _BankAccountsScreenState extends ConsumerState<BankAccountsScreen> {
         (data) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Bank account deleted successfully'),
+               SnackBar(
+                content: Text(ref.t('dashboard.bank_account_deleted_successfully')),
                 backgroundColor: Colors.green,
               ),
             );
@@ -142,7 +142,7 @@ class _BankAccountsScreenState extends ConsumerState<BankAccountsScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: _lightGreen,
-          title: Text('My Bank Accounts')
+          title: Text(ref.t('profile.my_bank_account'))
       ),
       backgroundColor: const Color(0xFFF5F7F8),
       body: SafeArea(
@@ -169,7 +169,7 @@ class _BankAccountsScreenState extends ConsumerState<BankAccountsScreen> {
                               ),
                               const SizedBox(height: 16),
                               Text(
-                                'No bank accounts added',
+                                ref.t('dashboard.no_bank_accounts_added'),
                                 style: TextStyle(
                                   fontSize: 16,
                                   color: Colors.grey.shade600,

@@ -1,8 +1,7 @@
 
 import 'package:fixify_admin/config/app_colors.dart';
+import 'package:fixify_admin/helpers/translate_helper.dart';
 import 'package:fixify_admin/screens/dashboard/dashboard_screen.dart';
-import 'package:fixify_admin/screens/dashboard/home_screen.dart';
-import 'package:fixify_admin/services/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -131,10 +130,10 @@ class _PhoneVerificationScreenState
             
             if (message.contains('not registered') || 
                 message.toLowerCase().contains('mobile number not registered')) {
-              errorMessage = 'Your account is in review. You will receive an update once verification completes.';
+              errorMessage = ref.t('auth.account_in_review');
             } else if (accountStatus == 'pending' || 
                        message.toLowerCase().contains('not active')) {
-              errorMessage = 'Your account is not active. Please contact support.';
+              errorMessage = ref.t('auth.account_not_active');
             }
 
             ScaffoldMessenger.of(context).showSnackBar(
@@ -176,9 +175,9 @@ class _PhoneVerificationScreenState
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Your phone number',
-                    style: TextStyle(
+                  Text(
+                    ref.t('auth.your_phone_number'),
+                    style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                       color: Colors.black87,
@@ -241,13 +240,13 @@ class _PhoneVerificationScreenState
             ),
 
             // Instructions
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.0),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  'create your account to save details! (From profile menu)',
-                  style: TextStyle(
+                  ref.t('auth.create_account_to_save'),
+                  style: const TextStyle(
                     fontSize: 18,
                     color: AppColors.textSecondary,
                   ),
@@ -342,13 +341,13 @@ class _PhoneVerificationScreenState
                             focusNode: _phoneFocusNode,
                             keyboardType: TextInputType.phone,
                             style: const TextStyle(fontSize: 18),
-                            decoration: const InputDecoration(
-                              hintText: 'Type phone number',
+                            decoration: InputDecoration(
+                              hintText: ref.t('auth.type_phone_number'),
                               hintStyle:
-                                  TextStyle(fontSize: 18, color: Colors.grey),
+                                  const TextStyle(fontSize: 18, color: Colors.grey),
                               border: InputBorder.none,
                               contentPadding:
-                                  EdgeInsets.symmetric(horizontal: 12),
+                                  const EdgeInsets.symmetric(horizontal: 12),
                             ),
                             onChanged: (value) {
                               setState(() {});
@@ -414,9 +413,9 @@ class _PhoneVerificationScreenState
                                 AlwaysStoppedAnimation<Color>(Colors.white),
                           ),
                         )
-                      : const Text(
-                          'Verify',
-                          style: TextStyle(
+                      : Text(
+                          ref.t('auth.verify'),
+                          style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                           ),

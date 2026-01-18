@@ -1,4 +1,5 @@
 import 'package:fixify_admin/components/custom_app_bar.dart';
+import 'package:fixify_admin/helpers/translate_helper.dart';
 import 'package:fixify_admin/models/earnings_model.dart';
 import 'package:fixify_admin/providers/location_provider.dart';
 import 'package:flutter/material.dart';
@@ -177,7 +178,7 @@ class _TransactionHistoryScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FB),
-      appBar: CustomAppBar(title: 'Transaction History ', showbackButton: true),
+      appBar: CustomAppBar(title: ref.t('profile.transaction_history'), showbackButton: true),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _errorMessage != null &&
@@ -195,7 +196,7 @@ class _TransactionHistoryScreenState
                       const SizedBox(height: 16),
                       ElevatedButton(
                         onPressed: _loadTransactionHistory,
-                        child: const Text('Retry'),
+                        child: Text(ref.t('common.retry')),
                       ),
                     ],
                   ),

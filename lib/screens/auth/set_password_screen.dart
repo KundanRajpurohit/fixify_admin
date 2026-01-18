@@ -1,15 +1,17 @@
+import 'package:fixify_admin/helpers/translate_helper.dart';
 import 'package:fixify_admin/screens/auth/upload_document_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:page_transition/page_transition.dart';
 
-class SetPasswordScreen extends StatefulWidget {
+class SetPasswordScreen extends ConsumerStatefulWidget {
   const SetPasswordScreen({super.key});
 
   @override
-  State<SetPasswordScreen> createState() => _SetPasswordScreenState();
+  ConsumerState<SetPasswordScreen> createState() => _SetPasswordScreenState();
 }
 
-class _SetPasswordScreenState extends State<SetPasswordScreen> {
+class _SetPasswordScreenState extends ConsumerState<SetPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
@@ -65,8 +67,8 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                 Image.asset("assets/images/5290058 1.png"),
                 const SizedBox(height: 24),
                 Text(
-                  'Password Created Successfully!',
-                  style: TextStyle(
+                  ref.t('auth.password_created_successfully'),
+                  style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: Colors.black87,
@@ -74,9 +76,9 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  'Your mobile number has been verified successfully. You can now explore our services and book with ease.',
-                  style: TextStyle(
+                Text(
+                  ref.t('auth.verification_message'),
+                  style: const TextStyle(
                     fontSize: 14,
                     color: Colors.black87,
                     height: 1.5,
@@ -107,9 +109,9 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                         borderRadius: BorderRadius.circular(35),
                       ),
                     ),
-                    child: const Text(
-                      'Continue',
-                      style: TextStyle(
+                    child: Text(
+                      ref.t('common.continue'),
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
@@ -119,7 +121,8 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
               ],
             ),
           );
-        } else {
+        }
+        else {
           return AlertDialog(
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(40),
@@ -130,9 +133,9 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                 const SizedBox(height: 16),
                 Image.asset("assets/images/lose_8586526.png"),
                 const SizedBox(height: 24),
-                const Text(
-                  'Verification Failed',
-                  style: TextStyle(
+                Text(
+                  ref.t('auth.verification_failed'),
+                  style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: Colors.black87,
@@ -140,9 +143,9 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  'The OTP you entered is invalid or expired. Please try again.',
-                  style: TextStyle(
+                Text(
+                  ref.t('auth.verification_failed_message'),
+                  style: const TextStyle(
                     fontSize: 14,
                     color: Colors.black87,
                     height: 1.5,
@@ -193,9 +196,9 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
           icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black87),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Set Password',
-          style: TextStyle(
+        title: Text(
+          ref.t('auth.set_password'),
+          style: const TextStyle(
             color: Colors.black87,
             fontSize: 20,
             fontWeight: FontWeight.w600,
@@ -244,25 +247,23 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
           ),
         ],
       ),
-      child: const Column(
+      child:  Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Instruction',
-            style: TextStyle(
+            ref.t('auth.instruction'),
+            style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,
               color: Colors.black87,
             ),
           ),
           SizedBox(height: 10),
-          _BulletText('Set a secure password to protect your account.'),
+          _BulletText(ref.t('auth.set_secure_password')),
           SizedBox(height: 4),
-          _BulletText('Password must be at least 8 characters.'),
+          _BulletText(ref.t('auth.password_at_least_8')),
           SizedBox(height: 4),
-          _BulletText(
-            'Include letters, numbers, or symbols for stronger security.',
-          ),
+          _BulletText(ref.t('auth.include_letters_numbers')),
         ],
       ),
     );
@@ -272,9 +273,9 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Password',
-          style: TextStyle(
+        Text(
+          ref.t('auth.password'),
+          style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
             color: Colors.black87,
@@ -284,7 +285,7 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
         TextFormField(
           controller: _passwordController,
           obscureText: _obscurePassword,
-          decoration: _inputDecoration('Enter Password').copyWith(
+          decoration: _inputDecoration(ref.t('auth.enter_password')).copyWith(
             suffixIcon: IconButton(
               icon: Icon(
                 _obscurePassword ? Icons.visibility_off : Icons.visibility,
@@ -300,18 +301,18 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
           ),
           validator: (value) {
             if (value == null || value.isEmpty) {
-              return 'Please enter password';
+              return ref.t('auth.please_enter_password');
             }
             if (value.length < 8) {
-              return 'Password must be at least 8 characters';
+              return ref.t('auth.password_must_be_8');
             }
             return null;
           },
         ),
         const SizedBox(height: 18),
-        const Text(
-          'Confirm Password',
-          style: TextStyle(
+        Text(
+          ref.t('auth.confirm_password'),
+          style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
             color: Colors.black87,
@@ -321,7 +322,7 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
         TextFormField(
           controller: _confirmPasswordController,
           obscureText: _obscureConfirmPassword,
-          decoration: _inputDecoration('Enter Confirm Password').copyWith(
+          decoration: _inputDecoration(ref.t('auth.enter_confirm_password_field')).copyWith(
             suffixIcon: IconButton(
               icon: Icon(
                 _obscureConfirmPassword
@@ -339,10 +340,10 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
           ),
           validator: (value) {
             if (value == null || value.isEmpty) {
-              return 'Please confirm password';
+              return ref.t('auth.please_confirm_password');
             }
             if (value != _passwordController.text) {
-              return 'Passwords do not match';
+              return ref.t('errors.password_mismatch');
             }
             return null;
           },
@@ -375,7 +376,7 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                     valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                   ),
                 )
-                : const Text('Create Account'),
+                : Text(ref.t('auth.create_account_button')),
       ),
     );
   }

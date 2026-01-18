@@ -1,17 +1,15 @@
 
 import 'package:fixify_admin/config/app_colors.dart';
 import 'package:fixify_admin/dio/resulr.dart';
+import 'package:fixify_admin/helpers/translate_helper.dart';
 import 'package:fixify_admin/providers/location_provider.dart';
 import 'package:fixify_admin/screens/auth/upload_document_screen.dart';
-import 'package:fixify_admin/services/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:permission_handler/permission_handler.dart';
-
 import '../../providers/auth_provider.dart';
-import 'phone_verification_screen.dart';
 
 class MapScreen extends ConsumerStatefulWidget {
   final bool isFromProfile;
@@ -57,18 +55,18 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Location Permission Required'),
+          title: Text(ref.t('auth.location_permission_required')),
           content: Text(
             isPermanentlyDenied
-                ? 'Location permission is permanently denied. Please enable it in app settings to use your current location.'
-                : 'FIXIFY needs location access to find your current location. Please allow location access.',
+                ? ref.t('auth.location_permission_permanently_denied')
+                : ref.t('auth.location_permission_needed'),
           ),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: const Text('Continue Without'),
+              child: Text(ref.t('auth.continue_without')),
             ),
             if (isPermanentlyDenied)
               TextButton(
@@ -76,7 +74,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                   Navigator.of(context).pop();
                   openAppSettings();
                 },
-                child: const Text('Open Settings'),
+                child: Text(ref.t('auth.open_settings')),
               )
             else
               TextButton(
@@ -84,7 +82,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                   Navigator.of(context).pop();
                   ref.read(locationProvider.notifier).requestLocationPermission();
                 },
-                child: const Text('Allow'),
+                child: Text(ref.t('auth.allow')),
               ),
           ],
         );
@@ -126,8 +124,8 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     
     if (locationState.selectedPosition == null || locationState.addressDetails.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select a location'),
+         SnackBar(
+          content: Text(ref.t('auth.please_select_location')),
           backgroundColor: Colors.red,
         ),
       );
@@ -200,8 +198,8 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         }
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Location saved successfully!'),
+           SnackBar(
+            content: Text(ref.t('map.location_saved')),
             backgroundColor: Colors.green,
           ),
         );
@@ -245,9 +243,9 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                       icon: const Icon(Icons.arrow_back_ios,
                           color: Colors.black87),
                     ),
-                    const Text(
-                      'Choose Your Location',
-                      style: TextStyle(
+                    Text(
+                      ref.t('auth.choose_your_location'),
+                      style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                         color: Colors.black87,
@@ -263,9 +261,9 @@ class _MapScreenState extends ConsumerState<MapScreen> {
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
-                child: const Text(
-                  'Select the location where you want to get the service.',
-                  style: TextStyle(
+                child: Text(
+                  ref.t('auth.select_location_service'),
+                  style: const TextStyle(
                     fontSize: 16,
                     color: Colors.black87,
                   ),
@@ -286,7 +284,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                       child: TextField(
                         controller: _searchController,
                         decoration: InputDecoration(
-                          hintText: 'Search location (e.g., Noida, Delhi)',
+                          hintText: ref.t('auth.search_location'),
                           hintStyle: const TextStyle(color: Colors.grey),
                           prefixIcon: locationState.isSearching
                               ? const SizedBox(
@@ -425,9 +423,9 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Current Location',
-                        style: TextStyle(
+                      Text(
+                        ref.t('map.current_location'),
+                        style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                           color: Colors.black87,
@@ -438,7 +436,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                         locationState.addressDetails.isNotEmpty
                             ? _getSimplifiedAddress(
                                 locationState.addressDetails)
-                            : 'Loading address...',
+                            : ref.t('auth.loading_address'),
                         style: const TextStyle(
                           fontSize: 14,
                           color: Colors.black87,
@@ -492,9 +490,9 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                               _useCurrentLocation();
                             }
                           },
-                          child: const Text(
-                            'Use Current Location',
-                            style: TextStyle(
+                          child: Text(
+                            ref.t('auth.use_current_location'),
+                            style: const TextStyle(
                               color: Color(0xFF2E7D32),
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -549,9 +547,9 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                                 AlwaysStoppedAnimation<Color>(Colors.white),
                           ),
                         )
-                      : const Text(
-                          'Save',
-                          style: TextStyle(
+                      : Text(
+                          ref.t('common.save'),
+                          style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
                           ),

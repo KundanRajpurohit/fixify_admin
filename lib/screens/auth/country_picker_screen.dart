@@ -1,3 +1,4 @@
+import 'package:fixify_admin/helpers/translate_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/auth_provider.dart';
@@ -49,10 +50,10 @@ class _CountryPickerScreenState extends ConsumerState<CountryPickerScreen> {
                       size: 24,
                     ),
                   ),
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      'Country',
-                      style: TextStyle(
+                      ref.t('auth.country'),
+                      style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                         color: Colors.black87,
@@ -76,13 +77,13 @@ class _CountryPickerScreenState extends ConsumerState<CountryPickerScreen> {
                 ),
                 child: TextField(
                   controller: _searchController,
-                  decoration: const InputDecoration(
-                    hintText: 'Search any country',
-                    hintStyle: TextStyle(color: Colors.grey),
-                    prefixIcon: Icon(Icons.search, color: Colors.grey),
+                  decoration: InputDecoration(
+                    hintText: ref.t('auth.search_any_country'),
+                    hintStyle: const TextStyle(color: Colors.grey),
+                    prefixIcon: const Icon(Icons.search, color: Colors.grey),
                     border: InputBorder.none,
                     contentPadding:
-                        EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   ),
                   onChanged: (value) {
                     setState(() {

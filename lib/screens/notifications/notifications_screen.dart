@@ -1,4 +1,5 @@
 import 'package:fixify_admin/components/custom_app_bar.dart';
+import 'package:fixify_admin/helpers/translate_helper.dart';
 import 'package:fixify_admin/models/notification_model.dart';
 import 'package:fixify_admin/providers/location_provider.dart';
 import 'package:flutter/material.dart';
@@ -121,7 +122,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FB),
-      appBar: CustomAppBar(title: 'Notifications', showbackButton: true),
+      appBar: CustomAppBar(title: ref.t('notifications.notifications'), showbackButton: true),
       body: _isLoading
           ? const Center(
               child: CircularProgressIndicator(
@@ -145,7 +146,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                           backgroundColor: const Color(0xFF217043),
                           foregroundColor: Colors.white,
                         ),
-                        child: const Text('Retry'),
+                        child: Text(ref.t('common.retry')),
                       ),
                     ],
                   ),
@@ -162,7 +163,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            'No notifications',
+                            ref.t('notifications.no_notifications'),
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w500,
@@ -171,7 +172,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'You\'re all caught up!',
+                            ref.t('notifications.all_read'),
                             style: TextStyle(
                               fontSize: 14,
                               color: Colors.grey.shade500,

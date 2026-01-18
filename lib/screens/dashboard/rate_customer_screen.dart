@@ -1,4 +1,5 @@
 import 'package:fixify_admin/config/app_colors.dart';
+import 'package:fixify_admin/helpers/translate_helper.dart';
 import 'package:fixify_admin/providers/location_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -49,9 +50,9 @@ class _RateCustomerScreenState extends ConsumerState<RateCustomerScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-              const Text(
-                'Job Completed Successfully',
-                style: TextStyle(
+              Text(
+                ref.t('dashboard.job_completed_successfully'),
+                style: const TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
                   color: Colors.black87,
@@ -59,10 +60,10 @@ class _RateCustomerScreenState extends ConsumerState<RateCustomerScreen> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
-              const Text(
-                'The job details have been submitted. Your earnings will be updated shortly.',
+              Text(
+                ref.t('dashboard.job_details_submitted'),
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 14,
                   color: Colors.black87,
                   height: 1.5,
@@ -158,9 +159,9 @@ class _RateCustomerScreenState extends ConsumerState<RateCustomerScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text(
-                    'Go to Job Details',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  child: Text(
+                    ref.t('dashboard.go_to_job_details'),
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 ),
               ),
@@ -174,8 +175,8 @@ class _RateCustomerScreenState extends ConsumerState<RateCustomerScreen> {
   Future<void> _handleSubmit() async {
     if (_rating == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please provide a rating'),
+         SnackBar(
+          content: Text(ref.t('dashboard.please_provide_rating')),
           backgroundColor: Colors.red,
         ),
       );
@@ -184,8 +185,8 @@ class _RateCustomerScreenState extends ConsumerState<RateCustomerScreen> {
 
     if (_commentController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please add a comment'),
+         SnackBar(
+          content: Text(ref.t('dashboard.please_add_comment')),
           backgroundColor: Colors.red,
         ),
       );
@@ -223,8 +224,8 @@ class _RateCustomerScreenState extends ConsumerState<RateCustomerScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Something went wrong. Please try again.'),
+         SnackBar(
+          content: Text(ref.t('common.try_again')),
           backgroundColor: Colors.red,
         ),
       );
@@ -255,10 +256,10 @@ class _RateCustomerScreenState extends ConsumerState<RateCustomerScreen> {
                   icon: const Icon(Icons.arrow_back, color: Colors.black87),
                   onPressed: () => Navigator.pop(context),
                 ),
-                const Expanded(
+                Expanded(
                   child: Text(
-                    'Rate the Customer',
-                    style: TextStyle(
+                    ref.t('dashboard.rate_customer'),
+                    style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                       color: Colors.black87,
@@ -293,7 +294,7 @@ class _RateCustomerScreenState extends ConsumerState<RateCustomerScreen> {
                 children: [
                   // Feedback Prompt
                   Text(
-                    'Your feedback helps us ensure better interactions and a safer working environment.',
+                    ref.t('dashboard.feedback_helps'),
                     style: TextStyle(
                       fontSize: 14,
                       color: Colors.grey.shade700,
@@ -318,9 +319,9 @@ class _RateCustomerScreenState extends ConsumerState<RateCustomerScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'How was your experience with this customer?',
-                          style: TextStyle(
+                        Text(
+                          ref.t('dashboard.how_was_experience'),
+                          style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                             color: Colors.black87,
@@ -373,9 +374,9 @@ class _RateCustomerScreenState extends ConsumerState<RateCustomerScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Add a comment',
-                          style: TextStyle(
+                        Text(
+                          ref.t('dashboard.add_comment'),
+                          style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                             color: Colors.black87,
@@ -386,8 +387,7 @@ class _RateCustomerScreenState extends ConsumerState<RateCustomerScreen> {
                           controller: _commentController,
                           maxLines: 5,
                           decoration: InputDecoration(
-                            hintText:
-                                'Share anything important about your experience...',
+                            hintText: ref.t('dashboard.share_experience'),
                             filled: true,
                             fillColor: Colors.grey.shade50,
                             border: OutlineInputBorder(
@@ -456,9 +456,9 @@ class _RateCustomerScreenState extends ConsumerState<RateCustomerScreen> {
                             ),
                           ),
                         )
-                        : const Text(
-                          'Submit',
-                          style: TextStyle(
+                        : Text(
+                          ref.t('common.submit'),
+                          style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                           ),

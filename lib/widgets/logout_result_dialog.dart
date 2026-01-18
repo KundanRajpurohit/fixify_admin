@@ -1,8 +1,10 @@
 
 import 'package:fixify_admin/config/app_colors.dart';
+import 'package:fixify_admin/helpers/translate_helper.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class LogoutResultDialog extends StatelessWidget {
+class LogoutResultDialog extends ConsumerWidget {
   final bool isSuccess;
   final String message;
   final VoidCallback onAction;
@@ -15,7 +17,7 @@ class LogoutResultDialog extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Dialog(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
@@ -50,7 +52,7 @@ class LogoutResultDialog extends StatelessWidget {
             
             // Title
             Text(
-              isSuccess ? 'Logout Successful' : 'Logout Failed',
+              isSuccess ? ref.t('profile.logout_successful') : ref.t('profile.logout_failed'),
               style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -86,7 +88,7 @@ class LogoutResultDialog extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    isSuccess ? 'Login' : 'Try Again',
+                    isSuccess ? ref.t('profile.login') : ref.t('profile.try_again'),
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,

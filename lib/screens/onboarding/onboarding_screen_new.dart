@@ -1,37 +1,36 @@
+import 'package:fixify_admin/helpers/translate_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:page_transition/page_transition.dart';
 import 'get_started_screen.dart';
 
-class OnboardingScreen extends StatefulWidget {
+class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
 
   @override
-  State<OnboardingScreen> createState() => _OnboardingScreenState();
+  ConsumerState<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
-class _OnboardingScreenState extends State<OnboardingScreen> {
+class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
-  final List<OnboardingPage> _pages = [
+  List<OnboardingPage> get _pages => [
     OnboardingPage(
-      title: "Manage Your Work Easily",
-      description:
-          "Find trusted carpenters, plumbers, and handymen near you. Schedule your service with just a few taps.",
-      illustration: _BookingServicesIllustration(),
+      title: ref.t('onboarding.manage_work_easily'),
+      description: ref.t('onboarding.manage_work_description'),
+      illustration:  _BookingServicesIllustration(),
     ),
     OnboardingPage(
-      title: "Skilled & Verified Professionals",
-      description:
-          "Get high-quality work from certified experts, ensuring safety, reliability, and satisfaction.",
-      illustration: _SkilledProfessionalsIllustration(),
+      title: ref.t('onboarding.skilled_professionals'),
+      description: ref.t('onboarding.skilled_professionals_description'),
+      illustration:  _SkilledProfessionalsIllustration(),
     ),
     OnboardingPage(
-      title: "Hassle-Free Payments",
-      description:
-          "Make secure online payments with clear, upfront pricing—no surprises or hidden costs.",
-      illustration: _PaymentIllustration(),
+      title: ref.t('onboarding.hassle_free_payments'),
+      description: ref.t('onboarding.hassle_free_payments_description'),
+      illustration:  _PaymentIllustration(),
     ),
   ];
 
@@ -52,9 +51,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       // Navigate to main app
                       _navigateToMainApp();
                     },
-                    child: const Text(
-                      'Skip',
-                      style: TextStyle(
+                    child: Text(
+                      ref.t('onboarding.skip'),
+                      style: const TextStyle(
                         color: Color(0xFF666666),
                         fontSize: 16,
                         fontWeight: FontWeight.w500,

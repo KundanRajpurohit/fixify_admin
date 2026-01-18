@@ -1,6 +1,7 @@
 import 'package:fixify_admin/components/custom_app_bar.dart';
 import 'package:fixify_admin/config/app_colors.dart';
 import 'package:fixify_admin/dio/resulr.dart';
+import 'package:fixify_admin/helpers/translate_helper.dart';
 import 'package:fixify_admin/models/job_model.dart';
 import 'package:fixify_admin/providers/location_provider.dart';
 import 'package:fixify_admin/screens/dashboard/job_details_screen.dart';
@@ -18,28 +19,32 @@ class MyJobsScreen extends ConsumerStatefulWidget {
 class _MyJobsScreenState extends ConsumerState<MyJobsScreen>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late TabController _tabController;
-  String _selectedNewJobFilter = 'All Jobs';
-  String _selectedAssignedJobFilter = 'All Assigned Jobs';
+  String _selectedNewJobFilter = 'All Jobs'; // Will be initialized with translation
+  String _selectedAssignedJobFilter = 'All Assigned Jobs'; // Will be initialized with translation
   int _selectedTabIndex = 0;
   bool _isLoading = false;
   List<JobModel> _newJobs = [];
   List<JobModel> _assignedJobs = [];
 
-  // New Job Request filters
-  final List<String> _newJobFilters = ['All Jobs', 'Upcoming', 'Cancelled'];
+  // New Job Request filters - Will be translated dynamically
+  List<String> get _newJobFilters => [
+    ref.t('dashboard.all_jobs'),
+    ref.t('dashboard.upcoming_jobs'),
+    ref.t('dashboard.cancelled_jobs'),
+  ];
 
-  // Assigned Job filters
-  final List<String> _assignedJobFilters = [
-    'All Assigned Jobs',
-    'Ongoing',
-    'Past',
+  // Assigned Job filters - Will be translated dynamically
+  List<String> get _assignedJobFilters => [
+    ref.t('dashboard.all_assigned_jobs'),
+    ref.t('dashboard.ongoing_jobs'),
+    ref.t('dashboard.past_jobs'),
   ];
 
   Map<String, dynamic> getStatusStyle(String status) {
     switch (status.toLowerCase()) {
       case "upcoming":
         return {
-          "label": "Upcoming",
+          "label": ref.t('dashboard.upcoming'),
           "bg": Color(0xffF2F6FB),
           "text": Color(0xFF214370),
           "border": Color(0xFFC2DAF0),
@@ -47,7 +52,7 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen>
 
       case "ongoing":
         return {
-          "label": "Ongoing",
+          "label": ref.t('dashboard.ongoing'),
           "bg": Color(0xffFBF6F2),
           "text": Color(0xFF704B21),
           "border": Color(0xFFF0E4C2),
@@ -55,7 +60,7 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen>
 
       case "past":
         return {
-          "label": "Past",
+          "label": ref.t('dashboard.past'),
           "bg": Color(0xffF2FBF2),
           "text": Color(0xFF257021),
           "border": Color(0xFFC2F0C7),
@@ -63,7 +68,7 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen>
 
       case "cancelled":
         return {
-          "label": "Cancelled",
+          "label": ref.t('dashboard.cancelled'),
           "bg": Color(0xffF5F5F5),
           "text": Color(0xFF434343),
           "border": Color(0xFFDFDFDF),
@@ -71,7 +76,7 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen>
 
       default:
         return {
-          "label": "Unknown",
+          "label": ref.t('common.unknown'),
           "bg": Color(0xffF5F5F5),
           "text": Color(0xFF434343),
           "border": Color(0xFFDFDFDF),
@@ -86,17 +91,12 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen>
       final userService = ref.read(userServiceProvider);
       ApiResult<Map<String, dynamic>> result;
 
-      switch (_selectedNewJobFilter) {
-        case 'Upcoming':
-          result = await userService.getUpcomingJobs();
-          break;
-        case 'Cancelled':
-          result = await userService.getCancelledJobs();
-          break;
-        case 'All Jobs':
-        default:
-          result = await userService.getAllJobs();
-          break;
+      if (_selectedNewJobFilter == ref.t('dashboard.upcoming_jobs')) {
+        result = await userService.getUpcomingJobs();
+      } else if (_selectedNewJobFilter == ref.t('dashboard.cancelled_jobs')) {
+        result = await userService.getCancelledJobs();
+      } else {
+        result = await userService.getAllJobs();
       }
 
       result.fold(
@@ -140,17 +140,12 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen>
       final userService = ref.read(userServiceProvider);
       ApiResult<Map<String, dynamic>> result;
 
-      switch (_selectedAssignedJobFilter) {
-        case 'Ongoing':
-          result = await userService.getOngoingJobs();
-          break;
-        case 'Past':
-          result = await userService.getPastJobs();
-          break;
-        case 'All Assigned Jobs':
-        default:
-          result = await userService.getAssignUpcomingJobs();
-          break;
+      if (_selectedAssignedJobFilter == ref.t('dashboard.ongoing_jobs')) {
+        result = await userService.getOngoingJobs();
+      } else if (_selectedAssignedJobFilter == ref.t('dashboard.past_jobs')) {
+        result = await userService.getPastJobs();
+      } else {
+        result = await userService.getAssignUpcomingJobs();
       }
 
       result.fold(
@@ -193,7 +188,6 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen>
     WidgetsBinding.instance.addObserver(this);
 
     _tabController = TabController(length: 2, vsync: this);
-    _loadNewJobs();
 
     _tabController.addListener(() {
       if (_selectedTabIndex != _tabController.index) {
@@ -206,6 +200,21 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen>
         } else {
           _loadAssignedJobs();
         }
+      }
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Initialize filters with translated strings after dependencies are available
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _selectedNewJobFilter == 'All Jobs') {
+        setState(() {
+          _selectedNewJobFilter = _newJobFilters.first;
+          _selectedAssignedJobFilter = _assignedJobFilters.first;
+        });
+        _loadNewJobs();
       }
     });
   }
@@ -315,7 +324,7 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(title: 'My Jobs'),
+      appBar: CustomAppBar(title: ref.t('dashboard.my_jobs')),
       backgroundColor: const Color(0xFFF5F7F8),
       body: Column(
         children: [
@@ -333,8 +342,8 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen>
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    _buildPillTab(title: 'New Job Request', index: 0),
-                    _buildPillTab(title: 'Assigned Job', index: 1),
+                    _buildPillTab(title: ref.t('dashboard.new_job_request'), index: 0),
+                    _buildPillTab(title: ref.t('dashboard.assigned_job'), index: 1),
                   ],
                 ),
               ),
@@ -417,7 +426,7 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen>
             Icon(Icons.work_outline, size: 64, color: Colors.grey.shade400),
             const SizedBox(height: 16),
             Text(
-              isNewJob ? 'No new job requests' : 'No assigned jobs',
+              isNewJob ? ref.t('dashboard.no_new_job_requests') : ref.t('dashboard.no_assigned_jobs'),
               style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
             ),
             const SizedBox(height: 20),
@@ -433,7 +442,7 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen>
                         }
                       },
               icon: const Icon(Icons.refresh),
-              label: Text(_isLoading ? 'Refreshing...' : 'Refresh'),
+              label: Text(_isLoading ? ref.t('common.refreshing') : ref.t('common.refresh')),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,

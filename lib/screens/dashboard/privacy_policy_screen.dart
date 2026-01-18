@@ -1,7 +1,7 @@
 import 'package:fixify_admin/components/custom_app_bar.dart';
 import 'package:fixify_admin/config/app_colors.dart';
+import 'package:fixify_admin/helpers/translate_helper.dart';
 import 'package:fixify_admin/providers/location_provider.dart';
-import 'package:fixify_admin/services/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
@@ -43,7 +43,7 @@ class _PrivacyPolicyScreenState extends ConsumerState<PrivacyPolicyScreen> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
-                  'Failed to load privacy policy: ${failure.message}',
+                  '${ref.t('profile.failed_to_load_privacy_policy')}: ${failure.message}',
                 ),
                 backgroundColor: Colors.red,
               ),
@@ -67,7 +67,7 @@ class _PrivacyPolicyScreenState extends ConsumerState<PrivacyPolicyScreen> {
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${e.toString()}'),
+            content: Text('${ref.t('common.error')}: ${e.toString()}'),
             backgroundColor: Colors.red,
           ),
         );
@@ -80,7 +80,7 @@ class _PrivacyPolicyScreenState extends ConsumerState<PrivacyPolicyScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7F8),
       appBar: CustomAppBar(
-        title: _title ?? 'Privacy Policy',
+        title: _title ?? ref.t('profile.privacy_policy'),
         showbackButton: true,
       ),
       body: Column(
@@ -99,7 +99,7 @@ class _PrivacyPolicyScreenState extends ConsumerState<PrivacyPolicyScreen> {
                       ),
                     )
                     : _content == null
-                    ? const Center(child: Text('No content available'))
+                    ? Center(child: Text(ref.t('profile.no_content_available')))
                     : SingleChildScrollView(
                       padding: const EdgeInsets.all(16),
                       child: Container(

@@ -1,11 +1,13 @@
 import 'package:fixify_admin/components/custom_app_bar.dart';
+import 'package:fixify_admin/helpers/translate_helper.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class RatingPage extends StatelessWidget {
+class RatingPage extends ConsumerWidget {
   const RatingPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final reviews = List.generate(
       3,
       (index) => const ReviewModel(
@@ -20,7 +22,7 @@ class RatingPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFffffff),
       appBar: CustomAppBar(
-        title: 'Ratings & Reviews',
+        title: ref.t('profile.my_rating_reviews'),
         showbackButton: true,
       ), // dark outer background
       body: SafeArea(
@@ -28,7 +30,7 @@ class RatingPage extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           child: ListView(
             children: [
-              _buildSummaryCard(),
+              _buildSummaryCard(ref),
               const SizedBox(height: 16),
               ...reviews.map((r) => _buildReviewCard(r)),
             ],
@@ -39,7 +41,7 @@ class RatingPage extends StatelessWidget {
   }
 
   // ---------- Top summary card ----------
-  Widget _buildSummaryCard() {
+  Widget _buildSummaryCard(WidgetRef ref) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -71,9 +73,9 @@ class RatingPage extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 4),
-              const Text(
-                '273 Reviews',
-                style: TextStyle(fontSize: 13, color: Colors.grey),
+              Text(
+                '273 ${ref.t('dashboard.reviews')}',
+                style:  TextStyle(fontSize: 13, color: Colors.grey),
               ),
             ],
           ),

@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:fixify_admin/config/app_colors.dart';
+import 'package:fixify_admin/helpers/translate_helper.dart';
 import 'package:fixify_admin/providers/location_provider.dart';
-import 'package:fixify_admin/services/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -371,7 +371,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+              child: Text(ref.t('common.cancel')),
             ),
             ElevatedButton(
               onPressed: _isUpdatingMobile ? null : () async {
@@ -947,9 +947,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                               ),
                             ),
                           )
-                              : const Text(
-                            'Save',
-                            style: TextStyle(
+                              : Text(
+                            ref.t('common.save'),
+                            style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
                             ),
@@ -1023,9 +1023,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             // First Name
-                            const Text(
-                              'First Name',
-                              style: TextStyle(
+                            Text(
+                              ref.t('auth.first_name'),
+                              style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
                                 color: Colors.black87,
@@ -1035,7 +1035,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                             TextFormField(
                               controller: _firstNameController,
                               decoration: InputDecoration(
-                                hintText: 'Enter first name',
+                                hintText: ref.t('auth.enter_first_name'),
                                 filled: true,
                                 fillColor: Colors.grey.shade50,
                                 enabledBorder: OutlineInputBorder(
@@ -1055,7 +1055,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                 if (value == null || value
                                     .trim()
                                     .isEmpty) {
-                                  return 'Please enter your first name';
+                                  return ref.t('auth.please_enter_first_name');
                                 }
                                 return null;
                               },
@@ -1063,9 +1063,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                             const SizedBox(height: 20),
 
                             // Last Name
-                            const Text(
-                              'Last Name',
-                              style: TextStyle(
+                            Text(
+                              ref.t('auth.last_name'),
+                              style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
                                 color: Colors.black87,
@@ -1075,7 +1075,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                             TextFormField(
                               controller: _lastNameController,
                               decoration: InputDecoration(
-                                hintText: 'Enter last name',
+                                hintText: ref.t('auth.enter_last_name'),
                                 filled: true,
                                 fillColor: Colors.grey.shade50,
                                 enabledBorder: OutlineInputBorder(
@@ -1095,7 +1095,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                 if (value == null || value
                                     .trim()
                                     .isEmpty) {
-                                  return 'Please enter your last name';
+                                  return ref.t('auth.please_enter_last_name');
                                 }
                                 return null;
                               },

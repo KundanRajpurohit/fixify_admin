@@ -1,9 +1,6 @@
+import 'package:fixify_admin/helpers/translate_helper.dart';
 import 'package:fixify_admin/screens/auth/map_screen.dart';
-import 'package:fixify_admin/screens/auth/set_password_screen.dart';
-import 'package:fixify_admin/screens/dashboard/home_screen.dart';
 import 'package:fixify_admin/screens/dashboard/terms_of_service_screen.dart';
-import 'package:fixify_admin/screens/onboarding/location_permission_screen.dart';
-import 'package:fixify_admin/services/user_service.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -135,10 +132,10 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
     final authState = ref.read(authProvider);
     if (authState.phoneNumber == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Phone number not found'),
-          backgroundColor: Colors.red,
-        ),
+          SnackBar(
+            content: Text(ref.t('auth.phone_number_not_found')),
+            backgroundColor: Colors.red,
+          ),
       );
       return;
     }
@@ -171,8 +168,8 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
             _prefillOTP(data['otp'].toString());
           }
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('OTP sent successfully'),
+            SnackBar(
+              content: Text(ref.t('auth.otp_sent')),
               backgroundColor: Colors.green,
             ),
           );
@@ -208,10 +205,10 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
               _prefillOTP(data['otp'].toString());
             }
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('OTP sent successfully'),
-                backgroundColor: Colors.green,
-              ),
+          SnackBar(
+            content: Text(ref.t('auth.otp_sent')),
+            backgroundColor: Colors.green,
+          ),
             );
           } else {
             // Handle different error scenarios
@@ -219,10 +216,10 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
             
             if (message.contains('not registered') || 
                 message.toLowerCase().contains('mobile number not registered')) {
-              errorMessage = 'Your account is in review. You will receive an update once verification completes.';
+              errorMessage = ref.t('auth.account_in_review');
             } else if (accountStatus == 'pending' || 
                        message.toLowerCase().contains('not active')) {
-              errorMessage = 'Your account is not active. Please contact support.';
+              errorMessage = ref.t('auth.account_not_active');
             }
 
             ScaffoldMessenger.of(context).showSnackBar(
@@ -324,8 +321,8 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
       if (authState.phoneNumber == null) {
         Navigator.of(context).pop(); // Close loading dialog
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Phone number not found'),
+          SnackBar(
+            content: Text(ref.t('auth.phone_number_not_found')),
             backgroundColor: Colors.red,
           ),
         );
@@ -387,9 +384,9 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
                 const SizedBox(height: 24),
                 Text(
                   widget.isCreateAccount
-                      ? 'Verified Successfully!'
-                      : 'Login Successful!',
-                  style: TextStyle(
+                      ? ref.t('auth.verified_successfully')
+                      : ref.t('auth.login_successful'),
+                  style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: Colors.black87,
@@ -397,9 +394,9 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  'Your mobile number has been verified successfully. You can now explore our services and book with ease.',
-                  style: TextStyle(
+                Text(
+                  ref.t('auth.verification_message'),
+                  style: const TextStyle(
                     fontSize: 14,
                     color: Colors.black87,
                     height: 1.5,
@@ -433,9 +430,9 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
                         borderRadius: BorderRadius.circular(35),
                       ),
                     ),
-                    child: const Text(
-                      'Continue',
-                      style: TextStyle(
+                    child: Text(
+                      ref.t('common.continue'),
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
@@ -456,9 +453,9 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
                 const SizedBox(height: 16),
                 Image.asset("assets/images/lose_8586526.png"),
                 const SizedBox(height: 24),
-                const Text(
-                  'Verification Failed',
-                  style: TextStyle(
+                Text(
+                  ref.t('auth.verification_failed'),
+                  style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: Colors.black87,
@@ -466,9 +463,9 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  'The OTP you entered is invalid or expired. Please try again.',
-                  style: TextStyle(
+                Text(
+                  ref.t('auth.verification_failed_message'),
+                  style: const TextStyle(
                     fontSize: 14,
                     color: Colors.black87,
                     height: 1.5,
@@ -497,9 +494,9 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
                         borderRadius: BorderRadius.circular(35),
                       ),
                     ),
-                    child: const Text(
-                      'Try Again',
-                      style: TextStyle(
+                    child: Text(
+                      ref.t('common.try_again'),
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
@@ -534,10 +531,10 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
                       size: 24,
                     ),
                   ),
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      'Verification Code',
-                      style: TextStyle(
+                      ref.t('auth.verification_code'),
+                      style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                         color: Colors.black87,
@@ -615,9 +612,9 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
                   if (_canResend)
                     GestureDetector(
                       onTap: _resendOTP,
-                      child: const Text(
-                        'Resend via SMS',
-                        style: TextStyle(
+                      child: Text(
+                        ref.t('auth.resend_via_sms'),
+                        style: const TextStyle(
                           fontSize: 16,
                           color: Color(0xFF217043),
                           fontWeight: FontWeight.w600,
@@ -626,7 +623,7 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
                     )
                   else
                     Text(
-                      'Resend via SMS in 00:${(_countdown % 60).toString().padLeft(2, '0')}',
+                      '${ref.t('auth.resend_via_sms_in')} 00:${(_countdown % 60).toString().padLeft(2, '0')}',
                       style: const TextStyle(fontSize: 16, color: Colors.grey),
                     ),
 
@@ -638,12 +635,11 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
                     text: TextSpan(
                       style: const TextStyle(fontSize: 14, color: Colors.black87),
                       children: [
-                        const TextSpan(
-                          text:
-                              'By verifying your phone number, you accept our ',
+                        TextSpan(
+                          text: ref.t('auth.by_verifying'),
                         ),
                         TextSpan(
-                          text: 'Term and Conditions',
+                          text: ref.t('auth.term_and_conditions'),
                           style: const TextStyle(
                             color: Color(0xFF217043),
                             fontWeight: FontWeight.w600,

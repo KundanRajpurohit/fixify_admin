@@ -1,5 +1,6 @@
 import 'package:fixify_admin/components/custom_app_bar.dart';
 import 'package:fixify_admin/config/app_colors.dart';
+import 'package:fixify_admin/helpers/translate_helper.dart';
 import 'package:fixify_admin/main.dart' show navigatorKey;
 import 'package:fixify_admin/providers/auth_provider.dart';
 import 'package:fixify_admin/providers/location_provider.dart'
@@ -14,7 +15,6 @@ import 'package:fixify_admin/screens/auth/phone_verification_screen.dart';
 import 'package:fixify_admin/screens/settings/earnings_dashboard_screen.dart';
 import 'package:fixify_admin/screens/settings/revieW_page.dart';
 import 'package:fixify_admin/screens/settings/transaction_history.dart';
-import 'package:fixify_admin/services/user_service.dart';
 import 'package:fixify_admin/widgets/logout_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -82,7 +82,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${e.toString()}'),
+            content: Text('${ref.t('common.error')}: ${e.toString()}'),
             backgroundColor: Colors.red,
           ),
         );
@@ -94,7 +94,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7F8),
-      appBar: CustomAppBar(title: 'My Profile', showbackButton: false),
+      appBar: CustomAppBar(title: ref.t('profile.my_profile'), showbackButton: false),
       body:
           _isLoading
               ? const Center(
@@ -130,9 +130,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text(
-            'My Profile',
-            style: TextStyle(
+          Text(
+            ref.t('profile.my_profile'),
+            style: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
               color: Colors.black87,
@@ -234,11 +234,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ],
           ),
           const SizedBox(height: 20),
-          _buildInfoRow('Name:', name),
+          _buildInfoRow(ref.t('profile.name'), name),
           const SizedBox(height: 6),
           Divider(color: Colors.grey.shade300),
           const SizedBox(height: 6),
-          _buildInfoRow('Contact', '+91 $mobile'),
+          _buildInfoRow(ref.t('profile.contact'), '+91 $mobile'),
         ],
       ),
     );
@@ -299,9 +299,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'My Document\'s',
-                  style: TextStyle(
+                Text(
+                  ref.t('profile.my_documents'),
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: Colors.black87,
@@ -311,12 +311,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            _buildDocumentItem('Aadhaar Card', nationalIdVerified),
+            _buildDocumentItem(ref.t('auth.aadhaar_card'), nationalIdVerified),
             const Divider(height: 24),
-            _buildDocumentItem('Address Proof', proofNationalIdVerified),
+            _buildDocumentItem(ref.t('auth.address_proof'), proofNationalIdVerified),
             const Divider(height: 24),
             _buildDocumentItem(
-              'Service License (if applicable)',
+              ref.t('auth.service_license_if_applicable'),
               servicesLicenseVerified,
             ),
           ],
@@ -343,7 +343,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
-            isVerified ? 'Verified' : 'In review',
+            isVerified ? ref.t('profile.verified') : ref.t('profile.in_review'),
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
@@ -373,9 +373,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Earnings & Payments',
-            style: TextStyle(
+          Text(
+            ref.t('profile.earnings_payments'),
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
               color: Colors.black87,
@@ -384,7 +384,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           const SizedBox(height: 16),
           _buildMenuItem(
             icon: Icons.account_balance_wallet,
-            title: 'Earnings Dashboard',
+            title: ref.t('profile.earnings_dashboard'),
             onTap: () {
               Navigator.push(
                 context,
@@ -397,7 +397,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           const Divider(height: 24),
           _buildMenuItem(
             icon: Icons.swap_horiz,
-            title: 'Transaction History',
+            title: ref.t('profile.transaction_history'),
             onTap: () {
               Navigator.push(
                 context,
@@ -410,7 +410,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           const Divider(height: 24),
           _buildMenuItem(
             icon: Icons.account_balance,
-            title: 'My Bank Account',
+            title: ref.t('profile.bank_accounts'),
             onTap: () {
               Navigator.push(
                 context,
@@ -444,19 +444,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         children: [
           _buildMenuItem(
             icon: Icons.star,
-            title: 'My Rating & Reviews',
+            title: ref.t('profile.my_rating_reviews'),
             onTap: () {
               // Navigate to rating & reviews
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const RatingPage()),
+                MaterialPageRoute(builder: (context) =>  RatingPage()),
               );
             },
           ),
           Divider(),
           _buildMenuItem(
             icon: Icons.holiday_village,
-            title: 'Our Vendors',
+            title: ref.t('profile.our_vendors'),
             onTap: () {
               // Navigate to vendor list
               Navigator.push(
@@ -490,9 +490,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Notification & Security',
-            style: TextStyle(
+          Text(
+            ref.t('profile.notification_security'),
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
               color: Colors.black87,
@@ -501,7 +501,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           const SizedBox(height: 16),
           _buildToggleItem(
             icon: Icons.notifications,
-            title: 'Notifications On/Off',
+            title: ref.t('profile.notifications_on_off'),
             value: _notificationsEnabled,
             onChanged: (value) async {
               if (value) {
@@ -514,20 +514,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     context: context,
                     builder:
                         (context) => AlertDialog(
-                          title: const Text('Notification Permission Required'),
+                          title: Text(ref.t('profile.notification_permission_title')),
                           content: Text(
                             status.isPermanentlyDenied
-                                ? 'Notifications are disabled for this app. Please enable them in your device settings to receive notifications.'
-                                : 'To enable notifications, please grant notification permission.',
+                                ? ref.t('profile.notification_permission_content_permanently_denied')
+                                : ref.t('profile.notification_permission_content_denied'),
                           ),
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(context, false),
-                              child: const Text('Cancel'),
+                              child: Text(ref.t('common.cancel')),
                             ),
                             TextButton(
                               onPressed: () => Navigator.pop(context, true),
-                              child: const Text('Open Settings'),
+                              child: Text(ref.t('auth.open_settings')),
                             ),
                           ],
                         ),
@@ -539,10 +539,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       await openAppSettings();
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Please enable "All fixify_admin notifications" in settings',
-                            ),
+                           SnackBar(
+                            content: Text(ref.t('profile.enable_notifications_in_settings')),
                             backgroundColor: Colors.orange,
                             duration: Duration(seconds: 4),
                           ),
@@ -557,10 +555,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           // Open app settings if permission still not granted
                           await openAppSettings();
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Please enable notifications in settings',
-                              ),
+                             SnackBar(
+                              content: Text(ref.t('profile.enable_notifications_in_settings')),
                               backgroundColor: Colors.orange,
                               duration: Duration(seconds: 3),
                             ),
@@ -579,10 +575,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     if (mounted) {
                       await openAppSettings();
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Please enable notifications in settings',
-                          ),
+                        SnackBar(
+                          content: Text(ref.t('profile.enable_notifications_in_settings')),
                           backgroundColor: Colors.orange,
                           duration: Duration(seconds: 3),
                         ),
@@ -605,9 +599,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     });
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(
-                          'Failed to update notification: ${failure.message}',
-                        ),
+                        content: Text('${ref.t('profile.failed_to_update_notification')}: ${failure.message}'),
                         backgroundColor: Colors.red,
                       ),
                     );
@@ -658,9 +650,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Legal Pages',
-            style: TextStyle(
+          Text(
+            ref.t('profile.legal_pages'),
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
               color: Colors.black87,
@@ -669,7 +661,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           const SizedBox(height: 16),
           _buildMenuItem(
             icon: Icons.privacy_tip,
-            title: 'Privacy Policy',
+            title: ref.t('profile.privacy_policy'),
             onTap: () {
               Navigator.push(
                 context,
@@ -682,7 +674,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           const Divider(height: 24),
           _buildMenuItem(
             icon: Icons.description,
-            title: 'Terms of Service',
+            title: ref.t('profile.terms_of_service'),
             onTap: () {
               Navigator.push(
                 context,
@@ -714,7 +706,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       ),
       child: _buildMenuItem(
         icon: Icons.logout,
-        title: 'Logout',
+        title: ref.t('profile.logout'),
         onTap: () {
           showDialog(
             context: context,

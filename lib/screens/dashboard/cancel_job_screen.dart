@@ -1,27 +1,31 @@
 import 'package:fixify_admin/components/custom_app_bar.dart';
 import 'package:fixify_admin/config/app_colors.dart';
+import 'package:fixify_admin/helpers/translate_helper.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class CancelJobScreen extends StatefulWidget {
+class CancelJobScreen extends ConsumerStatefulWidget {
   final Map<String, dynamic> job;
 
   const CancelJobScreen({super.key, required this.job});
 
   @override
-  State<CancelJobScreen> createState() => _CancelJobScreenState();
+  ConsumerState<CancelJobScreen> createState() => _CancelJobScreenState();
 }
 
-class _CancelJobScreenState extends State<CancelJobScreen> {
+class _CancelJobScreenState extends ConsumerState<CancelJobScreen> {
   String? _selectedReason;
   final TextEditingController _otherReasonController = TextEditingController();
 
-  final List<String> _cancellationReasons = [
-    'Incorrect address/location',
-    'Unable to reach the location',
-    'Service not possible',
-    'Emergency / personal reason',
-    'Other',
-  ];
+  List<String> get _cancellationReasons {
+    return [
+      ref.t('jobs.incorrect_address'),
+      ref.t('jobs.unable_to_reach'),
+      ref.t('jobs.service_not_possible'),
+      ref.t('jobs.emergency_reason'),
+      ref.t('jobs.other'),
+    ];
+  }
 
   @override
   void dispose() {
@@ -55,19 +59,19 @@ class _CancelJobScreenState extends State<CancelJobScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-              const Text(
-                'Job Cancelled Successfully',
-                style: TextStyle(
+              Text(
+                ref.t('jobs.job_cancelled'),
+                style: const TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
                   color: Colors.black87,
                 ),
               ),
               const SizedBox(height: 12),
-              const Text(
-                'We\'ve updated the status and notified the customer.',
+              Text(
+                ref.t('jobs.job_cancelled_message'),
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 14,
                   color: Colors.black87,
                   height: 1.5,
@@ -90,9 +94,9 @@ class _CancelJobScreenState extends State<CancelJobScreen> {
                       borderRadius: BorderRadius.circular(30),
                     ),
                   ),
-                  child: const Text(
-                    'Go to My Jobs',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  child: Text(
+                    ref.t('jobs.go_to_my_jobs'),
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 ),
               ),
@@ -106,19 +110,19 @@ class _CancelJobScreenState extends State<CancelJobScreen> {
   void _handleSubmit() {
     if (_selectedReason == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select a reason for cancellation'),
+         SnackBar(
+          content: Text(ref.t('jobs.select_reason')),
           backgroundColor: Colors.red,
         ),
       );
       return;
     }
 
-    if (_selectedReason == 'Other' &&
+    if (_selectedReason == ref.t('jobs.other') &&
         _otherReasonController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please provide a reason'),
+         SnackBar(
+          content: Text(ref.t('jobs.provide_reason')),
           backgroundColor: Colors.red,
         ),
       );
@@ -133,7 +137,7 @@ class _CancelJobScreenState extends State<CancelJobScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7F8),
-      appBar: CustomAppBar(title: 'Cancel Job', showbackButton: true),
+      appBar: CustomAppBar(title: ref.t('jobs.cancel_job'), showbackButton: true),
       body: Column(
         children: [
           // Header
@@ -145,9 +149,9 @@ class _CancelJobScreenState extends State<CancelJobScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Please select the reason for cancelling this job. Your feedback helps us improve service quality.',
-                    style: TextStyle(
+                  Text(
+                    ref.t('jobs.cancel_reason'),
+                    style: const TextStyle(
                       fontSize: 17,
                       color: Colors.black87,
                       height: 1.5,
@@ -171,9 +175,9 @@ class _CancelJobScreenState extends State<CancelJobScreen> {
                       mainAxisAlignment: MainAxisAlignment.start,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Reasons for Cancellation',
-                          style: TextStyle(
+                        Text(
+                          ref.t('jobs.reasons_for_cancellation'),
+                          style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                             color: Colors.black87,
@@ -189,7 +193,7 @@ class _CancelJobScreenState extends State<CancelJobScreen> {
                             children:
                                 _cancellationReasons.map((reason) {
                                   final isSelected = _selectedReason == reason;
-                                  final isOther = reason == 'Other';
+                                  final isOther = reason == ref.t('jobs.other');
 
                                   return Column(
                                     children: [
@@ -221,7 +225,7 @@ class _CancelJobScreenState extends State<CancelJobScreen> {
                                           child: TextField(
                                             controller: _otherReasonController,
                                             decoration: InputDecoration(
-                                              hintText: 'Write Reason...',
+                                              hintText: ref.t('jobs.write_reason'),
                                               hintStyle: TextStyle(
                                                 color: Colors.grey.shade400,
                                               ),
