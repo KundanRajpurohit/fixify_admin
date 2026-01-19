@@ -37,12 +37,29 @@ class LanguageNotifier extends StateNotifier<AppLanguage> {
   }
 
   /// Check if user has selected a language before
+  /// Returns true if either the flag is set OR a language code is stored
   Future<bool> hasLanguageBeenSelected() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      return prefs.getBool(_languageSelectedKey) ?? false;
+      
+      // Check if language selection flag is set
+      final flagSet = prefs.getBool(_languageSelectedKey) ?? false;
+      
+      // Also check if a language code is stored (fallback check)
+      final languageCode = prefs.getString(_languageKey);
+      final languageStored = languageCode != null && languageCode.isNotEmpty;
+      
+      // Return true if either condition is met
+      final hasSelected = flagSet || languageStored;
+      
+      print('🌐 [LanguageProvider] Language selection check:');
+      print('   Flag set: $flagSet');
+      print('   Language stored: $languageStored (code: $languageCode)');
+      print('   Has selected: $hasSelected');
+      
+      return hasSelected;
     } catch (e) {
-      print('Error checking language selection: $e');
+      print('❌ [LanguageProvider] Error checking language selection: $e');
       return false;
     }
   }

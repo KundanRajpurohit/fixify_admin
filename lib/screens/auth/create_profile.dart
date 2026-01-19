@@ -5,6 +5,7 @@ import 'package:fixify_admin/helpers/translate_helper.dart';
 import 'package:fixify_admin/providers/auth_provider.dart';
 import 'package:fixify_admin/screens/auth/country_picker_screen.dart';
 import 'package:fixify_admin/screens/auth/otp_verification_screen.dart';
+import 'package:fixify_admin/services/device_info_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -160,11 +161,18 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
         return;
       }
 
+      // Get device info
+      final deviceInfo = await DeviceInfoService.getCachedDeviceInfo();
+      final deviceToken = deviceInfo['deviceToken'];
+      final platform = deviceInfo['platform'];
+
       print('📝 [CreateProfile] Registering partner:');
       print('   - name: $fullName');
       print('   - mobile: $mobileNumber');
       print('   - email: $email');
       print('   - services: $_selectedService');
+      print('   - deviceToken: ${deviceToken != null ? "${deviceToken.substring(0, 20)}..." : "null"}');
+      print('   - platform: $platform');
 
       final result = await userService.partnerRegister(
         name: fullName,
@@ -172,6 +180,8 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
         email: email,
         services: _selectedService,
         image: _profileImage,
+        deviceToken: deviceToken,
+        platform: platform,
       );
 
       if (!mounted) return;

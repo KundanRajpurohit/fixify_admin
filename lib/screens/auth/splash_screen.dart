@@ -4,6 +4,7 @@ import 'package:fixify_admin/screens/auth/initial_language_selection_screen.dart
 import 'package:fixify_admin/screens/auth/phone_verification_screen.dart';
 import 'package:fixify_admin/screens/dashboard/dashboard_screen.dart';
 import 'package:fixify_admin/screens/onboarding/onboarding_screen.dart';
+import 'package:fixify_admin/services/device_info_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:page_transition/page_transition.dart';
@@ -41,6 +42,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     _animationController.forward();
 
+    // Initialize device info (device token, platform, GA4 client ID)
+    _initializeDeviceInfo();
+
+    // Note: Notification permissions are already requested in main.dart
+    // during NotificationService initialization
+    // We don't need to request again here to avoid duplicate requests
+
     // Navigate after 3 seconds
     Future.delayed(const Duration(seconds: 3), () {
       if (!mounted) return;
@@ -48,13 +56,26 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     });
   }
 
+  Future<void> _initializeDeviceInfo() async {
+    try {
+      print('🚀 [SplashScreen] Initializing device info...');
+      await DeviceInfoService.initializeDeviceInfo();
+      print('✅ [SplashScreen] Device info initialized successfully');
+    } catch (e) {
+      print('❌ [SplashScreen] Failed to initialize device info: $e');
+    }
+  }
+
   Future<void> _checkLanguageAndNavigate() async {
     // First check if language has been selected
     final languageNotifier = ref.read(languageProvider.notifier);
     final hasSelectedLanguage = await languageNotifier.hasLanguageBeenSelected();
 
+    print('🌐 [SplashScreen] Language selection check: hasSelectedLanguage = $hasSelectedLanguage');
+
+    // Only show language selection screen if language has NOT been selected
     if (!hasSelectedLanguage) {
-      // Navigate to language selection screen
+      // Navigate to language selection screen only if no language is selected
       print('🌐 [SplashScreen] No language selected - Navigating to InitialLanguageSelectionScreen');
       if (!mounted) return;
       
@@ -69,7 +90,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       return;
     }
 
-    // Language is selected, proceed with auth-based navigation
+    // Language is already selected - skip language selection screen and proceed with auth-based navigation
+    print('🌐 [SplashScreen] Language already selected - Skipping language selection screen');
+    print('🌐 [SplashScreen] Proceeding with auth-based navigation');
     _navigateBasedOnAuthState();
   }
 

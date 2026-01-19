@@ -298,6 +298,8 @@ class UserService {
     required String email,
     String? services,
     File? image,
+    String? deviceToken,
+    String? platform,
   }) async {
     try {
       print('👤 [UserService] Starting partnerRegister API call');
@@ -307,6 +309,8 @@ class UserService {
       print('   - email: $email');
       print('   - services: ${services ?? "null"}');
       print('   - image: ${image?.path ?? "null"}');
+      print('   - deviceToken: ${deviceToken ?? "null"}');
+      print('   - platform: ${platform ?? "null"}');
       print('🌐 [UserService] API endpoint: ${ApiConfig.partnerRegister}');
       print(
         '🔗 [UserService] Full URL: ${ApiConfig.baseUrl}${ApiConfig.partnerRegister}',
@@ -317,6 +321,8 @@ class UserService {
         'mobile': mobile,
         'email': email,
         if (services != null) 'services': services,
+        if (deviceToken != null && deviceToken.isNotEmpty) 'devicetoken': deviceToken,
+        if (platform != null && platform.isNotEmpty) 'platform': platform,
         if (image != null)
           'image': await MultipartFile.fromFile(
             image.path,
@@ -628,17 +634,25 @@ class UserService {
   // Partner Login
   Future<ApiResult<Map<String, dynamic>>> partnerLogin({
     required String mobile,
+    String? deviceToken,
+    String? platform,
   }) async {
     try {
       print('🔐 [UserService] Starting partnerLogin API call');
       print('📝 [UserService] Request data:');
       print('   - mobile: $mobile');
+      print('   - deviceToken: ${deviceToken ?? "null"}');
+      print('   - platform: ${platform ?? "null"}');
       print('🌐 [UserService] API endpoint: ${ApiConfig.partnerLogin}');
       print(
         '🔗 [UserService] Full URL: ${ApiConfig.baseUrl}${ApiConfig.partnerLogin}',
       );
 
-      final formData = FormData.fromMap({'mobile': mobile});
+      final formData = FormData.fromMap({
+        'mobile': mobile,
+        if (deviceToken != null && deviceToken.isNotEmpty) 'devicetoken': deviceToken,
+        if (platform != null && platform.isNotEmpty) 'platform': platform,
+      });
 
       print('📤 [UserService] Sending partner login request...');
       final response = await _dio.post(ApiConfig.partnerLogin, data: formData);

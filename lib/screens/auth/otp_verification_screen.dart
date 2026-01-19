@@ -1,6 +1,7 @@
 import 'package:fixify_admin/helpers/translate_helper.dart';
 import 'package:fixify_admin/screens/auth/map_screen.dart';
 import 'package:fixify_admin/screens/dashboard/terms_of_service_screen.dart';
+import 'package:fixify_admin/services/device_info_service.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -177,9 +178,16 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
       );
     } else {
       // Use partner Login API for phone verification (login) flow
+      // Get device info
+      final deviceInfo = await DeviceInfoService.getCachedDeviceInfo();
+      final deviceToken = deviceInfo['deviceToken'];
+      final platform = deviceInfo['platform'];
+      
       print('📤 [OTPVerificationScreen] Resending OTP via partnerLogin (phone verification)');
       final result = await userService.partnerLogin(
         mobile: phoneNumber,
+        deviceToken: deviceToken,
+        platform: platform,
       );
       result.fold(
         (failure) {

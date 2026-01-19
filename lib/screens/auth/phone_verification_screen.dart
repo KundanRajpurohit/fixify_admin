@@ -2,6 +2,7 @@
 import 'package:fixify_admin/config/app_colors.dart';
 import 'package:fixify_admin/helpers/translate_helper.dart';
 import 'package:fixify_admin/screens/dashboard/dashboard_screen.dart';
+import 'package:fixify_admin/services/device_info_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -73,10 +74,21 @@ class _PhoneVerificationScreenState
       final phoneNumber = _phoneController.text.trim().replaceAll(RegExp(r'[^\d]'), '');
       final selectedCountry = ref.read(selectedCountryProvider);
       
+      // Get device info
+      final deviceInfo = await DeviceInfoService.getCachedDeviceInfo();
+      final deviceToken = deviceInfo['deviceToken'];
+      final platform = deviceInfo['platform'];
+      
       print('📱 [PhoneVerificationScreen] Calling partner login API');
       print('📝 [PhoneVerificationScreen] Phone: $phoneNumber');
+      print('📱 [PhoneVerificationScreen] Device Token: ${deviceToken != null ? "${deviceToken.substring(0, 20)}..." : "null"}');
+      print('📱 [PhoneVerificationScreen] Platform: $platform');
 
-      final result = await userService.partnerLogin(mobile: phoneNumber);
+      final result = await userService.partnerLogin(
+        mobile: phoneNumber,
+        deviceToken: deviceToken,
+        platform: platform,
+      );
 
       if (!mounted) return;
 

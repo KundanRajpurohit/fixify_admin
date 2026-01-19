@@ -6,8 +6,11 @@ import 'package:fixify_admin/providers/auth_provider.dart';
 import 'package:fixify_admin/providers/language_provider.dart';
 import 'package:fixify_admin/providers/location_provider.dart';
 import 'package:fixify_admin/screens/auth/splash_screen.dart';
+import 'package:fixify_admin/services/notification_service.dart';
 import 'package:fixify_admin/services/translation_service.dart';
 import 'package:fixify_admin/services/user_service.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,8 +20,49 @@ import 'package:shared_preferences/shared_preferences.dart';
 // Global navigator key for handling 401 redirects
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
+/// Top-level function for handling background messages
+/// This must be a top-level function, not a class method
+/// MUST be registered BEFORE Firebase.initializeApp()
+@pragma('vm:entry-point')
+Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+  print('🔔 [Background] Background message received: ${message.messageId}');
+  print('📝 [Background] Title: ${message.notification?.title}');
+  print('📝 [Background] Body: ${message.notification?.body}');
+  print('📝 [Background] Data: ${message.data}');
+  
+  // Handle background notification logic here
+  // You can save to database, update UI state, etc.
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // CRITICAL: Set background message handler BEFORE Firebase.initializeApp()
+  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+  print('✅ Background message handler registered');
+
+  // Initialize Firebase
+  try {
+    await Firebase.initializeApp();
+    print('✅ Firebase initialized successfully');
+    
+    // Initialize notification service AFTER Firebase is initialized
+    try {
+      final notificationService = NotificationService();
+      await notificationService.initialize();
+      print('✅ Notification service initialized successfully');
+      
+      // Print notification service status for debugging
+      await notificationService.printStatus();
+    } catch (e, stackTrace) {
+      print('❌ Failed to initialize notification service: $e');
+      print('Stack trace: $stackTrace');
+    }
+  } catch (e, stackTrace) {
+    print('❌ Failed to initialize Firebase: $e');
+    print('Stack trace: $stackTrace');
+  }
 
   // Initialize SharedPreferences
   try {
