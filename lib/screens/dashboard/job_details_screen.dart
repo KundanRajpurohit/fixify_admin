@@ -1,3 +1,4 @@
+import 'package:fixify_admin/components/bottom_popup.dart';
 import 'package:fixify_admin/components/custom_app_bar.dart';
 import 'package:fixify_admin/config/app_colors.dart';
 import 'package:fixify_admin/helpers/translate_helper.dart';
@@ -32,6 +33,34 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
   Timer? _timer;
   Map<String, dynamic>? jobDetails;
   bool _loading = true;
+  AdditionalService? service;
+  Future<void> _openAddServiceSheet() async {
+    final result = await showModalBottomSheet<AdditionalService>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const AddAdditionalServiceSheet(),
+    );
+
+    if (result != null) {
+      setState(() {
+        service = result;
+      });
+    }
+  }
+
+  Widget _buildAdditionalServicesCard() {
+    return service == null
+        ? ServiceListCard(
+          service: AdditionalService(
+            name: 'No Additional Service',
+            description: 'You have not added any additional services yet.',
+            price: 0,
+          ),
+          onAddMore: _openAddServiceSheet,
+        )
+        : ServiceListCard(service: service!, onAddMore: _openAddServiceSheet);
+  }
 
   Map<String, dynamic> getStatusStyle(String status) {
     switch (status.toLowerCase()) {
@@ -750,7 +779,10 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
         backgroundColor: const Color(0xFFF5F7F8),
         body: Column(
           children: [
-            CustomAppBar(title: ref.t('dashboard.job_details'), showbackButton: true),
+            CustomAppBar(
+              title: ref.t('dashboard.job_details'),
+              showbackButton: true,
+            ),
 
             // Timer (only for hourly services when job is ongoing)
             if (_jobStatus == 'ongoing' && _isHourlyService)
@@ -822,6 +854,7 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
                     const SizedBox(height: 12),
                     _buildCustomerDetailsCard(),
                     const SizedBox(height: 12),
+                    _buildAdditionalServicesCard(),
                     _buildJobNotesCard(),
                   ],
                 ),
@@ -1254,6 +1287,147 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
           ],
         ),
       ],
+    );
+  }
+}
+
+class AdditionalService {
+  final String name;
+  final String description;
+  final int price;
+
+  AdditionalService({
+    required this.name,
+    required this.description,
+    required this.price,
+  });
+}
+
+class ServiceListCard extends StatelessWidget {
+  final AdditionalService service;
+  final VoidCallback onAddMore;
+
+  const ServiceListCard({
+    super.key,
+    required this.service,
+    required this.onAddMore,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      // margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Service List',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 16),
+
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      service.name,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      service.description,
+                      style: const TextStyle(color: Colors.grey),
+                    ),
+                  ],
+                ),
+              ),
+              Text(
+                '₹${service.price}',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 12),
+
+          const SizedBox(height: 20),
+
+          Center(
+            child: OutlinedButton(
+              onPressed: onAddMore,
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Color(0xFF2F6B3F)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(40),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 16,
+                  horizontal: 16,
+                ),
+              ),
+              child: const Text(
+                'Add Additional Service',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF2F6B3F),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AddServiceButton extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _AddServiceButton({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(0),
+      child: OutlinedButton(
+        onPressed: onTap,
+        style: OutlinedButton.styleFrom(
+          side: const BorderSide(color: Color(0xFF2F6B3F), width: 1.5),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(40),
+          ),
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+        ),
+        child: const Text(
+          'Add Additional Service',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF2F6B3F),
+          ),
+        ),
+      ),
     );
   }
 }
