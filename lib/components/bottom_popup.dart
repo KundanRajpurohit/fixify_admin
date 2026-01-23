@@ -1,11 +1,14 @@
 import 'package:fixify_admin/helpers/translate_helper.dart';
+import 'package:fixify_admin/providers/location_provider.dart';
 import 'package:fixify_admin/screens/dashboard/job_details_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class AddAdditionalServiceSheet extends StatefulWidget {
-  const AddAdditionalServiceSheet({super.key});
+class AddAdditionalServiceSheet extends ConsumerStatefulWidget {
+  final String token;
+  const AddAdditionalServiceSheet({super.key, required this.token});
   @override
-  State<AddAdditionalServiceSheet> createState() =>
+  ConsumerState<AddAdditionalServiceSheet> createState() =>
       _AddAdditionalServiceSheetState();
 
   static InputDecoration _inputDecoration(String hint) {
@@ -28,7 +31,7 @@ class AddAdditionalServiceSheet extends StatefulWidget {
   }
 }
 
-class _AddAdditionalServiceSheetState extends State<AddAdditionalServiceSheet> {
+class _AddAdditionalServiceSheetState extends ConsumerState<AddAdditionalServiceSheet> {
   TextEditingController serviceNameController = TextEditingController();
 
   TextEditingController priceController = TextEditingController();
@@ -122,7 +125,25 @@ class _AddAdditionalServiceSheetState extends State<AddAdditionalServiceSheet> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
+                      final result = await ref.read(userServiceProvider).addAdditionalItem(
+  bookingToken: widget.token,
+  item: serviceNameController.text,
+  price: int.parse(priceController.text),
+  quantity: 1,
+);
+
+result.fold(
+  (failure) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(failure.message)),
+    );
+  },
+  (data) {
+  
+  },
+);
+
                       Navigator.pop(
                         context,
                         AdditionalService(

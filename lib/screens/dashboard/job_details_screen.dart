@@ -2,6 +2,7 @@ import 'package:fixify_admin/components/bottom_popup.dart';
 import 'package:fixify_admin/components/custom_app_bar.dart';
 import 'package:fixify_admin/config/app_colors.dart';
 import 'package:fixify_admin/helpers/translate_helper.dart';
+import 'package:fixify_admin/providers/jobtimer.dart';
 import 'package:fixify_admin/providers/location_provider.dart';
 import 'package:fixify_admin/screens/dashboard/cancel_job_screen.dart';
 import 'package:fixify_admin/screens/dashboard/complete_job_screen.dart';
@@ -39,7 +40,7 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => const AddAdditionalServiceSheet(),
+      builder: (_) => AddAdditionalServiceSheet(token: widget.token),
     );
 
     if (result != null) {
@@ -571,14 +572,24 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
             ),
           );
         },
-        (data) {
+        (data) async {
           Navigator.of(context).pop(); // Close loading
           if (!mounted) return;
+          ref.read(jobTimerProvider.notifier).start();
+          final result = await ref
+              .read(userServiceProvider)
+              .startJob(bookingToken: widget.token);
+
+          result.fold((failure) {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(failure.message)));
+          }, (data) {});
 
           // Update job status to ongoing
           setState(() {
             _jobStatus = 'ongoing';
-            _isTimerRunning = true;
+
             _elapsedTime = Duration.zero;
             if (jobDetails != null) {
               jobDetails!['work_status'] = 'ongoing';
@@ -586,7 +597,7 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
           });
 
           // Start timer
-          _startTimer();
+          // _startTimer();
 
           // Show success dialog
           _showJobStartedDialog();
@@ -745,7 +756,18 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
     );
   }
 
-  void _handleCompleteJob() {
+  void _handleCompleteJob() async {
+    ref.read(jobTimerProvider.notifier).stop();
+    final result = await ref
+        .read(userServiceProvider)
+        .endJob(bookingToken: widget.token);
+
+    result.fold((failure) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(failure.message)));
+    }, (data) {});
+
     Navigator.push(
       context,
       PageTransition(
@@ -773,6 +795,7 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     final status = getStatusStyle(jobDetails?['work_status']);
+    final timerState = ref.watch(jobTimerProvider);
 
     return SafeArea(
       child: Scaffold(
@@ -785,7 +808,7 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
             ),
 
             // Timer (only for hourly services when job is ongoing)
-            if (_jobStatus == 'ongoing' && _isHourlyService)
+            if (_jobStatus == 'ongoing')
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
@@ -794,15 +817,14 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
                 color: Colors.white,
                 child: Row(
                   children: [
-                    Text(
-                      ref.t('dashboard.running_timer'),
-                      style: const TextStyle(
+                    const Text(
+                      'Running Timer',
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: Colors.black87,
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const Spacer(),
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,
@@ -811,34 +833,14 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
                       decoration: BoxDecoration(
                         color: const Color(0xFFFFF6E5),
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: Colors.amber.shade200,
-                          width: 1,
-                        ),
                       ),
                       child: Text(
-                        _formatDuration(_elapsedTime),
+                        _formatDuration(timerState.elapsed),
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF704B21),
                         ),
                       ),
-                    ),
-                    const Spacer(),
-                    Switch(
-                      value: _isTimerRunning,
-                      onChanged: (value) {
-                        setState(() {
-                          _isTimerRunning = value;
-                          if (value) {
-                            _startTimer();
-                          } else {
-                            _stopTimer();
-                          }
-                        });
-                      },
-                      activeColor: AppColors.primary,
                     ),
                   ],
                 ),

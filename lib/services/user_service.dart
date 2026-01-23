@@ -266,24 +266,26 @@ class UserService {
         final data = json.decode(response.body);
         if (data['status'] == true && data['data'] != null) {
           final List<dynamic> servicesData = data['data'];
-          final List<String> services = servicesData
-              .map((service) => service['title'] as String)
-              .toList();
+          final List<String> services =
+              servicesData
+                  .map((service) => service['title'] as String)
+                  .toList();
           print('✅ [UserService] Services fetched successfully: $services');
           return right(services);
         } else {
           print('❌ [UserService] Services fetch failed - invalid response');
-          return left(ServerFailure(
-            data['message'] ?? 'Failed to fetch services',
-            response.statusCode,
-          ));
+          return left(
+            ServerFailure(
+              data['message'] ?? 'Failed to fetch services',
+              response.statusCode,
+            ),
+          );
         }
       } else {
         print('❌ [UserService] Services HTTP Error: ${response.statusCode}');
-        return left(ServerFailure(
-          'Failed to fetch services',
-          response.statusCode,
-        ));
+        return left(
+          ServerFailure('Failed to fetch services', response.statusCode),
+        );
       }
     } catch (e) {
       print('❌ [UserService] Services fetch error: $e');
@@ -321,7 +323,8 @@ class UserService {
         'mobile': mobile,
         'email': email,
         if (services != null) 'services': services,
-        if (deviceToken != null && deviceToken.isNotEmpty) 'devicetoken': deviceToken,
+        if (deviceToken != null && deviceToken.isNotEmpty)
+          'devicetoken': deviceToken,
         if (platform != null && platform.isNotEmpty) 'platform': platform,
         if (image != null)
           'image': await MultipartFile.fromFile(
@@ -588,48 +591,43 @@ class UserService {
   }
 
   Future<ApiResult<Map<String, dynamic>>> getVendorList() async {
-  try {
-    print('🏪 [UserService] Starting getVendorList API call');
-    print('🌐 [UserService] API endpoint: ${ApiConfig.partnerVendorList}');
+    try {
+      print('🏪 [UserService] Starting getVendorList API call');
+      print('🌐 [UserService] API endpoint: ${ApiConfig.partnerVendorList}');
 
-    final authToken = await getAuthToken();
-    if (authToken == null) {
-      print('❌ [UserService] No authorization token found');
-      return left(const UnauthorizedFailure());
-    }
+      final authToken = await getAuthToken();
+      if (authToken == null) {
+        print('❌ [UserService] No authorization token found');
+        return left(const UnauthorizedFailure());
+      }
 
-    final response = await _dio.get(
-      ApiConfig.partnerVendorList,
-      options: Options(
-        headers: {
-          'Authorization': 'Bearer $authToken',
-        },
-      ),
-    );
-
-    print('📥 [UserService] Response Status: ${response.statusCode}');
-
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      print('✅ [UserService] Vendor list fetched successfully');
-      return right(response.data);
-    } else {
-      print('⚠️ [UserService] Failed to fetch vendor list');
-      return left(
-        ServerFailure(
-          'Failed to fetch vendor list',
-          response.statusCode ?? 500,
-        ),
+      final response = await _dio.get(
+        ApiConfig.partnerVendorList,
+        options: Options(headers: {'Authorization': 'Bearer $authToken'}),
       );
-    }
-  } on DioException catch (e) {
-    print('❌ [UserService] DioException occurred');
-    return left(_handleDioError(e));
-  } catch (e) {
-    print('❌ [UserService] Unknown error: $e');
-    return left(UnknownFailure(e.toString()));
-  }
-}
 
+      print('📥 [UserService] Response Status: ${response.statusCode}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print('✅ [UserService] Vendor list fetched successfully');
+        return right(response.data);
+      } else {
+        print('⚠️ [UserService] Failed to fetch vendor list');
+        return left(
+          ServerFailure(
+            'Failed to fetch vendor list',
+            response.statusCode ?? 500,
+          ),
+        );
+      }
+    } on DioException catch (e) {
+      print('❌ [UserService] DioException occurred');
+      return left(_handleDioError(e));
+    } catch (e) {
+      print('❌ [UserService] Unknown error: $e');
+      return left(UnknownFailure(e.toString()));
+    }
+  }
 
   // Partner Login
   Future<ApiResult<Map<String, dynamic>>> partnerLogin({
@@ -650,7 +648,8 @@ class UserService {
 
       final formData = FormData.fromMap({
         'mobile': mobile,
-        if (deviceToken != null && deviceToken.isNotEmpty) 'devicetoken': deviceToken,
+        if (deviceToken != null && deviceToken.isNotEmpty)
+          'devicetoken': deviceToken,
         if (platform != null && platform.isNotEmpty) 'platform': platform,
       });
 
@@ -950,9 +949,7 @@ class UserService {
         return left(const UnauthorizedFailure());
       }
 
-      final formData = FormData.fromMap({
-        'mobile': mobile,
-      });
+      final formData = FormData.fromMap({'mobile': mobile});
 
       final response = await _dio.post(
         ApiConfig.partnerUpdateMobile,
@@ -982,7 +979,9 @@ class UserService {
       print('🔐 [UserService] Starting verifyMobileOtp API call');
       print('📝 [UserService] Request data:');
       print('   - otp: $otp');
-      print('🌐 [UserService] API endpoint: ${ApiConfig.partnerMobileOtpVerify}');
+      print(
+        '🌐 [UserService] API endpoint: ${ApiConfig.partnerMobileOtpVerify}',
+      );
 
       final authToken = await getAuthToken();
       if (authToken == null) {
@@ -990,9 +989,7 @@ class UserService {
         return left(const UnauthorizedFailure());
       }
 
-      final formData = FormData.fromMap({
-        'otp': otp,
-      });
+      final formData = FormData.fromMap({'otp': otp});
 
       final response = await _dio.post(
         ApiConfig.partnerMobileOtpVerify,
@@ -1099,6 +1096,113 @@ class UserService {
       return left(UnknownFailure(e.toString()));
     }
   }
+  Future<ApiResult<Map<String, dynamic>>> addAdditionalItem({
+  required String bookingToken,
+  required String item,
+  required int price,
+  required int quantity,
+}) async {
+  try {
+    print('➕ [UserService] Starting addAdditionalItem API call');
+    print('🌐 [UserService] API endpoint: ${ApiConfig.partnerAddAdditionalItem}');
+    print('🧾 [UserService] Booking token: $bookingToken');
+    print('📦 [UserService] Item: $item | Price: $price | Qty: $quantity');
+
+    final authToken = await getAuthToken();
+    if (authToken == null) {
+      print('❌ [UserService] No authorization token found');
+      return left(const UnauthorizedFailure());
+    }
+
+    final response = await _dio.post(
+      ApiConfig.partnerAddAdditionalItem,
+      data: FormData.fromMap({
+        'bookingtoken': bookingToken,
+        'item': item,
+        'price': price,
+        'quantity': quantity,
+      }),
+      options: Options(
+        headers: {'Authorization': 'Bearer $authToken'},
+      ),
+    );
+
+    print('📥 [UserService] API Response Status: ${response.statusCode}');
+    print('📦 [UserService] API Response Body: ${response.data}');
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      print('✅ [UserService] Additional item added successfully');
+      return right(response.data);
+    } else {
+      print(
+        '⚠️ [UserService] Failed to add additional item: Status ${response.statusCode}',
+      );
+      return left(
+        ServerFailure(
+          'Failed to add additional item',
+          response.statusCode ?? 500,
+        ),
+      );
+    }
+  } on DioException catch (e) {
+    print('❌ [UserService] DioException occurred');
+    return left(_handleDioError(e));
+  } catch (e) {
+    print('❌ [UserService] Unknown error: $e');
+    return left(UnknownFailure(e.toString()));
+  }
+}
+
+
+  Future<ApiResult<Map<String, dynamic>>> startJob({
+    required String bookingToken,
+  }) async {
+    try {
+      final authToken = await getAuthToken();
+      if (authToken == null) {
+        print('❌ [UserService] No authorization token found');
+        return left(const UnauthorizedFailure());
+      }
+      final response = await _dio.post(
+        '/partner/pose/start',
+        data: FormData.fromMap({'bookingtoken': bookingToken}),
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $authToken', // your stored token
+          },
+        ),
+      );
+
+      return right(response.data);
+    } catch (e) {
+      return left(UnknownFailure(e.toString()));
+    }
+  }
+
+ Future<ApiResult<Map<String, dynamic>>> endJob({
+    required String bookingToken,
+  }) async {
+    try {
+      final authToken = await getAuthToken();
+      if (authToken == null) {
+        print('❌ [UserService] No authorization token found');
+        return left(const UnauthorizedFailure());
+      }
+      final response = await _dio.post(
+        '/partner/pose/end',
+        data: FormData.fromMap({'bookingtoken': bookingToken}),
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $authToken', // your stored token
+          },
+        ),
+      );
+
+      return right(response.data);
+    } catch (e) {
+      return left(UnknownFailure(e.toString()));
+    }
+  }
 
   // Get All Jobs
   Future<ApiResult<Map<String, dynamic>>> getAllJobs() async {
@@ -1139,48 +1243,48 @@ class UserService {
     }
   }
 
- // job detail
- Future<ApiResult<Map<String, dynamic>>> getJobDetails(String token) async {
-  try {
-    print('📄 [UserService] Starting getJobDetails API call');
-    print('🔑 [UserService] Token: $token');
-    print('🌐 [UserService] API endpoint: ${ApiConfig.partnerJobDetails(token)}');
+  // job detail
+  Future<ApiResult<Map<String, dynamic>>> getJobDetails(String token) async {
+    try {
+      print('📄 [UserService] Starting getJobDetails API call');
+      print('🔑 [UserService] Token: $token');
+      print(
+        '🌐 [UserService] API endpoint: ${ApiConfig.partnerJobDetails(token)}',
+      );
 
-    final authToken = await getAuthToken();
-    if (authToken == null) {
-      print('❌ [UserService] No authorization token found');
-      return left(const UnauthorizedFailure());
+      final authToken = await getAuthToken();
+      if (authToken == null) {
+        print('❌ [UserService] No authorization token found');
+        return left(const UnauthorizedFailure());
+      }
+
+      final response = await _dio.get(
+        ApiConfig.partnerJobDetails(token),
+        options: Options(headers: {'Authorization': 'Bearer $authToken'}),
+      );
+
+      print('📥 [UserService] Response Status: ${response.statusCode}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print('✅ [UserService] Job details fetched successfully');
+        return right(response.data);
+      } else {
+        print('⚠️ [UserService] Failed: Status ${response.statusCode}');
+        return left(
+          ServerFailure(
+            'Failed to fetch job details',
+            response.statusCode ?? 500,
+          ),
+        );
+      }
+    } on DioException catch (e) {
+      print('❌ [UserService] DioException occurred: ${e.message}');
+      return left(_handleDioError(e));
+    } catch (e) {
+      print('❌ [UserService] Unknown error: $e');
+      return left(UnknownFailure(e.toString()));
     }
-
-    final response = await _dio.get(
-      ApiConfig.partnerJobDetails(token),
-      options: Options(
-        headers: {
-          'Authorization': 'Bearer $authToken',
-        },
-      ),
-    );
-
-    print('📥 [UserService] Response Status: ${response.statusCode}');
-
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      print('✅ [UserService] Job details fetched successfully');
-      return right(response.data);
-    } else {
-      print('⚠️ [UserService] Failed: Status ${response.statusCode}');
-      return left(ServerFailure(
-        'Failed to fetch job details',
-        response.statusCode ?? 500,
-      ));
-    }
-  } on DioException catch (e) {
-    print('❌ [UserService] DioException occurred: ${e.message}');
-    return left(_handleDioError(e));
-  } catch (e) {
-    print('❌ [UserService] Unknown error: $e');
-    return left(UnknownFailure(e.toString()));
   }
-}
 
   // Get Upcoming Jobs
   Future<ApiResult<Map<String, dynamic>>> getUpcomingJobs() async {
@@ -1199,7 +1303,12 @@ class UserService {
       if (response.statusCode == 200 || response.statusCode == 201) {
         return right(response.data);
       } else {
-        return left(ServerFailure('Failed to fetch upcoming jobs', response.statusCode ?? 500));
+        return left(
+          ServerFailure(
+            'Failed to fetch upcoming jobs',
+            response.statusCode ?? 500,
+          ),
+        );
       }
     } on DioException catch (e) {
       return left(_handleDioError(e));
@@ -1225,7 +1334,12 @@ class UserService {
       if (response.statusCode == 200 || response.statusCode == 201) {
         return right(response.data);
       } else {
-        return left(ServerFailure('Failed to fetch cancelled jobs', response.statusCode ?? 500));
+        return left(
+          ServerFailure(
+            'Failed to fetch cancelled jobs',
+            response.statusCode ?? 500,
+          ),
+        );
       }
     } on DioException catch (e) {
       return left(_handleDioError(e));
@@ -1251,7 +1365,12 @@ class UserService {
       if (response.statusCode == 200 || response.statusCode == 201) {
         return right(response.data);
       } else {
-        return left(ServerFailure('Failed to fetch ongoing jobs', response.statusCode ?? 500));
+        return left(
+          ServerFailure(
+            'Failed to fetch ongoing jobs',
+            response.statusCode ?? 500,
+          ),
+        );
       }
     } on DioException catch (e) {
       return left(_handleDioError(e));
@@ -1277,7 +1396,12 @@ class UserService {
       if (response.statusCode == 200 || response.statusCode == 201) {
         return right(response.data);
       } else {
-        return left(ServerFailure('Failed to fetch past jobs', response.statusCode ?? 500));
+        return left(
+          ServerFailure(
+            'Failed to fetch past jobs',
+            response.statusCode ?? 500,
+          ),
+        );
       }
     } on DioException catch (e) {
       return left(_handleDioError(e));
@@ -1303,7 +1427,12 @@ class UserService {
       if (response.statusCode == 200 || response.statusCode == 201) {
         return right(response.data);
       } else {
-        return left(ServerFailure('Failed to fetch assigned jobs', response.statusCode ?? 500));
+        return left(
+          ServerFailure(
+            'Failed to fetch assigned jobs',
+            response.statusCode ?? 500,
+          ),
+        );
       }
     } on DioException catch (e) {
       return left(_handleDioError(e));
@@ -1332,7 +1461,9 @@ class UserService {
       if (response.statusCode == 200 || response.statusCode == 201) {
         return right(response.data);
       } else {
-        return left(ServerFailure('Failed to accept job', response.statusCode ?? 500));
+        return left(
+          ServerFailure('Failed to accept job', response.statusCode ?? 500),
+        );
       }
     } on DioException catch (e) {
       return left(_handleDioError(e));
@@ -1361,7 +1492,9 @@ class UserService {
       if (response.statusCode == 200 || response.statusCode == 201) {
         return right(response.data);
       } else {
-        return left(ServerFailure('Failed to assign job', response.statusCode ?? 500));
+        return left(
+          ServerFailure('Failed to assign job', response.statusCode ?? 500),
+        );
       }
     } on DioException catch (e) {
       return left(_handleDioError(e));
@@ -1398,7 +1531,9 @@ class UserService {
       if (response.statusCode == 200 || response.statusCode == 201) {
         return right(response.data);
       } else {
-        return left(ServerFailure('Failed to verify OTP', response.statusCode ?? 500));
+        return left(
+          ServerFailure('Failed to verify OTP', response.statusCode ?? 500),
+        );
       }
     } on DioException catch (e) {
       return left(_handleDioError(e));
@@ -1427,7 +1562,9 @@ class UserService {
       if (response.statusCode == 200 || response.statusCode == 201) {
         return right(response.data);
       } else {
-        return left(ServerFailure('Failed to complete job', response.statusCode ?? 500));
+        return left(
+          ServerFailure('Failed to complete job', response.statusCode ?? 500),
+        );
       }
     } on DioException catch (e) {
       return left(_handleDioError(e));
@@ -1476,7 +1613,12 @@ class UserService {
       if (response.statusCode == 200 || response.statusCode == 201) {
         return right(response.data);
       } else {
-        return left(ServerFailure('Failed to submit job report', response.statusCode ?? 500));
+        return left(
+          ServerFailure(
+            'Failed to submit job report',
+            response.statusCode ?? 500,
+          ),
+        );
       }
     } on DioException catch (e) {
       return left(_handleDioError(e));
@@ -1513,7 +1655,9 @@ class UserService {
       if (response.statusCode == 200 || response.statusCode == 201) {
         return right(response.data);
       } else {
-        return left(ServerFailure('Failed to submit rating', response.statusCode ?? 500));
+        return left(
+          ServerFailure('Failed to submit rating', response.statusCode ?? 500),
+        );
       }
     } on DioException catch (e) {
       return left(_handleDioError(e));
@@ -1521,7 +1665,6 @@ class UserService {
       return left(UnknownFailure(e.toString()));
     }
   }
-
 
   // Update Notification Setting
   Future<ApiResult<Map<String, dynamic>>> updateNotification(
@@ -1885,7 +2028,12 @@ class UserService {
         print('✅ [UserService] Dashboard stats fetched successfully');
         return right(response.data);
       } else {
-        return left(ServerFailure('Failed to fetch dashboard stats', response.statusCode ?? 500));
+        return left(
+          ServerFailure(
+            'Failed to fetch dashboard stats',
+            response.statusCode ?? 500,
+          ),
+        );
       }
     } on DioException catch (e) {
       return left(_handleDioError(e));
@@ -1903,9 +2051,7 @@ class UserService {
         return left(const UnauthorizedFailure());
       }
 
-      final formData = FormData.fromMap({
-        'go_online': isOnline ? '1' : '0',
-      });
+      final formData = FormData.fromMap({'go_online': isOnline ? '1' : '0'});
 
       final response = await _dio.post(
         ApiConfig.partnerGoOnline,
@@ -1917,7 +2063,12 @@ class UserService {
         print('✅ [UserService] Go online status updated successfully');
         return right(response.data);
       } else {
-        return left(ServerFailure('Failed to update online status', response.statusCode ?? 500));
+        return left(
+          ServerFailure(
+            'Failed to update online status',
+            response.statusCode ?? 500,
+          ),
+        );
       }
     } on DioException catch (e) {
       return left(_handleDioError(e));
@@ -1944,7 +2095,12 @@ class UserService {
         print('✅ [UserService] Go online status fetched successfully');
         return right(response.data);
       } else {
-        return left(ServerFailure('Failed to fetch online status', response.statusCode ?? 500));
+        return left(
+          ServerFailure(
+            'Failed to fetch online status',
+            response.statusCode ?? 500,
+          ),
+        );
       }
     } on DioException catch (e) {
       return left(_handleDioError(e));
@@ -1967,10 +2123,7 @@ class UserService {
 
       final response = await _dio.get(
         ApiConfig.partnerGetDataByCustomDate,
-        queryParameters: {
-          'start_date': startDate,
-          'end_date': endDate,
-        },
+        queryParameters: {'start_date': startDate, 'end_date': endDate},
         options: Options(headers: {'Authorization': 'Bearer $authToken'}),
       );
 
@@ -1978,7 +2131,12 @@ class UserService {
         print('✅ [UserService] Custom date data fetched successfully');
         return right(response.data);
       } else {
-        return left(ServerFailure('Failed to fetch custom date data', response.statusCode ?? 500));
+        return left(
+          ServerFailure(
+            'Failed to fetch custom date data',
+            response.statusCode ?? 500,
+          ),
+        );
       }
     } on DioException catch (e) {
       return left(_handleDioError(e));
@@ -1988,13 +2146,12 @@ class UserService {
   }
 
   // Get Booking Transaction Daily
-  Future<ApiResult<BookingTransactionDailyResponse>> getBookingTransactionDaily({
-    required String date,
-  }) async {
+  Future<ApiResult<BookingTransactionDailyResponse>>
+  getBookingTransactionDaily({required String date}) async {
     try {
       print('💰 [UserService] Starting getBookingTransactionDaily API call');
       print('📝 [UserService] Date: $date');
-      
+
       final authToken = await getAuthToken();
       if (authToken == null) {
         return left(const UnauthorizedFailure());
@@ -2011,7 +2168,12 @@ class UserService {
         final data = BookingTransactionDailyResponse.fromJson(response.data);
         return right(data);
       } else {
-        return left(ServerFailure('Failed to fetch daily transaction data', response.statusCode ?? 500));
+        return left(
+          ServerFailure(
+            'Failed to fetch daily transaction data',
+            response.statusCode ?? 500,
+          ),
+        );
       }
     } on DioException catch (e) {
       return left(_handleDioError(e));
@@ -2021,19 +2183,19 @@ class UserService {
   }
 
   // Get Booking Transaction Weekly
-  Future<ApiResult<BookingTransactionWeeklyResponse>> getBookingTransactionWeekly({
-    String? date,
-  }) async {
+  Future<ApiResult<BookingTransactionWeeklyResponse>>
+  getBookingTransactionWeekly({String? date}) async {
     try {
       print('💰 [UserService] Starting getBookingTransactionWeekly API call');
       print('📝 [UserService] Date: $date');
-      
+
       final authToken = await getAuthToken();
       if (authToken == null) {
         return left(const UnauthorizedFailure());
       }
 
-      final Map<String, dynamic> queryParams = date != null && date.isNotEmpty ? {'date': date} : {};
+      final Map<String, dynamic> queryParams =
+          date != null && date.isNotEmpty ? {'date': date} : {};
       final response = await _dio.get(
         ApiConfig.partnerBookingTransactionWeekly,
         queryParameters: queryParams,
@@ -2045,7 +2207,12 @@ class UserService {
         final data = BookingTransactionWeeklyResponse.fromJson(response.data);
         return right(data);
       } else {
-        return left(ServerFailure('Failed to fetch weekly transaction data', response.statusCode ?? 500));
+        return left(
+          ServerFailure(
+            'Failed to fetch weekly transaction data',
+            response.statusCode ?? 500,
+          ),
+        );
       }
     } on DioException catch (e) {
       return left(_handleDioError(e));
@@ -2055,14 +2222,15 @@ class UserService {
   }
 
   // Get Booking Transaction Monthly
-  Future<ApiResult<BookingTransactionMonthlyResponse>> getBookingTransactionMonthly({
+  Future<ApiResult<BookingTransactionMonthlyResponse>>
+  getBookingTransactionMonthly({
     required String month,
     required String year,
   }) async {
     try {
       print('💰 [UserService] Starting getBookingTransactionMonthly API call');
       print('📝 [UserService] Month: $month, Year: $year');
-      
+
       final authToken = await getAuthToken();
       if (authToken == null) {
         return left(const UnauthorizedFailure());
@@ -2070,10 +2238,7 @@ class UserService {
 
       final response = await _dio.get(
         ApiConfig.partnerBookingTransactionMonth,
-        queryParameters: {
-          'month': month,
-          'year': year,
-        },
+        queryParameters: {'month': month, 'year': year},
         options: Options(headers: {'Authorization': 'Bearer $authToken'}),
       );
 
@@ -2082,7 +2247,12 @@ class UserService {
         final data = BookingTransactionMonthlyResponse.fromJson(response.data);
         return right(data);
       } else {
-        return left(ServerFailure('Failed to fetch monthly transaction data', response.statusCode ?? 500));
+        return left(
+          ServerFailure(
+            'Failed to fetch monthly transaction data',
+            response.statusCode ?? 500,
+          ),
+        );
       }
     } on DioException catch (e) {
       return left(_handleDioError(e));
@@ -2095,7 +2265,7 @@ class UserService {
   Future<ApiResult<TransactionHistoryResponse>> getTransactionHistory() async {
     try {
       print('💰 [UserService] Starting getTransactionHistory API call');
-      
+
       final authToken = await getAuthToken();
       if (authToken == null) {
         return left(const UnauthorizedFailure());
@@ -2111,7 +2281,12 @@ class UserService {
         final data = TransactionHistoryResponse.fromJson(response.data);
         return right(data);
       } else {
-        return left(ServerFailure('Failed to fetch transaction history', response.statusCode ?? 500));
+        return left(
+          ServerFailure(
+            'Failed to fetch transaction history',
+            response.statusCode ?? 500,
+          ),
+        );
       }
     } on DioException catch (e) {
       return left(_handleDioError(e));
@@ -2124,7 +2299,7 @@ class UserService {
   Future<ApiResult<CheckoutIndexResponse>> getCheckoutIndex() async {
     try {
       print('💰 [UserService] Starting getCheckoutIndex API call');
-      
+
       final authToken = await getAuthToken();
       if (authToken == null) {
         return left(const UnauthorizedFailure());
@@ -2140,7 +2315,12 @@ class UserService {
         final data = CheckoutIndexResponse.fromJson(response.data);
         return right(data);
       } else {
-        return left(ServerFailure('Failed to fetch checkout index', response.statusCode ?? 500));
+        return left(
+          ServerFailure(
+            'Failed to fetch checkout index',
+            response.statusCode ?? 500,
+          ),
+        );
       }
     } on DioException catch (e) {
       return left(_handleDioError(e));
@@ -2156,8 +2336,10 @@ class UserService {
   }) async {
     try {
       print('💰 [UserService] Starting submitWithdrawalRequest API call');
-      print('📝 [UserService] Account: $accountNumber, Amount: $withdrawAmountRequest');
-      
+      print(
+        '📝 [UserService] Account: $accountNumber, Amount: $withdrawAmountRequest',
+      );
+
       final authToken = await getAuthToken();
       if (authToken == null) {
         return left(const UnauthorizedFailure());
@@ -2178,12 +2360,15 @@ class UserService {
         print('✅ [UserService] Withdrawal request submitted successfully');
         return right(response.data);
       } else {
-        final message = response.data['message'] ?? 'Failed to submit withdrawal request';
+        final message =
+            response.data['message'] ?? 'Failed to submit withdrawal request';
         return left(ServerFailure(message, response.statusCode ?? 500));
       }
     } on DioException catch (e) {
       if (e.response?.statusCode == 400 || e.response?.statusCode == 422) {
-        final message = e.response?.data['message'] ?? 'Failed to submit withdrawal request';
+        final message =
+            e.response?.data['message'] ??
+            'Failed to submit withdrawal request';
         return left(ServerFailure(message, e.response?.statusCode ?? 400));
       }
       return left(_handleDioError(e));
@@ -2196,7 +2381,7 @@ class UserService {
   Future<ApiResult<NotificationResponse>> getNotifications() async {
     try {
       print('🔔 [UserService] Starting getNotifications API call');
-      
+
       final authToken = await getAuthToken();
       if (authToken == null) {
         return left(const UnauthorizedFailure());
@@ -2212,7 +2397,12 @@ class UserService {
         final data = NotificationResponse.fromJson(response.data);
         return right(data);
       } else {
-        return left(ServerFailure('Failed to fetch notifications', response.statusCode ?? 500));
+        return left(
+          ServerFailure(
+            'Failed to fetch notifications',
+            response.statusCode ?? 500,
+          ),
+        );
       }
     } on DioException catch (e) {
       return left(_handleDioError(e));
@@ -2228,7 +2418,7 @@ class UserService {
     try {
       print('🔔 [UserService] Starting markNotificationAsRead API call');
       print('📝 [UserService] Token: $notificationToken');
-      
+
       final authToken = await getAuthToken();
       if (authToken == null) {
         return left(const UnauthorizedFailure());
@@ -2248,12 +2438,15 @@ class UserService {
         print('✅ [UserService] Notification marked as read successfully');
         return right(response.data);
       } else {
-        final message = response.data['message'] ?? 'Failed to mark notification as read';
+        final message =
+            response.data['message'] ?? 'Failed to mark notification as read';
         return left(ServerFailure(message, response.statusCode ?? 500));
       }
     } on DioException catch (e) {
       if (e.response?.statusCode == 400 || e.response?.statusCode == 422) {
-        final message = e.response?.data['message'] ?? 'Failed to mark notification as read';
+        final message =
+            e.response?.data['message'] ??
+            'Failed to mark notification as read';
         return left(ServerFailure(message, e.response?.statusCode ?? 400));
       }
       return left(_handleDioError(e));

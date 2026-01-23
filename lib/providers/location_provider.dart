@@ -366,6 +366,7 @@ class LocationNotifier extends StateNotifier<LocationState> {
       );
     }
   }
+  
 
   Future<void> selectPlace(Map<String, dynamic> place) async {
     try {

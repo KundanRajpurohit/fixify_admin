@@ -17,6 +17,9 @@ class ApiConfig {
   static const String partnerVerifyOtp = '/partner/verify-otp';
   static const String verifyOtp = '/partner/verify-otp';
   static const String partnerPageDetail = '/partner/page-detail';
+  static const String partnerAddAdditionalItem =
+    '/partner/add-additional-item';
+
 
   // Bank Account endpoints
   static const String partnerBankAll = '/partner/bank/all';
