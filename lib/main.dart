@@ -193,34 +193,43 @@ class MyApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Always use English locale for Material widgets (they don't support Hindi),
-    // but our custom TranslationService will handle Hindi for app content
     return ScreenUtilInit(
       designSize: const Size(375, 812), // iPhone X design size
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) {
-        return MaterialApp(
-          navigatorKey: navigatorKey,
-          title: 'FIXIFY',
-          theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: const Color(0xFF217043),
-            ),
-            useMaterial3: true,
-            fontFamily: 'Roboto',
+        final mediaQuery = MediaQuery.of(context);
+
+        return MediaQuery(
+          data: mediaQuery.copyWith(
+            // 🔒 Prevent iOS Large Text / Bold Text from breaking UI
+            textScaleFactor: mediaQuery.textScaleFactor.clamp(1.0, 1.1),
           ),
-          locale: const Locale('en'), // Always use English for Material widgets
-          supportedLocales: const [
-            Locale('en'),
-          ],
-          localizationsDelegates: const [
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          home: const AuthWrapper(),
-          debugShowCheckedModeBanner: false,
+          child: MaterialApp(
+            navigatorKey: navigatorKey,
+            title: 'FIXIFY Partner',
+            theme: ThemeData(
+              colorScheme: ColorScheme.fromSeed(
+                seedColor: const Color(0xFF217043),
+              ),
+              useMaterial3: true,
+              fontFamily: 'Roboto',
+            ),
+
+            // 🔤 Force English for Material widgets
+            locale: const Locale('en'),
+            supportedLocales: const [
+              Locale('en'),
+            ],
+            localizationsDelegates: const [
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+
+            home: const AuthWrapper(),
+            debugShowCheckedModeBanner: false,
+          ),
         );
       },
     );
