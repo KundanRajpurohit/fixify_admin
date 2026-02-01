@@ -1,5 +1,5 @@
-
 import 'package:dio/dio.dart';
+import 'package:fixify_admin/dio/token_interceptor.dart';
 import 'package:fixify_admin/screens/auth/phone_verification_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:page_transition/page_transition.dart';
@@ -13,29 +13,65 @@ class UnauthorizedInterceptor extends QueuedInterceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
-    // Check for 401 status code
-    if (err.response?.statusCode == 401 && !_isHandling401) {
-      _isHandling401 = true;
-      print('🔒 [UnauthorizedInterceptor] 401 Unauthenticated detected');
-      print('🔒 [UnauthorizedInterceptor] Response: ${err.response?.data}');
-      
-      // Clear all preferences
-      try {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.clear();
-        print('🧹 [UnauthorizedInterceptor] All preferences cleared');
-      } catch (e) {
-        print('❌ [UnauthorizedInterceptor] Error clearing preferences: $e');
-      }
-
-      // Navigate to phone verification screen
-      _navigateToPhoneVerification();
-      
-      // Reset flag after a delay
-      Future.delayed(const Duration(seconds: 3), () {
-        _isHandling401 = false;
-      });
+    print('🔒 [UnauthorizedInterceptor] onError - Status: ${err.response?.statusCode}');
+    
+    // Only handle 401 status code
+    if (err.response?.statusCode != 401) {
+      return handler.next(err);
     }
+    
+    // Check if TokenInterceptor has already handled this (successful refresh means we won't reach here)
+    // We only get here if:
+    // 1. TokenInterceptor's refresh failed (refreshFailed = true)
+    // 2. OR there was no refresh token to begin with
+    // 3. OR the request was already a retry that failed
+    
+    final isRetry = err.requestOptions.extra['isRetry'] == true;
+    final refreshMarkedFailed = err.requestOptions.extra['refreshFailed'] == true;
+    
+    print('🔒 [UnauthorizedInterceptor] isRetry: $isRetry, refreshMarkedFailed: $refreshMarkedFailed');
+    print('🔒 [UnauthorizedInterceptor] TokenInterceptor.refreshFailed: ${TokenInterceptor.refreshFailed}');
+    
+    // Only proceed with logout if:
+    // 1. Token refresh has actually failed (static flag or request extra)
+    // 2. OR this is a retry that still got 401 (refresh didn't help)
+    final shouldLogout = TokenInterceptor.refreshFailed || 
+                         refreshMarkedFailed || 
+                         isRetry;
+    
+    if (!shouldLogout) {
+      print('🔒 [UnauthorizedInterceptor] Not logging out - refresh might still be in progress');
+      return handler.next(err);
+    }
+    
+    if (_isHandling401) {
+      print('🔒 [UnauthorizedInterceptor] Already handling 401, skipping');
+      return handler.next(err);
+    }
+    
+    _isHandling401 = true;
+    print('🔒 [UnauthorizedInterceptor] Token refresh failed, proceeding with logout');
+    print('🔒 [UnauthorizedInterceptor] Response: ${err.response?.data}');
+    
+    // Clear all preferences
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+      print('🧹 [UnauthorizedInterceptor] All preferences cleared');
+    } catch (e) {
+      print('❌ [UnauthorizedInterceptor] Error clearing preferences: $e');
+    }
+    
+    // Reset the static flag
+    TokenInterceptor.refreshFailed = false;
+
+    // Navigate to phone verification screen
+    _navigateToPhoneVerification();
+    
+    // Reset flag after a delay
+    Future.delayed(const Duration(seconds: 3), () {
+      _isHandling401 = false;
+    });
 
     handler.next(err);
   }

@@ -6,6 +6,7 @@ class ApiConfig {
   // Partner endpoints
   static const String partnerLogin = '/partner/login';
   static const String partnerRegister = '/partner/register';
+  static const String partnerRefreshToken = '/partner/refresh-token';
   static const String partnerProfile = '/partner/profile';
   static const String partnerUpdateProfile = '/partner/update-profile';
   static const String partnerUploadImage = '/partner/upload-image';
