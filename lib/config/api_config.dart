@@ -1,6 +1,7 @@
 // API Configuration
 class ApiConfig {
-  static const String baseUrl = 'https://admin.fixify.expert/api';
+  // static const String baseUrl = 'https://admin.fixify.expert/api';
+  static const String baseUrl = 'https://test.fixify.expert/api';
 
   // Partner endpoints
   static const String partnerLogin = '/partner/login';
@@ -17,9 +18,7 @@ class ApiConfig {
   static const String partnerVerifyOtp = '/partner/verify-otp';
   static const String verifyOtp = '/partner/verify-otp';
   static const String partnerPageDetail = '/partner/page-detail';
-  static const String partnerAddAdditionalItem =
-    '/partner/add-additional-item';
-
+  static const String partnerAddAdditionalItem = '/partner/add-additional-item';
 
   // Bank Account endpoints
   static const String partnerBankAll = '/partner/bank/all';
@@ -33,7 +32,8 @@ class ApiConfig {
   static const String partnerCancelledJobs = '/partner/cancelled-jobs';
   static const String partnerOngoingJobs = '/partner/ongoing-jobs';
   static const String partnerPastJobs = '/partner/past-jobs';
-  static const String partnerAssignUpcomingJobs = '/partner/assign-upcoming-jobs';
+  static const String partnerAssignUpcomingJobs =
+      '/partner/assign-upcoming-jobs';
   static const String partnerAcceptJob = '/partner/accept-job';
   static const String partnerAssignJob = '/partner/assign-job';
   static const String partnerVerifyJobOtp = '/partner/verify-job-otp';
@@ -41,9 +41,7 @@ class ApiConfig {
   static const String partnerSubmitJobReport = '/partner/submit-job-report';
   static const String partnerRatingCustomer = '/partner/rating-customer';
   static String partnerJobDetails(String token) =>
-    '/partner/single-job-details/$token';
-
-
+      '/partner/single-job-details/$token';
 
   // Availability endpoints
   static const String partnerGetAvailability = '/partner/get-availability';
@@ -59,14 +57,19 @@ class ApiConfig {
   static const String partnerDashboard = '/partner/deshbord';
   static const String partnerGoOnline = '/partner/go-online';
   static const String partnerGetGoOnline = '/partner/get-go-online';
-  static const String partnerGetDataByCustomDate = '/partner/get-data-by-custom-date';
+  static const String partnerGetDataByCustomDate =
+      '/partner/get-data-by-custom-date';
   static const String partnerVendorList = '/partner/vendor-list';
 
   // Earnings and Transaction endpoints
-  static const String partnerBookingTransactionDaily = '/partner/booking-transaction-daily';
-  static const String partnerBookingTransactionWeekly = '/partner/booking-transaction-weekly';
-  static const String partnerBookingTransactionMonth = '/partner/booking-transaction-month';
-  static const String partnerTransactionHistory = '/partner/transaction-history';
+  static const String partnerBookingTransactionDaily =
+      '/partner/booking-transaction-daily';
+  static const String partnerBookingTransactionWeekly =
+      '/partner/booking-transaction-weekly';
+  static const String partnerBookingTransactionMonth =
+      '/partner/booking-transaction-month';
+  static const String partnerTransactionHistory =
+      '/partner/transaction-history';
 
   // Withdrawal endpoints
   static const String partnerCheckoutIndex = '/partner/checkout-index';
@@ -74,7 +77,8 @@ class ApiConfig {
 
   // Notification endpoints
   static const String partnerNotifications = '/partner/notifications';
-  static const String partnerMarkNotificationAsRead = '/partner/notifications/mark-as-read';
+  static const String partnerMarkNotificationAsRead =
+      '/partner/notifications/mark-as-read';
 
   // Mobile update endpoints
   static const String partnerUpdateMobile = '/partner/update-mobile';
@@ -82,8 +86,6 @@ class ApiConfig {
 
   // Services endpoints
   static const String partnerListServices = '/partner/list-services';
-
-
 
   // Google Places API
   static const String googlePlacesApiKey =

@@ -1059,8 +1059,8 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
             icon: 'assets/images/serviceType.png',
             label: ref.t('dashboard.service_type'),
             value:
-                jobDetails?['ServiceType'] ??
-                jobDetails?['jobType'] ??
+                jobDetails?['ServiceType'][0]["title"] ??
+                // jobDetails?['jobType'] ??
                 "service",
           ),
           const Divider(height: 24),

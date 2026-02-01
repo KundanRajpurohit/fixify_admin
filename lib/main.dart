@@ -1,10 +1,13 @@
 import 'package:dio/dio.dart';
 import 'package:fixify_admin/config/api_config.dart';
 import 'package:fixify_admin/dio/auth_interceptor.dart';
+import 'package:fixify_admin/dio/token_interceptor.dart';
+import 'package:fixify_admin/dio/token_manager.dart';
 import 'package:fixify_admin/dio/unauth_interceptor.dart';
 import 'package:fixify_admin/providers/auth_provider.dart';
 import 'package:fixify_admin/providers/language_provider.dart';
 import 'package:fixify_admin/providers/location_provider.dart';
+import 'package:fixify_admin/screens/auth/phone_verification_screen.dart';
 import 'package:fixify_admin/screens/auth/splash_screen.dart';
 import 'package:fixify_admin/services/notification_service.dart';
 import 'package:fixify_admin/services/translation_service.dart';
@@ -30,7 +33,7 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   print('📝 [Background] Title: ${message.notification?.title}');
   print('📝 [Background] Body: ${message.notification?.body}');
   print('📝 [Background] Data: ${message.data}');
-  
+
   // Handle background notification logic here
   // You can save to database, update UI state, etc.
 }
@@ -46,13 +49,13 @@ void main() async {
   try {
     await Firebase.initializeApp();
     print('✅ Firebase initialized successfully');
-    
+
     // Initialize notification service AFTER Firebase is initialized
     try {
       final notificationService = NotificationService();
       await notificationService.initialize();
       print('✅ Notification service initialized successfully');
-      
+
       // Print notification service status for debugging
       await notificationService.printStatus();
     } catch (e, stackTrace) {
@@ -167,12 +170,11 @@ void main() async {
       ],
     ),
   );
-  
+  dio.interceptors.add(TokenInterceptor(tokenManager: TokenManager()));
+
   // Add unauthorized interceptor LAST to handle 401 errors from all endpoints
   // This ensures it catches 401 errors after all other interceptors have processed
-  dio.interceptors.add(
-    UnauthorizedInterceptor(navigatorKey: navigatorKey),
-  );
+  dio.interceptors.add(UnauthorizedInterceptor(navigatorKey: navigatorKey));
 
   print('🔧 [Main] Dio initialized with base URL: ${ApiConfig.baseUrl}');
   final userService = UserService(dio);
@@ -180,9 +182,7 @@ void main() async {
 
   runApp(
     ProviderScope(
-      overrides: [
-        userServiceProvider.overrideWithValue(userService),
-      ],
+      overrides: [userServiceProvider.overrideWithValue(userService)],
       child: const MyApp(),
     ),
   );
@@ -203,7 +203,9 @@ class MyApp extends ConsumerWidget {
         return MediaQuery(
           data: mediaQuery.copyWith(
             // 🔒 Prevent iOS Large Text / Bold Text from breaking UI
-            textScaleFactor: mediaQuery.textScaleFactor.clamp(1.0, 1.1),
+            textScaler: TextScaler.linear(
+              mediaQuery.textScaleFactor.clamp(1.0, 1.1),
+            ),
           ),
           child: MaterialApp(
             navigatorKey: navigatorKey,
@@ -218,9 +220,7 @@ class MyApp extends ConsumerWidget {
 
             // 🔤 Force English for Material widgets
             locale: const Locale('en'),
-            supportedLocales: const [
-              Locale('en'),
-            ],
+            supportedLocales: const [Locale('en')],
             localizationsDelegates: const [
               GlobalMaterialLocalizations.delegate,
               GlobalWidgetsLocalizations.delegate,

@@ -82,11 +82,11 @@ class PhoneVerificationState {
 // Auth Provider
 class AuthNotifier extends StateNotifier<PhoneVerificationState> {
   final UserService _userService;
-  
+
   AuthNotifier(this._userService) : super(PhoneVerificationState()) {
     checkLoginStatus();
   }
-  
+
   // SharedPreferences keys
   static const String _isLoggedInKey = 'is_logged_in';
   static const String _phoneNumberKey = 'phone_number';
@@ -94,19 +94,20 @@ class AuthNotifier extends StateNotifier<PhoneVerificationState> {
   static const String _userIdKey = 'user_id';
   static const String _userTokenKey = 'user_token';
   static const String _authTokenKey = 'authorization_token';
+  static const String _refreshTokenKey = 'refresh_token';
 
   Future<void> checkLoginStatus() async {
     try {
       print('Starting auth check...');
-      
+
       // Test SharedPreferences first
       final prefs = await SharedPreferences.getInstance();
       print('SharedPreferences instance created successfully');
-      
+
       // Try to read a simple value first
       final testValue = prefs.getString('test_key');
       print('Test read successful, value: $testValue');
-      
+
       // Now read the actual auth values
       final isLoggedIn = prefs.getBool(_isLoggedInKey) ?? false;
       final savedPhoneNumber = prefs.getString(_phoneNumberKey) ?? '';
@@ -114,10 +115,14 @@ class AuthNotifier extends StateNotifier<PhoneVerificationState> {
       final savedUserId = prefs.getString(_userIdKey) ?? '';
       final savedUserToken = prefs.getString(_userTokenKey) ?? '';
       final savedAuthToken = prefs.getString(_authTokenKey) ?? '';
-      
-      print('Auth Check - isLoggedIn: $isLoggedIn, phoneNumber: $savedPhoneNumber');
-      
-      if (isLoggedIn && savedPhoneNumber.isNotEmpty && savedAuthToken.isNotEmpty) {
+
+      print(
+        'Auth Check - isLoggedIn: $isLoggedIn, phoneNumber: $savedPhoneNumber',
+      );
+
+      if (isLoggedIn &&
+          savedPhoneNumber.isNotEmpty &&
+          savedAuthToken.isNotEmpty) {
         state = state.copyWith(
           isVerified: true,
           phoneNumber: savedPhoneNumber,
@@ -138,20 +143,30 @@ class AuthNotifier extends StateNotifier<PhoneVerificationState> {
     }
   }
 
-  Future<void> _saveLoginStatus(String phoneNumber, String countryCode, String userId, String userToken, String authToken) async {
+  Future<void> _saveLoginStatus(
+    String phoneNumber,
+    String countryCode,
+    String userId,
+    String userToken,
+    String authToken,
+    String refreshToken,
+  ) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_isLoggedInKey, true);
       await prefs.setString(_phoneNumberKey, phoneNumber);
       await prefs.setString(_countryCodeKey, countryCode);
       if (userId.isNotEmpty) {
-      await prefs.setString(_userIdKey, userId);
+        await prefs.setString(_userIdKey, userId);
       }
       if (userToken.isNotEmpty) {
-      await prefs.setString(_userTokenKey, userToken);
+        await prefs.setString(_userTokenKey, userToken);
       }
       await prefs.setString(_authTokenKey, authToken);
-      print('Login status saved - phoneNumber: $phoneNumber, countryCode: $countryCode, userId: $userId, userToken: $userToken');
+      await prefs.setString(_refreshTokenKey, refreshToken);
+      print(
+        'Login status saved - phoneNumber: $phoneNumber, countryCode: $countryCode, userId: $userId, userToken: $userToken , refreshtoken: $refreshToken',
+      );
     } catch (e) {
       print('Error saving login status: $e');
     }
@@ -171,17 +186,18 @@ class AuthNotifier extends StateNotifier<PhoneVerificationState> {
     }
   }
 
-
   Future<bool> verifyOTP(String otp) async {
     print('🔐 [AuthProvider] Starting verifyOTP...');
     print('🔢 [AuthProvider] OTP to verify: $otp');
     print('📱 [AuthProvider] Phone number: ${state.phoneNumber}');
     print('👤 [AuthProvider] User ID: ${state.userId}');
     print('🔑 [AuthProvider] User Token: ${state.userToken}');
-    
+
     if (state.phoneNumber == null) {
       print('❌ [AuthProvider] Phone number is null');
-      state = state.copyWith(error: 'Phone number not found. Please request OTP again.');
+      state = state.copyWith(
+        error: 'Phone number not found. Please request OTP again.',
+      );
       return false;
     }
 
@@ -199,33 +215,32 @@ class AuthNotifier extends StateNotifier<PhoneVerificationState> {
       return result.fold(
         (failure) {
           print('❌ [AuthProvider] VerifyOTP failed: ${failure.message}');
-          state = state.copyWith(
-            isLoading: false,
-            error: failure.message,
-          );
+          state = state.copyWith(isLoading: false, error: failure.message);
           return false;
         },
         (data) async {
           print('✅ [AuthProvider] VerifyOTP successful');
           print('📊 [AuthProvider] Response data: $data');
           print('🔑 [AuthProvider] Auth token: ${data['token']}');
-          
+
           // Save login status to SharedPreferences
           // For login flow, userId and userToken might be null, so use empty strings or get from response
           print('💾 [AuthProvider] Saving login status...');
           final userId = state.userId ?? data['data']?['id']?.toString() ?? '';
-          final userToken = state.userToken ?? data['data']?['partnerid']?.toString() ?? '';
+          final userToken =
+              state.userToken ?? data['data']?['partnerid']?.toString() ?? '';
           final countryCode = state.countryCode ?? '+91';
-          
+
           await _saveLoginStatus(
             state.phoneNumber ?? '',
             countryCode,
             userId,
             userToken,
             data['token'],
+            data['refresh_token'] ?? '',
           );
           print('✅ [AuthProvider] Login status saved');
-          
+
           state = state.copyWith(
             isLoading: false,
             isVerified: true,
@@ -251,10 +266,7 @@ class AuthNotifier extends StateNotifier<PhoneVerificationState> {
 
   // Set user data from default address response
   void setUserData(String userId, String userToken) {
-    state = state.copyWith(
-      userId: userId,
-      userToken: userToken,
-    );
+    state = state.copyWith(userId: userId, userToken: userToken);
   }
 
   Future<void> logout() async {
@@ -272,19 +284,30 @@ class AuthNotifier extends StateNotifier<PhoneVerificationState> {
 }
 
 // Providers
-final authProvider = StateNotifierProvider<AuthNotifier, PhoneVerificationState>((ref) {
-  final userService = ref.watch(userServiceProvider);
-  return AuthNotifier(userService);
-});
+final authProvider =
+    StateNotifierProvider<AuthNotifier, PhoneVerificationState>((ref) {
+      final userService = ref.watch(userServiceProvider);
+      return AuthNotifier(userService);
+    });
 
 // Country data provider
 final countriesProvider = Provider<List<Country>>((ref) {
   return [
     Country(name: 'India', code: 'IN', dialCode: '+91', flag: '🇮🇳'),
-    Country(name: 'United Arab Emirates', code: 'AE', dialCode: '+971', flag: '🇦🇪'),
+    Country(
+      name: 'United Arab Emirates',
+      code: 'AE',
+      dialCode: '+971',
+      flag: '🇦🇪',
+    ),
     Country(name: 'Andorra', code: 'AD', dialCode: '+376', flag: '🇦🇩'),
     Country(name: 'Afghanistan', code: 'AF', dialCode: '+93', flag: '🇦🇫'),
-    Country(name: 'Antigua & Barbuda', code: 'AG', dialCode: '+1', flag: '🇦🇬'),
+    Country(
+      name: 'Antigua & Barbuda',
+      code: 'AG',
+      dialCode: '+1',
+      flag: '🇦🇬',
+    ),
     Country(name: 'Anguilla', code: 'AI', dialCode: '+1', flag: '🇦🇮'),
     Country(name: 'Albania', code: 'AL', dialCode: '+355', flag: '🇦🇱'),
     Country(name: 'Armenia', code: 'AM', dialCode: '+374', flag: '🇦🇲'),
@@ -317,5 +340,7 @@ final countriesProvider = Provider<List<Country>>((ref) {
 // Selected country provider
 final selectedCountryProvider = StateProvider<Country>((ref) {
   final countries = ref.watch(countriesProvider);
-  return countries.firstWhere((country) => country.code == 'IN'); // Default to India
+  return countries.firstWhere(
+    (country) => country.code == 'IN',
+  ); // Default to India
 });

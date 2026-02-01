@@ -1,24 +1,15 @@
-// token_interceptor.dart
 import 'package:dio/dio.dart';
-
 import 'package:fixify_admin/dio/token_manager.dart';
 
 class TokenInterceptor extends QueuedInterceptor {
-  final Dio dio;
   final TokenManager tokenManager;
-  final Function() onUnauthorized;
-  
   bool _isRefreshing = false;
 
-  TokenInterceptor({
-    required this.dio,
-    required this.tokenManager,
-    required this.onUnauthorized,
-  });
+  TokenInterceptor({required this.tokenManager});
 
   @override
   void onRequest(
-    RequestOptions options, 
+    RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
     final token = await tokenManager.getAccessToken();
@@ -29,57 +20,68 @@ class TokenInterceptor extends QueuedInterceptor {
   }
 
   @override
-  void onError(DioException err, ErrorInterceptorHandler handler) async {
-    if (err.response?.statusCode == 401) {
-      if (!_isRefreshing) {
-        _isRefreshing = true;
-        
-        try {
-          final refreshToken = await tokenManager.getRefreshToken();
-          
-          if (refreshToken == null) {
-            onUnauthorized();
-            return handler.reject(err);
-          }
-
-          // Refresh token API call
-          final response = await dio.post(
-            '/auth/refresh',
-            data: {'refresh_token': refreshToken},
-            options: Options(headers: {'Authorization': 'Bearer $refreshToken'}),
-          );
-
-          final newAccessToken = response.data['access_token'];
-          final newRefreshToken = response.data['refresh_token'];
-          
-          await tokenManager.saveTokens(newAccessToken, newRefreshToken);
-
-          // Retry original request with new token
-          err.requestOptions.headers['Authorization'] = 'Bearer $newAccessToken';
-          
-          final retryResponse = await dio.fetch(err.requestOptions);
-          return handler.resolve(retryResponse);
-          
-        } catch (e) {
-          onUnauthorized();
-          return handler.reject(err);
-        } finally {
-          _isRefreshing = false;
-        }
-      } else {
-        // Wait for refresh to complete
-        await Future.delayed(const Duration(milliseconds: 100));
-        try {
-          final token = await tokenManager.getAccessToken();
-          err.requestOptions.headers['Authorization'] = 'Bearer $token';
-          final retryResponse = await dio.fetch(err.requestOptions);
-          return handler.resolve(retryResponse);
-        } catch (e) {
-          return handler.reject(err);
-        }
-      }
+  void onError(
+    DioException err,
+    ErrorInterceptorHandler handler,
+  ) async {
+    // Not a 401 OR already retried → let it pass
+    if (err.response?.statusCode != 401 ||
+        err.requestOptions.extra['isRetry'] == true) {
+      return handler.next(err);
     }
-    
-    handler.next(err);
+
+    final refreshToken = await tokenManager.getRefreshToken();
+    if (refreshToken == null) {
+      return handler.next(err);
+    }
+
+    // If refresh already running → wait
+    if (_isRefreshing) {
+      await Future.delayed(const Duration(milliseconds: 300));
+      final token = await tokenManager.getAccessToken();
+
+      if (token != null) {
+        err.requestOptions.headers['Authorization'] = 'Bearer $token';
+        err.requestOptions.extra['isRetry'] = true;
+        return handler.resolve(await Dio().fetch(err.requestOptions));
+      }
+
+      return handler.next(err);
+    }
+
+    _isRefreshing = true;
+
+    try {
+      // ⚠️ ISOLATED DIO (NO INTERCEPTORS)
+      final refreshDio = Dio(
+        BaseOptions(
+          baseUrl: err.requestOptions.baseUrl,
+          headers: {'Content-Type': 'application/json'},
+        ),
+      );
+
+      final response = await refreshDio.post(
+        '/partner/refresh-token',
+        data: {'refresh_token': refreshToken},
+      );
+
+      final newAccess = response.data['access_token'];
+      final newRefresh = response.data['refresh_token'];
+
+      await tokenManager.saveTokens(newAccess, newRefresh);
+
+      err.requestOptions
+        ..headers['Authorization'] = 'Bearer $newAccess'
+        ..extra['isRetry'] = true;
+
+      return handler.resolve(
+        await refreshDio.fetch(err.requestOptions),
+      );
+    } catch (e) {
+      await tokenManager.clearTokens();
+      return handler.next(err);
+    } finally {
+      _isRefreshing = false;
+    }
   }
 }

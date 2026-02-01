@@ -1,54 +1,57 @@
-// api_handler.dart
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:fixify_admin/dio/resulr.dart';
 import 'package:fixify_admin/dio/token_interceptor.dart';
 import 'package:fixify_admin/dio/token_manager.dart';
-
 import 'package:fpdart/fpdart.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 
 class ApiHandler {
   late final Dio _dio;
   final TokenManager _tokenManager;
-  final Function() onSessionExpired;
 
   ApiHandler({
     required String baseUrl,
     required TokenManager tokenManager,
-    required this.onSessionExpired,
   }) : _tokenManager = tokenManager {
-    _dio = Dio(BaseOptions(
-      baseUrl: baseUrl,
-      connectTimeout: const Duration(seconds: 30),
-      receiveTimeout: const Duration(seconds: 30),
-      headers: {'Content-Type': 'application/json'},
-    ));
+    _dio = Dio(
+      BaseOptions(
+        baseUrl: baseUrl,
+        connectTimeout: const Duration(seconds: 30),
+        receiveTimeout: const Duration(seconds: 30),
+        headers: {'Content-Type': 'application/json'},
+      ),
+    );
 
-    // Add beautiful logger
-    _dio.interceptors.add(PrettyDioLogger(
-      requestHeader: true,
-      requestBody: true,
-      responseBody: true,
-      responseHeader: false,
-      error: true,
-      compact: true,
-      maxWidth: 90,
-    ));
+    // Logger
+    _dio.interceptors.add(
+      PrettyDioLogger(
+        requestHeader: true,
+        requestBody: true,
+        responseBody: true,
+        responseHeader: false,
+        error: true,
+        compact: true,
+        maxWidth: 90,
+      ),
+    );
 
-    // Add token refresh interceptor
-    _dio.interceptors.add(TokenInterceptor(
-      dio: _dio,
-      tokenManager: _tokenManager,
-      onUnauthorized: onSessionExpired,
-    ));
+    // ✅ Token attach + refresh ONLY
+    _dio.interceptors.add(
+      TokenInterceptor(tokenManager: _tokenManager),
+    );
+
+    // ❗ UnauthorizedInterceptor is added OUTSIDE
+    // (usually in main.dart so it has navigatorKey)
   }
+
+  // ---------------- REQUESTS ----------------
 
   Future<ApiResult<T>> get<T>({
     required String endpoint,
     Map<String, dynamic>? queryParams,
     T Function(dynamic json)? parser,
-  }) async {
+  }) {
     return _handleRequest<T>(
       () => _dio.get(endpoint, queryParameters: queryParams),
       parser,
@@ -59,7 +62,7 @@ class ApiHandler {
     required String endpoint,
     Map<String, dynamic>? data,
     T Function(dynamic json)? parser,
-  }) async {
+  }) {
     return _handleRequest<T>(
       () => _dio.post(endpoint, data: data),
       parser,
@@ -70,7 +73,7 @@ class ApiHandler {
     required String endpoint,
     Map<String, dynamic>? data,
     T Function(dynamic json)? parser,
-  }) async {
+  }) {
     return _handleRequest<T>(
       () => _dio.put(endpoint, data: data),
       parser,
@@ -80,12 +83,14 @@ class ApiHandler {
   Future<ApiResult<T>> delete<T>({
     required String endpoint,
     T Function(dynamic json)? parser,
-  }) async {
+  }) {
     return _handleRequest<T>(
       () => _dio.delete(endpoint),
       parser,
     );
   }
+
+  // ---------------- CORE HANDLER ----------------
 
   Future<ApiResult<T>> _handleRequest<T>(
     Future<Response> Function() request,
@@ -94,20 +99,24 @@ class ApiHandler {
     try {
       final response = await request();
 
-      if (response.statusCode! >= 200 && response.statusCode! < 300) {
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
         try {
           final data =
               parser != null ? parser(response.data) : response.data as T;
           return right(data);
-        } catch (e) {
+        } catch (_) {
           return left(const ParseFailure());
         }
       }
 
-      return left(ServerFailure(
-        response.statusMessage ?? 'Server error',
-        response.statusCode ?? 500,
-      ));
+      return left(
+        ServerFailure(
+          response.statusMessage ?? 'Server error',
+          response.statusCode ?? 500,
+        ),
+      );
     } on DioException catch (e) {
       return left(_handleDioError(e));
     } on SocketException {
@@ -116,6 +125,8 @@ class ApiHandler {
       return left(UnknownFailure(e.toString()));
     }
   }
+
+  // ---------------- ERROR MAPPING ----------------
 
   ApiFailure _handleDioError(DioException error) {
     switch (error.type) {
@@ -126,7 +137,8 @@ class ApiHandler {
 
       case DioExceptionType.badResponse:
         final statusCode = error.response?.statusCode ?? 500;
-        final message = error.response?.data['message'] ??
+        final message =
+            error.response?.data?['message'] ??
             error.response?.statusMessage ??
             'Server error';
 
