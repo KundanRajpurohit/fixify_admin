@@ -186,7 +186,8 @@ class AuthNotifier extends StateNotifier<PhoneVerificationState> {
     }
   }
 
-  Future<bool> verifyOTP(String otp) async {
+  Future<bool> verifyOTP(String otp) async
+  {
     print('🔐 [AuthProvider] Starting verifyOTP...');
     print('🔢 [AuthProvider] OTP to verify: $otp');
     print('📱 [AuthProvider] Phone number: ${state.phoneNumber}');

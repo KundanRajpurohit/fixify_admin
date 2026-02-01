@@ -311,44 +311,51 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder:
-          (context) => const Center(
-            child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF217043)),
-            ),
+      builder: (context) => WillPopScope(
+        onWillPop: () async => false, // Prevent back button
+        child: const Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF217043)),
           ),
+        ),
+      ),
     );
 
     print('⏳ [OTPVerificationScreen] Calling verifyOTP...');
-    
+
     bool isSuccess = false;
-    
+    String? errorMessage;
+
     if (widget.isCreateAccount) {
       // Use partner OTP verification API
       final authState = ref.read(authProvider);
       if (authState.phoneNumber == null) {
-        Navigator.of(context).pop(); // Close loading dialog
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(ref.t('auth.phone_number_not_found')),
-            backgroundColor: Colors.red,
-          ),
-        );
+        if (mounted) Navigator.of(context).pop(); // Close loading dialog
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(ref.t('auth.phone_number_not_found')),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
         _isVerifying = false;
         return;
       }
-      
+
       final userService = ref.read(userServiceProvider);
       final result = await userService.partnerVerifyOtp(
         mobile: authState.phoneNumber!,
         otp: otp,
       );
-      
+
       result.fold(
-        (failure) {
+            (failure) {
           isSuccess = false;
+          errorMessage = failure.message;
+          print('❌ [OTPVerificationScreen] Verification failed: ${failure.message}');
         },
-        (data) {
+            (data) {
           isSuccess = true;
           // Update auth state with token if available
           // The token is already saved to SharedPreferences by partnerVerifyOtp method
@@ -363,10 +370,26 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
       );
     } else {
       // Use regular user OTP verification
-      isSuccess = await ref.read(authProvider.notifier).verifyOTP(otp);
+      try {
+        isSuccess = await ref.read(authProvider.notifier).verifyOTP(otp);
+        if (!isSuccess) {
+          final authState = ref.read(authProvider);
+          errorMessage = authState.error;
+        }
+      } catch (e) {
+        isSuccess = false;
+        errorMessage = e.toString();
+        print('❌ [OTPVerificationScreen] Verification exception: $e');
+      }
     }
-    
+
     print('📥 [OTPVerificationScreen] verifyOTP result: $isSuccess');
+
+    // IMPORTANT: Check if widget is still mounted before popping
+    if (!mounted) {
+      print('⚠️ [OTPVerificationScreen] Widget not mounted, exiting early');
+      return;
+    }
 
     // Close loading dialog
     Navigator.of(context).pop();
@@ -374,148 +397,155 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
     // Reset verification flag
     _isVerifying = false;
 
-    // Show result dialog
-    showDialog(
+    // IMPORTANT: Check again if still mounted before showing result dialog
+    if (!mounted) {
+      print('⚠️ [OTPVerificationScreen] Widget not mounted after API call, exiting');
+      return;
+    }
+
+    // Show result dialog - wrapped in mounted check
+    await showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) {
-        if (isSuccess) {
-          return AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(40),
+      builder: (dialogContext) => WillPopScope(
+        onWillPop: () async => false, // Prevent back button on dialog
+        child: AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(40),
+          ),
+          content: isSuccess ? _buildSuccessDialog(dialogContext) : _buildFailureDialog(dialogContext, errorMessage),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSuccessDialog(BuildContext dialogContext) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const SizedBox(height: 16),
+        Image.asset("assets/images/5290058 1.png"),
+        const SizedBox(height: 24),
+        Text(
+          widget.isCreateAccount
+              ? ref.t('auth.verified_successfully')
+              : ref.t('auth.login_successful'),
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 16),
+        Text(
+          ref.t('auth.verification_message'),
+          style: const TextStyle(
+            fontSize: 14,
+            color: Colors.black87,
+            height: 1.5,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 24),
+        SizedBox(
+          width: double.infinity,
+          height: 48,
+          child: ElevatedButton(
+            onPressed: () {
+              Navigator.of(dialogContext).pop(); // Close dialog
+              Navigator.pushReplacement(
+                context,
+                PageTransition(
+                  type: PageTransitionType.fade,
+                  duration: const Duration(milliseconds: 500),
+                  child: widget.isCreateAccount
+                      ? MapScreen()
+                      : const HomePageScreen(),
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF217043),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(35),
+              ),
             ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(height: 16),
-                Image.asset("assets/images/5290058 1.png"),
-                const SizedBox(height: 24),
-                Text(
-                  widget.isCreateAccount
-                      ? ref.t('auth.verified_successfully')
-                      : ref.t('auth.login_successful'),
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  ref.t('auth.verification_message'),
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.black87,
-                    height: 1.5,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      Navigator.pushReplacement(
-                        context,
-                        PageTransition(
-                          type: PageTransitionType.fade,
-                          duration: const Duration(milliseconds: 500),
-                          child:
-                              widget.isCreateAccount
-                                  // ? LocationPermissionScreen()
-                                  ? MapScreen()
-                                  : const HomePageScreen(),
-                        ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF217043),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(35),
-                      ),
-                    ),
-                    child: Text(
-                      ref.t('common.continue'),
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+            child: Text(
+              ref.t('common.continue'),
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-          );
-        } else {
-          return AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(40),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFailureDialog(BuildContext dialogContext, String? errorMessage) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const SizedBox(height: 16),
+        Image.asset("assets/images/lose_8586526.png"),
+        const SizedBox(height: 24),
+        Text(
+          ref.t('auth.verification_failed'),
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 16),
+        Text(
+          errorMessage ?? ref.t('auth.verification_failed_message'),
+          style: const TextStyle(
+            fontSize: 14,
+            color: Colors.black87,
+            height: 1.5,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 24),
+        SizedBox(
+          width: double.infinity,
+          height: 48,
+          child: ElevatedButton(
+            onPressed: () {
+              Navigator.of(dialogContext).pop(); // Only close the dialog
+              // Stay on OTP screen - clear fields and refocus
+              if (mounted) {
+                setState(() {
+                  for (var controller in _otpControllers) {
+                    controller.clear();
+                  }
+                  _isVerifying = false;
+                });
+                _focusNodes[0].requestFocus();
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF217043),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(35),
+              ),
             ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(height: 16),
-                Image.asset("assets/images/lose_8586526.png"),
-                const SizedBox(height: 24),
-                Text(
-                  ref.t('auth.verification_failed'),
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  ref.t('auth.verification_failed_message'),
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.black87,
-                    height: 1.5,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      // Clear OTP fields
-                      for (var controller in _otpControllers) {
-                        controller.clear();
-                      }
-                      // Reset verification flag
-                      _isVerifying = false;
-                      _focusNodes[0].requestFocus();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF217043),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(35),
-                      ),
-                    ),
-                    child: Text(
-                      ref.t('common.try_again'),
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+            child: Text(
+              ref.t('common.try_again'),
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-          );
-        }
-      },
+          ),
+        ),
+      ],
     );
   }
 

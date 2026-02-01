@@ -755,7 +755,8 @@ class UserService {
   Future<ApiResult<Map<String, dynamic>>> partnerVerifyOtp({
     required String mobile,
     required String otp,
-  }) async {
+  }) async
+  {
     try {
       print('🔐 [UserService] Starting partnerVerifyOtp API call');
       print('📝 [UserService] Request data:');
