@@ -123,42 +123,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 50, 16, 16),
-      decoration: BoxDecoration(color: AppColors.secondary.withOpacity(0.4)),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            ref.t('profile.my_profile'),
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
-          ),
-          Container(
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.all(Radius.circular(8)),
-            ),
-            child: IconButton(
-              icon: const Icon(
-                Icons.notifications,
-                color: Color(0xFF217043),
-                size: 22,
-              ),
-              onPressed: () {
-                // Handle notifications
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildProfileCard() {
     final name = _profileData?['name'] ?? 'N/A';
     final mobile = _profileData?['mobile'] ?? 'N/A';

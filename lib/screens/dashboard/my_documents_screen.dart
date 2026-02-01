@@ -363,7 +363,7 @@ class _MyDocumentsScreenState extends ConsumerState<MyDocumentsScreen> {
                 borderRadius: BorderRadius.circular(12),
                 child: showSelectedFile
                     ? Image.file(
-                        selectedFile!,
+                        selectedFile,
                         fit: BoxFit.cover,
                       )
                     : Image.network(

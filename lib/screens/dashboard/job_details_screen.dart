@@ -128,6 +128,22 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
     }
   }
 
+  Future<void> openMap(String address) async {
+    final encodedAddress = Uri.encodeComponent(address);
+
+    final Uri googleMapsUrl = Uri.parse(
+      'https://www.google.com/maps/search/?api=1&query=$encodedAddress',
+    );
+
+    if (!await launchUrl(
+      googleMapsUrl,
+      mode: LaunchMode.externalApplication,
+    )) {
+      throw 'Could not open the map.';
+    }
+  }
+
+
   Future<void> _handleAcceptJob() async {
     // Show loading dialog
     showDialog(
@@ -1117,7 +1133,7 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
             label: ref.t('dashboard.contact_number'),
             value: jobDetails?['UserMobile'] ?? "Not Available",
             actionText: ref.t('dashboard.call_now'),
-            onAction: () => _makePhoneCall('+918535544156'),
+            onAction: () => _makePhoneCall(jobDetails?['UserMobile']),
           ),
           const Divider(height: 24),
           _buildDetailRowWithAction(
@@ -1126,7 +1142,10 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
             value: jobDetails?['UserAddress'],
             actionText: ref.t('dashboard.view_map'),
             onAction: () {
-              // Handle view map
+              final address = jobDetails?['UserAddress'];
+              if (address != null && address.isNotEmpty) {
+                openMap(address);
+              }
             },
           ),
         ],
@@ -1403,33 +1422,3 @@ class ServiceListCard extends StatelessWidget {
   }
 }
 
-class _AddServiceButton extends StatelessWidget {
-  final VoidCallback onTap;
-
-  const _AddServiceButton({required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(0),
-      child: OutlinedButton(
-        onPressed: onTap,
-        style: OutlinedButton.styleFrom(
-          side: const BorderSide(color: Color(0xFF2F6B3F), width: 1.5),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(40),
-          ),
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-        ),
-        child: const Text(
-          'Add Additional Service',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF2F6B3F),
-          ),
-        ),
-      ),
-    );
-  }
-}

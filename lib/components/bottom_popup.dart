@@ -1,4 +1,3 @@
-import 'package:fixify_admin/helpers/translate_helper.dart';
 import 'package:fixify_admin/providers/location_provider.dart';
 import 'package:fixify_admin/screens/dashboard/job_details_screen.dart';
 import 'package:flutter/material.dart';

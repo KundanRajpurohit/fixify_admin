@@ -34,10 +34,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return day.substring(0, 1).toUpperCase();
   }
 
-  String _getDayShortName(String day) {
-    return day.substring(0, 3);
-  }
-
   @override
   void initState() {
     super.initState();

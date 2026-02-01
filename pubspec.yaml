@@ -39,6 +39,7 @@ dependencies:
   firebase_core:
   firebase_messaging: ^14.7.9
   firebase_analytics: ^10.7.4
+  clarity_flutter:
   flutter_local_notifications: ^17.2.2
   # For page transitions and animations
   page_transition: ^2.1.0
