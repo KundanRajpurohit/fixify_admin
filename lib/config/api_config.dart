@@ -1,7 +1,7 @@
 // API Configuration
 class ApiConfig {
-  // static const String baseUrl = 'https://admin.fixify.expert/api';
-  static const String baseUrl = 'https://test.fixify.expert/api';
+  static const String baseUrl = 'https://admin.fixify.expert/api';
+  // static const String baseUrl = 'https://test.fixify.expert/api';
 
   // Partner endpoints
   static const String partnerLogin = '/partner/login';
