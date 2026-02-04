@@ -27,6 +27,12 @@ class UserService {
     await prefs.setString('authorization_token', authToken);
   }
 
+  // Save refresh token to SharedPreferences
+  Future<void> _saveRefreshToken(String refreshToken) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('refresh_token', refreshToken);
+  }
+
   // Get user ID from SharedPreferences
   Future<String?> getUserId() async {
     final prefs = await SharedPreferences.getInstance();
@@ -788,6 +794,14 @@ class UserService {
           print('🔑 [UserService] Authorization token: ${data['token']}');
           await _saveAuthToken(data['token']);
           print('💾 [UserService] Authorization token saved successfully');
+        }
+
+        final refreshToken =
+            data['refresh_token'] ?? data['data']?['refresh_token'];
+        if (refreshToken is String && refreshToken.isNotEmpty) {
+          print('🔄 [UserService] Refresh token received');
+          await _saveRefreshToken(refreshToken);
+          print('💾 [UserService] Refresh token saved successfully');
         }
 
         return right(data);
