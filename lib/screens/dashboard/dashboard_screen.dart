@@ -132,8 +132,8 @@ class _HomePageScreenState extends ConsumerState<HomePageScreen> {
 
   double _getIndicatorPosition() {
     final screenWidth = MediaQuery.of(context).size.width;
-    final itemWidth = (screenWidth - 16) / 4;
-    return 8 +
+    final itemWidth = (screenWidth - 18) / 4;
+    return 7 +
         (itemWidth * _selectedIndex) +
         (itemWidth - _getIndicatorWidth()) / 2;
   }
@@ -143,13 +143,13 @@ class _HomePageScreenState extends ConsumerState<HomePageScreen> {
       case 0:
         return 95.0; // Home
       case 1:
-        return 115.0; // Search
+        return 110.0; // Search
       case 2:
-        return 115.0; // Cart
+        return 110.0; // Cart
       case 3:
-        return 90.0; // Profile
+        return 105.0; // Profile
       default:
-        return 100.0;
+        return 110.0;
     }
   }
 
@@ -181,7 +181,7 @@ class _HomePageScreenState extends ConsumerState<HomePageScreen> {
                       Icon(
                         icon,
                         color: isSelected ? Colors.white : Colors.grey.shade400,
-                        size: 22,
+                        size: isSelected ? 16 : 20,
                       ),
                     ],
                   ),
@@ -192,7 +192,7 @@ class _HomePageScreenState extends ConsumerState<HomePageScreen> {
               duration: const Duration(milliseconds: 300),
               width: isSelected ? 3 : 0,
             ),
-            SizedBox(width: !isSelected ? 0 : 6),
+            SizedBox(width: !isSelected ? 0 : 4),
             AnimatedDefaultTextStyle(
               duration: const Duration(milliseconds: 300),
               style: TextStyle(

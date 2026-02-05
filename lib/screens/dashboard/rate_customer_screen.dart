@@ -25,6 +25,7 @@ class _RateCustomerScreenState extends ConsumerState<RateCustomerScreen> {
   }
 
   void _showJobCompletedDialog() {
+    print("Showing job completed dialog for job: ${widget.job.toString()}");
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -131,7 +132,7 @@ class _RateCustomerScreenState extends ConsumerState<RateCustomerScreen> {
                     Row(
                       children: [
                         Text(
-                          widget.job['ServiceType'] ?? 'Service',
+                          widget.job['ServiceType']?[0]?["title"] ?? 'Service',
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.grey.shade600,
@@ -161,7 +162,10 @@ class _RateCustomerScreenState extends ConsumerState<RateCustomerScreen> {
                   ),
                   child: Text(
                     ref.t('dashboard.go_to_job_details'),
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),
@@ -175,7 +179,7 @@ class _RateCustomerScreenState extends ConsumerState<RateCustomerScreen> {
   Future<void> _handleSubmit() async {
     if (_rating == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-         SnackBar(
+        SnackBar(
           content: Text(ref.t('dashboard.please_provide_rating')),
           backgroundColor: Colors.red,
         ),
@@ -185,7 +189,7 @@ class _RateCustomerScreenState extends ConsumerState<RateCustomerScreen> {
 
     if (_commentController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-         SnackBar(
+        SnackBar(
           content: Text(ref.t('dashboard.please_add_comment')),
           backgroundColor: Colors.red,
         ),
@@ -224,7 +228,7 @@ class _RateCustomerScreenState extends ConsumerState<RateCustomerScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-         SnackBar(
+        SnackBar(
           content: Text(ref.t('common.try_again')),
           backgroundColor: Colors.red,
         ),
@@ -471,4 +475,3 @@ class _RateCustomerScreenState extends ConsumerState<RateCustomerScreen> {
     );
   }
 }
-
