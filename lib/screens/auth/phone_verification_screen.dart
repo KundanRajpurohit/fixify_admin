@@ -81,7 +81,7 @@ class _PhoneVerificationScreenState
       
       print('📱 [PhoneVerificationScreen] Calling partner login API');
       print('📝 [PhoneVerificationScreen] Phone: $phoneNumber');
-      print('📱 [PhoneVerificationScreen] Device Token: ${deviceToken != null ? "${deviceToken.substring(0, 20)}..." : "null"}');
+      print('📱 [PhoneVerificationScreen] Device Token: ${deviceToken != null ? "${deviceToken}..." : "null"}');
       print('📱 [PhoneVerificationScreen] Platform: $platform');
 
       final result = await userService.partnerLogin(

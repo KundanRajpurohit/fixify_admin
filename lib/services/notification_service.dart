@@ -136,6 +136,7 @@ class NotificationService {
       importance: Importance.high,
       playSound: true,
       enableVibration: true,
+      sound: RawResourceAndroidNotificationSound('notification_sound'), // ← Add this
     );
 
     final androidInfo = _localNotifications
@@ -201,6 +202,7 @@ class NotificationService {
       priority: Priority.high,
       showWhen: true,
       icon: '@mipmap/ic_launcher',
+      sound: RawResourceAndroidNotificationSound('notification_sound'), // ← Add this
     );
 
     const iosDetails = DarwinNotificationDetails(

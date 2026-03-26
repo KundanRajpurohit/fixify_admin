@@ -142,7 +142,7 @@ class DeviceInfoService {
     
     print('📱 [DeviceInfoService] Device info initialized:');
     print('   - Platform: $platform');
-    print('   - Device Token: ${deviceToken != null ? "${deviceToken.substring(0, 20)}..." : "null"}');
+    print('   - Device Token: ${deviceToken != null ? "${deviceToken}" : "null"}');
     print('   - GA4 Client ID: ${ga4ClientId != null ? "${ga4ClientId.substring(0, 20)}..." : "null"}');
     
     return {
