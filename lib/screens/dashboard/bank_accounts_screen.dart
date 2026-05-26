@@ -41,7 +41,9 @@ class _BankAccountsScreenState extends ConsumerState<BankAccountsScreen> {
             });
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('${ref.t('dashboard.failed_to_load_bank_accounts')}: ${failure.message}'),
+                content: Text(
+                  '${ref.t('dashboard.failed_to_load_bank_accounts')}: ${failure.message}',
+                ),
                 backgroundColor: Colors.red,
               ),
             );
@@ -50,7 +52,8 @@ class _BankAccountsScreenState extends ConsumerState<BankAccountsScreen> {
         (data) {
           if (mounted) {
             setState(() {
-              _bankAccounts = data.map((json) => BankAccount.fromJson(json)).toList();
+              _bankAccounts =
+                  data.map((json) => BankAccount.fromJson(json)).toList();
               _isLoading = false;
             });
           }
@@ -76,23 +79,22 @@ class _BankAccountsScreenState extends ConsumerState<BankAccountsScreen> {
 
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(ref.t('dashboard.delete_bank_account')),
-        content: Text(ref.t('dashboard.delete_bank_account_confirmation')),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(ref.t('common.cancel')),
+      builder:
+          (context) => AlertDialog(
+            title: Text(ref.t('dashboard.delete_bank_account')),
+            content: Text(ref.t('dashboard.delete_bank_account_confirmation')),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text(ref.t('common.cancel')),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                child: Text(ref.t('common.delete')),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(
-              foregroundColor: Colors.red,
-            ),
-            child: Text(ref.t('common.delete')),
-          ),
-        ],
-      ),
     );
 
     if (confirmed != true) return;
@@ -106,7 +108,9 @@ class _BankAccountsScreenState extends ConsumerState<BankAccountsScreen> {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Failed to delete bank account: ${failure.message}'),
+                content: Text(
+                  'Failed to delete bank account: ${failure.message}',
+                ),
                 backgroundColor: Colors.red,
               ),
             );
@@ -115,8 +119,10 @@ class _BankAccountsScreenState extends ConsumerState<BankAccountsScreen> {
         (data) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-               SnackBar(
-                content: Text(ref.t('dashboard.bank_account_deleted_successfully')),
+              SnackBar(
+                content: Text(
+                  ref.t('dashboard.bank_account_deleted_successfully'),
+                ),
                 backgroundColor: Colors.green,
               ),
             );
@@ -135,6 +141,7 @@ class _BankAccountsScreenState extends ConsumerState<BankAccountsScreen> {
       }
     }
   }
+
   static const Color _lightGreen = Color(0xFFE6F6E7);
 
   @override
@@ -142,7 +149,7 @@ class _BankAccountsScreenState extends ConsumerState<BankAccountsScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: _lightGreen,
-          title: Text(ref.t('profile.my_bank_account'))
+        title: Text(ref.t('profile.my_bank_account')),
       ),
       backgroundColor: const Color(0xFFF5F7F8),
       body: SafeArea(
@@ -151,45 +158,48 @@ class _BankAccountsScreenState extends ConsumerState<BankAccountsScreen> {
             // Header
             // Bank Accounts List
             Expanded(
-              child: _isLoading
-                  ? const Center(
-                      child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-                      ),
-                    )
-                  : _bankAccounts.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.account_balance,
-                                size: 64,
-                                color: Colors.grey.shade400,
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                ref.t('dashboard.no_bank_accounts_added'),
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.grey.shade600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                      : RefreshIndicator(
-                          onRefresh: _loadBankAccounts,
-                          child: ListView.builder(
-                            padding: const EdgeInsets.all(16),
-                            itemCount: _bankAccounts.length,
-                            itemBuilder: (context, index) {
-                              return _buildBankAccountCard(_bankAccounts[index]);
-                            },
+              child:
+                  _isLoading
+                      ? const Center(
+                        child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            AppColors.primary,
                           ),
                         ),
+                      )
+                      : _bankAccounts.isEmpty
+                      ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.account_balance,
+                              size: 64,
+                              color: Colors.grey.shade400,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              ref.t('dashboard.no_bank_accounts_added'),
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                      : RefreshIndicator(
+                        onRefresh: _loadBankAccounts,
+                        child: ListView.builder(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: _bankAccounts.length,
+                          itemBuilder: (context, index) {
+                            return _buildBankAccountCard(_bankAccounts[index]);
+                          },
+                        ),
+                      ),
             ),
-        
+
             // Add New Bank Account Button
             Container(
               padding: const EdgeInsets.all(16),
@@ -325,7 +335,11 @@ class _BankAccountsScreenState extends ConsumerState<BankAccountsScreen> {
                     color: AppColors.secondary.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(Icons.edit, color: AppColors.primary, size: 18),
+                  child: const Icon(
+                    Icons.edit,
+                    color: AppColors.primary,
+                    size: 18,
+                  ),
                 ),
                 onPressed: () {
                   Navigator.push(

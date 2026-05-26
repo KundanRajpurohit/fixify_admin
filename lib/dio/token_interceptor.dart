@@ -5,7 +5,7 @@ import 'package:fixify_admin/dio/token_manager.dart';
 class TokenInterceptor extends QueuedInterceptor {
   final TokenManager tokenManager;
   bool _isRefreshing = false;
-  
+
   // Static flag to communicate with UnauthorizedInterceptor
   static bool refreshFailed = false;
 
@@ -24,19 +24,18 @@ class TokenInterceptor extends QueuedInterceptor {
   }
 
   @override
-  void onError(
-    DioException err,
-    ErrorInterceptorHandler handler,
-  ) async {
-    print('🔄 [TokenInterceptor] onError - Status: ${err.response?.statusCode}');
+  void onError(DioException err, ErrorInterceptorHandler handler) async {
+    print(
+      '🔄 [TokenInterceptor] onError - Status: ${err.response?.statusCode}',
+    );
     print('🔄 [TokenInterceptor] Path: ${err.requestOptions.path}');
-    
+
     // Not a 401 → let it pass
     if (err.response?.statusCode != 401) {
       print('🔄 [TokenInterceptor] Not a 401, passing through');
       return handler.next(err);
     }
-    
+
     // Already retried → mark as refresh failed and let UnauthorizedInterceptor handle
     if (err.requestOptions.extra['isRetry'] == true) {
       print('🔄 [TokenInterceptor] Already retried, marking refresh as failed');
@@ -45,8 +44,10 @@ class TokenInterceptor extends QueuedInterceptor {
     }
 
     final refreshToken = await tokenManager.getRefreshToken();
-    print('🔄 [TokenInterceptor] Refresh token exists: ${refreshToken != null}');
-    
+    print(
+      '🔄 [TokenInterceptor] Refresh token exists: ${refreshToken != null}',
+    );
+
     if (refreshToken == null || refreshToken.isEmpty) {
       print('🔄 [TokenInterceptor] No refresh token, marking as failed');
       refreshFailed = true;
@@ -62,25 +63,27 @@ class TokenInterceptor extends QueuedInterceptor {
         await Future.delayed(const Duration(milliseconds: 200));
         attempts++;
       }
-      
+
       if (refreshFailed) {
         print('🔄 [TokenInterceptor] Previous refresh failed');
         return handler.next(err);
       }
-      
+
       final token = await tokenManager.getAccessToken();
       if (token != null && token.isNotEmpty) {
         print('🔄 [TokenInterceptor] Using new token from completed refresh');
-        final retryDio = Dio(BaseOptions(
-          baseUrl: err.requestOptions.baseUrl,
-          headers: {'Content-Type': 'application/json'},
-          connectTimeout: const Duration(seconds: 60),
-          receiveTimeout: const Duration(seconds: 60),
-        ));
-        
+        final retryDio = Dio(
+          BaseOptions(
+            baseUrl: err.requestOptions.baseUrl,
+            headers: {'Content-Type': 'application/json'},
+            connectTimeout: const Duration(seconds: 60),
+            receiveTimeout: const Duration(seconds: 60),
+          ),
+        );
+
         err.requestOptions.headers['Authorization'] = 'Bearer $token';
         err.requestOptions.extra['isRetry'] = true;
-        
+
         try {
           final retryResponse = await retryDio.fetch(err.requestOptions);
           return handler.resolve(retryResponse);
@@ -122,15 +125,17 @@ class TokenInterceptor extends QueuedInterceptor {
       final responseData = response.data;
       String? newAccess;
       String? newRefresh;
-      
+
       if (responseData is Map) {
         // Try different possible key names
-        newAccess = responseData['access_token'] ?? 
-                    responseData['token'] ?? 
-                    responseData['data']?['token'] ??
-                    responseData['data']?['access_token'];
-        newRefresh = responseData['refresh_token'] ?? 
-                     responseData['data']?['refresh_token'];
+        newAccess =
+            responseData['access_token'] ??
+            responseData['token'] ??
+            responseData['data']?['token'] ??
+            responseData['data']?['access_token'];
+        newRefresh =
+            responseData['refresh_token'] ??
+            responseData['data']?['refresh_token'];
       }
 
       if (newAccess == null || newAccess.isEmpty) {
@@ -150,13 +155,13 @@ class TokenInterceptor extends QueuedInterceptor {
       print('🔄 [TokenInterceptor] Retrying original request...');
       final retryResponse = await refreshDio.fetch(err.requestOptions);
       print('🔄 [TokenInterceptor] Retry successful!');
-      
+
       return handler.resolve(retryResponse);
     } catch (e) {
       print('🔄 [TokenInterceptor] Refresh failed with error: $e');
       refreshFailed = true;
       await tokenManager.clearTokens();
-      
+
       // Mark error as refresh-failed for UnauthorizedInterceptor
       err.requestOptions.extra['refreshFailed'] = true;
       return handler.next(err);

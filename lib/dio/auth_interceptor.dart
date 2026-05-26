@@ -8,11 +8,14 @@ class AuthInterceptor extends Interceptor {
 
   @override
   void onRequest(
-      RequestOptions options, RequestInterceptorHandler handler) async {
+    RequestOptions options,
+    RequestInterceptorHandler handler,
+  ) async {
     try {
       // Check if the current path matches any protected path
-      final shouldAddToken =
-          protectedPaths.any((path) => options.path.contains(path));
+      final shouldAddToken = protectedPaths.any(
+        (path) => options.path.contains(path),
+      );
 
       if (shouldAddToken) {
         final prefs = await SharedPreferences.getInstance();

@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:fixify_admin/helpers/job_timer.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -12,10 +13,7 @@ class JobTimerNotifier extends StateNotifier<JobTimerState> {
 
     final startTime = DateTime.now();
 
-    state = state.copyWith(
-      isRunning: true,
-      startedAt: startTime,
-    );
+    state = state.copyWith(isRunning: true, startedAt: startTime);
 
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
@@ -41,7 +39,6 @@ class JobTimerNotifier extends StateNotifier<JobTimerState> {
   }
 }
 
-final jobTimerProvider =
-    StateNotifierProvider<JobTimerNotifier, JobTimerState>(
+final jobTimerProvider = StateNotifierProvider<JobTimerNotifier, JobTimerState>(
   (ref) => JobTimerNotifier(),
 );

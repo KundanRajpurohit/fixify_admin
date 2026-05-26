@@ -1,26 +1,24 @@
+import 'package:dropdown_search/dropdown_search.dart';
 import 'package:fixify_admin/config/app_colors.dart';
 import 'package:fixify_admin/helpers/translate_helper.dart';
 import 'package:fixify_admin/models/bank_model.dart';
 import 'package:fixify_admin/providers/location_provider.dart';
-import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class AddEditBankAccountScreen extends ConsumerStatefulWidget {
   final BankAccount? bankAccount;
 
-  const AddEditBankAccountScreen({
-    super.key,
-    this.bankAccount,
-  });
+  const AddEditBankAccountScreen({super.key, this.bankAccount});
 
   @override
   ConsumerState<AddEditBankAccountScreen> createState() =>
       _AddEditBankAccountScreenState();
 }
 
-class _AddEditBankAccountScreenState extends ConsumerState<AddEditBankAccountScreen> {
+class _AddEditBankAccountScreenState
+    extends ConsumerState<AddEditBankAccountScreen> {
   final _formKey = GlobalKey<FormState>();
   final _accountHolderNameController = TextEditingController();
   final _accountNumberController = TextEditingController();
@@ -29,7 +27,6 @@ class _AddEditBankAccountScreenState extends ConsumerState<AddEditBankAccountScr
   String? _selectedBank;
   BankInfo? _selectedBankInfo;
   bool _isSubmitting = false;
-
 
   @override
   void initState() {
@@ -78,7 +75,9 @@ class _AddEditBankAccountScreenState extends ConsumerState<AddEditBankAccountScr
               ),
               const SizedBox(height: 20),
               Text(
-                isEdit ? ref.t('dashboard.bank_account_updated') : ref.t('dashboard.bank_account_added'),
+                isEdit
+                    ? ref.t('dashboard.bank_account_updated')
+                    : ref.t('dashboard.bank_account_added'),
                 style: const TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
@@ -102,7 +101,9 @@ class _AddEditBankAccountScreenState extends ConsumerState<AddEditBankAccountScr
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.of(context).pop(); // Close dialog
-                    Navigator.of(context).pop(true); // Return true to indicate success
+                    Navigator.of(
+                      context,
+                    ).pop(true); // Return true to indicate success
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
@@ -112,7 +113,9 @@ class _AddEditBankAccountScreenState extends ConsumerState<AddEditBankAccountScr
                     ),
                   ),
                   child: Text(
-                    isEdit ? ref.t('profile.my_bank_account') : ref.t('dashboard.go_to_bank_accounts'),
+                    isEdit
+                        ? ref.t('profile.my_bank_account')
+                        : ref.t('dashboard.go_to_bank_accounts'),
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -134,7 +137,7 @@ class _AddEditBankAccountScreenState extends ConsumerState<AddEditBankAccountScr
 
     if (_selectedBank == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-         SnackBar(
+        SnackBar(
           content: Text(ref.t('dashboard.please_select_bank')),
           backgroundColor: Colors.red,
         ),
@@ -168,7 +171,9 @@ class _AddEditBankAccountScreenState extends ConsumerState<AddEditBankAccountScr
               });
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('${ref.t('dashboard.failed_to_update_bank_account')}: ${failure.message}'),
+                  content: Text(
+                    '${ref.t('dashboard.failed_to_update_bank_account')}: ${failure.message}',
+                  ),
                   backgroundColor: Colors.red,
                 ),
               );
@@ -200,7 +205,9 @@ class _AddEditBankAccountScreenState extends ConsumerState<AddEditBankAccountScr
               });
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('${ref.t('dashboard.failed_to_add_bank_account')}: ${failure.message}'),
+                  content: Text(
+                    '${ref.t('dashboard.failed_to_add_bank_account')}: ${failure.message}',
+                  ),
                   backgroundColor: Colors.red,
                 ),
               );
@@ -239,7 +246,9 @@ class _AddEditBankAccountScreenState extends ConsumerState<AddEditBankAccountScr
       backgroundColor: const Color(0xFFF5F7F8),
       appBar: AppBar(
         title: Text(
-          isEdit ? ref.t('dashboard.edit_bank_account') : ref.t('dashboard.add_bank_account'),
+          isEdit
+              ? ref.t('dashboard.edit_bank_account')
+              : ref.t('dashboard.add_bank_account'),
           style: const TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
@@ -247,7 +256,7 @@ class _AddEditBankAccountScreenState extends ConsumerState<AddEditBankAccountScr
           ),
           textAlign: TextAlign.center,
         ),
-        leading:  IconButton(
+        leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black87),
           onPressed: () => Navigator.pop(context),
         ),
@@ -262,19 +271,19 @@ class _AddEditBankAccountScreenState extends ConsumerState<AddEditBankAccountScr
                 child: Form(
                   key: _formKey,
                   child: Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 10,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Column(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildTextField(
@@ -283,10 +292,14 @@ class _AddEditBankAccountScreenState extends ConsumerState<AddEditBankAccountScr
                           hint: ref.t('dashboard.enter_account_holder_name'),
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
-                              return ref.t('dashboard.please_enter_account_holder_name');
+                              return ref.t(
+                                'dashboard.please_enter_account_holder_name',
+                              );
                             }
                             if (value.trim().length < 3) {
-                              return ref.t('dashboard.name_must_be_at_least_3_characters');
+                              return ref.t(
+                                'dashboard.name_must_be_at_least_3_characters',
+                              );
                             }
                             return null;
                           },
@@ -309,10 +322,11 @@ class _AddEditBankAccountScreenState extends ConsumerState<AddEditBankAccountScr
                             if (_selectedBank == null) {
                               return 'Please select a bank first';
                             }
-                            final error = BankValidationRules.validateAccountNumber(
-                              value.trim(),
-                              _selectedBank!,
-                            );
+                            final error =
+                                BankValidationRules.validateAccountNumber(
+                                  value.trim(),
+                                  _selectedBank!,
+                                );
                             return error;
                           },
                         ),
@@ -331,12 +345,15 @@ class _AddEditBankAccountScreenState extends ConsumerState<AddEditBankAccountScr
                               return ref.t('dashboard.please_enter_ifsc_code');
                             }
                             if (_selectedBank == null) {
-                              return ref.t('dashboard.please_select_bank_first');
+                              return ref.t(
+                                'dashboard.please_select_bank_first',
+                              );
                             }
-                            final error = BankValidationRules.validateIFSCForBank(
-                              value.trim(),
-                              _selectedBank!,
-                            );
+                            final error =
+                                BankValidationRules.validateIFSCForBank(
+                                  value.trim(),
+                                  _selectedBank!,
+                                );
                             return error;
                           },
                         ),
@@ -346,7 +363,7 @@ class _AddEditBankAccountScreenState extends ConsumerState<AddEditBankAccountScr
                 ),
               ),
             ),
-        
+
             // Submit Button
             Container(
               padding: const EdgeInsets.all(16),
@@ -372,22 +389,27 @@ class _AddEditBankAccountScreenState extends ConsumerState<AddEditBankAccountScr
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: _isSubmitting
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  child:
+                      _isSubmitting
+                          ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
+                            ),
+                          )
+                          : Text(
+                            isEdit
+                                ? ref.t('dashboard.save_bank_details')
+                                : ref.t('dashboard.add_bank_details'),
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                        )
-                      : Text(
-                          isEdit ? ref.t('dashboard.save_bank_details') : ref.t('dashboard.add_bank_details'),
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
                 ),
               ),
             ),
@@ -497,7 +519,9 @@ class _AddEditBankAccountScreenState extends ConsumerState<AddEditBankAccountScr
               ),
               itemAsString: (BankInfo bank) => bank.bankName,
               filterFn: (BankInfo bank, String filter) {
-                return bank.bankName.toLowerCase().contains(filter.toLowerCase()) ||
+                return bank.bankName.toLowerCase().contains(
+                      filter.toLowerCase(),
+                    ) ||
                     bank.shortCode.toLowerCase().contains(filter.toLowerCase());
               },
               dropdownDecoratorProps: DropDownDecoratorProps(
@@ -516,7 +540,10 @@ class _AddEditBankAccountScreenState extends ConsumerState<AddEditBankAccountScr
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                    borderSide: const BorderSide(
+                      color: AppColors.primary,
+                      width: 2,
+                    ),
                   ),
                   errorBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -548,18 +575,12 @@ class _AddEditBankAccountScreenState extends ConsumerState<AddEditBankAccountScr
           const SizedBox(height: 8),
           Text(
             'Account number should be ${_selectedBankInfo!.accountValidation.minLength}-${_selectedBankInfo!.accountValidation.maxLength} digits',
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey.shade600,
-            ),
+            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
           ),
           const SizedBox(height: 4),
           Text(
             'IFSC should start with ${_selectedBankInfo!.ifscPrefix}',
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey.shade600,
-            ),
+            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
           ),
         ],
       ],
@@ -580,6 +601,3 @@ class UpperCaseTextFormatter extends TextInputFormatter {
     );
   }
 }
-
-
-

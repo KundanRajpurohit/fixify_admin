@@ -20,7 +20,9 @@ class UnauthorizedInterceptor extends QueuedInterceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
-    print('🔒 [UnauthorizedInterceptor] onError - Status: ${err.response?.statusCode}');
+    print(
+      '🔒 [UnauthorizedInterceptor] onError - Status: ${err.response?.statusCode}',
+    );
 
     // Only handle 401 status code
     if (err.response?.statusCode != 401) {
@@ -29,27 +31,37 @@ class UnauthorizedInterceptor extends QueuedInterceptor {
 
     // ✅ Check if this is an OTP verification endpoint
     final requestPath = err.requestOptions.path;
-    final isOtpEndpoint = _otpEndpoints.any((endpoint) => requestPath.contains(endpoint));
+    final isOtpEndpoint = _otpEndpoints.any(
+      (endpoint) => requestPath.contains(endpoint),
+    );
 
     if (isOtpEndpoint) {
-      print('🔒 [UnauthorizedInterceptor] OTP endpoint detected, skipping logout');
+      print(
+        '🔒 [UnauthorizedInterceptor] OTP endpoint detected, skipping logout',
+      );
       print('🔒 [UnauthorizedInterceptor] Path: $requestPath');
       return handler.next(err); // ✅ Just pass the error, don't logout
     }
 
     // Check if TokenInterceptor has already handled this
     final isRetry = err.requestOptions.extra['isRetry'] == true;
-    final refreshMarkedFailed = err.requestOptions.extra['refreshFailed'] == true;
+    final refreshMarkedFailed =
+        err.requestOptions.extra['refreshFailed'] == true;
 
-    print('🔒 [UnauthorizedInterceptor] isRetry: $isRetry, refreshMarkedFailed: $refreshMarkedFailed');
-    print('🔒 [UnauthorizedInterceptor] TokenInterceptor.refreshFailed: ${TokenInterceptor.refreshFailed}');
+    print(
+      '🔒 [UnauthorizedInterceptor] isRetry: $isRetry, refreshMarkedFailed: $refreshMarkedFailed',
+    );
+    print(
+      '🔒 [UnauthorizedInterceptor] TokenInterceptor.refreshFailed: ${TokenInterceptor.refreshFailed}',
+    );
 
-    final shouldLogout = TokenInterceptor.refreshFailed ||
-        refreshMarkedFailed ||
-        isRetry;
+    final shouldLogout =
+        TokenInterceptor.refreshFailed || refreshMarkedFailed || isRetry;
 
     if (!shouldLogout) {
-      print('🔒 [UnauthorizedInterceptor] Not logging out - refresh might still be in progress');
+      print(
+        '🔒 [UnauthorizedInterceptor] Not logging out - refresh might still be in progress',
+      );
       return handler.next(err);
     }
 
@@ -59,7 +71,9 @@ class UnauthorizedInterceptor extends QueuedInterceptor {
     }
 
     _isHandling401 = true;
-    print('🔒 [UnauthorizedInterceptor] Token refresh failed, proceeding with logout');
+    print(
+      '🔒 [UnauthorizedInterceptor] Token refresh failed, proceeding with logout',
+    );
     print('🔒 [UnauthorizedInterceptor] Response: ${err.response?.data}');
 
     // Clear all preferences
@@ -84,6 +98,7 @@ class UnauthorizedInterceptor extends QueuedInterceptor {
 
     handler.next(err);
   }
+
   void _navigateToPhoneVerification() {
     // Use post-frame callback to ensure navigation happens after current frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -96,14 +111,17 @@ class UnauthorizedInterceptor extends QueuedInterceptor {
       // Try using navigator state first (most reliable)
       if (navigatorKey?.currentState != null) {
         final navigator = navigatorKey!.currentState!;
-        
+
         // Check if we're already on the phone verification screen
         final currentRoute = ModalRoute.of(navigator.context);
-        if (currentRoute?.settings.name?.contains('PhoneVerification') == true) {
-          print('⚠️ [UnauthorizedInterceptor] Already on PhoneVerificationScreen, skipping navigation');
+        if (currentRoute?.settings.name?.contains('PhoneVerification') ==
+            true) {
+          print(
+            '⚠️ [UnauthorizedInterceptor] Already on PhoneVerificationScreen, skipping navigation',
+          );
           return;
         }
-        
+
         navigator.pushAndRemoveUntil(
           PageTransition(
             type: PageTransitionType.fade,
@@ -112,21 +130,26 @@ class UnauthorizedInterceptor extends QueuedInterceptor {
           ),
           (route) => false,
         );
-        print('✅ [UnauthorizedInterceptor] Navigated to PhoneVerificationScreen via currentState');
+        print(
+          '✅ [UnauthorizedInterceptor] Navigated to PhoneVerificationScreen via currentState',
+        );
         return;
       }
 
       // Fallback: Use context if available
       if (navigatorKey?.currentContext != null) {
         final context = navigatorKey!.currentContext!;
-        
+
         // Check if we're already on the phone verification screen
         final currentRoute = ModalRoute.of(context);
-        if (currentRoute?.settings.name?.contains('PhoneVerification') == true) {
-          print('⚠️ [UnauthorizedInterceptor] Already on PhoneVerificationScreen, skipping navigation');
+        if (currentRoute?.settings.name?.contains('PhoneVerification') ==
+            true) {
+          print(
+            '⚠️ [UnauthorizedInterceptor] Already on PhoneVerificationScreen, skipping navigation',
+          );
           return;
         }
-        
+
         Navigator.of(context).pushAndRemoveUntil(
           PageTransition(
             type: PageTransitionType.fade,
@@ -135,12 +158,16 @@ class UnauthorizedInterceptor extends QueuedInterceptor {
           ),
           (route) => false,
         );
-        print('✅ [UnauthorizedInterceptor] Navigated to PhoneVerificationScreen via context');
+        print(
+          '✅ [UnauthorizedInterceptor] Navigated to PhoneVerificationScreen via context',
+        );
         return;
       }
 
       // Last resort: Try again after a short delay
-      print('⚠️ [UnauthorizedInterceptor] Navigator not ready, retrying in 500ms...');
+      print(
+        '⚠️ [UnauthorizedInterceptor] Navigator not ready, retrying in 500ms...',
+      );
       Future.delayed(const Duration(milliseconds: 500), () {
         if (!_isHandling401) return; // Don't retry if flag was reset
         _performNavigation();

@@ -221,6 +221,7 @@
     "service_type": "सेवा प्रकार",
     "time_date": "समय और तारीख",
     "payment": "भुगतान",
+    "pay_later": "बाद में भुगतान",
     "customer_details": "ग्राहक विवरण",
     "name": "नाम",
     "contact_number": "संपर्क नंबर",
@@ -474,4 +475,3 @@
     "sun": "रवि"
   }
 }
-

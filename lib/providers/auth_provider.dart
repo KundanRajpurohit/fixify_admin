@@ -1,6 +1,7 @@
 import 'package:fixify_admin/providers/location_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import '../services/user_service.dart';
 
 // Models
@@ -186,8 +187,7 @@ class AuthNotifier extends StateNotifier<PhoneVerificationState> {
     }
   }
 
-  Future<bool> verifyOTP(String otp) async
-  {
+  Future<bool> verifyOTP(String otp) async {
     print('🔐 [AuthProvider] Starting verifyOTP...');
     print('🔢 [AuthProvider] OTP to verify: $otp');
     print('📱 [AuthProvider] Phone number: ${state.phoneNumber}');

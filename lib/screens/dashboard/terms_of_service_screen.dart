@@ -127,12 +127,3 @@ class _TermsOfServiceScreenState extends ConsumerState<TermsOfServiceScreen> {
     );
   }
 }
-
-
-
-
-
-
-
-
-

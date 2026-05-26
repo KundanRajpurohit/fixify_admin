@@ -23,11 +23,12 @@ class SegmentedRingPainter extends CustomPainter {
         (2 * 3.14159 - (gapAngle * totalSegments)) / totalSegments;
 
     for (int i = 0; i < totalSegments; i++) {
-      final paint = Paint()
-        ..color = i < currentSegment ? activeColor : inactiveColor
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeWidth
-        ..strokeCap = StrokeCap.round;
+      final paint =
+          Paint()
+            ..color = i < currentSegment ? activeColor : inactiveColor
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = strokeWidth
+            ..strokeCap = StrokeCap.round;
 
       final startAngle = -3.14159 / 2 + (i * (segmentAngle + gapAngle));
 

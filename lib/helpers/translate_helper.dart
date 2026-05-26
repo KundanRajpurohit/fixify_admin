@@ -1,9 +1,9 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fixify_admin/helpers/app_localizations.dart';
 import 'package:fixify_admin/services/translation_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Helper class to easily access translations in widgets
-/// 
+///
 /// Usage:
 /// ```dart
 /// class MyWidget extends ConsumerWidget {
@@ -14,7 +14,7 @@ import 'package:fixify_admin/services/translation_service.dart';
 ///   }
 /// }
 /// ```
-/// 
+///
 /// Or for parameters:
 /// ```dart
 /// t.get('withdraw.minimum_withdrawal', params: {'amount': '500'})
@@ -33,8 +33,3 @@ class T {
     return TranslationService.translate(key, params: params);
   }
 }
-
-
-
-
-

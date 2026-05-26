@@ -121,8 +121,7 @@ class _SetPasswordScreenState extends ConsumerState<SetPasswordScreen> {
               ],
             ),
           );
-        }
-        else {
+        } else {
           return AlertDialog(
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(40),
@@ -247,7 +246,7 @@ class _SetPasswordScreenState extends ConsumerState<SetPasswordScreen> {
           ),
         ],
       ),
-      child:  Column(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
@@ -322,7 +321,9 @@ class _SetPasswordScreenState extends ConsumerState<SetPasswordScreen> {
         TextFormField(
           controller: _confirmPasswordController,
           obscureText: _obscureConfirmPassword,
-          decoration: _inputDecoration(ref.t('auth.enter_confirm_password_field')).copyWith(
+          decoration: _inputDecoration(
+            ref.t('auth.enter_confirm_password_field'),
+          ).copyWith(
             suffixIcon: IconButton(
               icon: Icon(
                 _obscureConfirmPassword
@@ -406,6 +407,7 @@ class _SetPasswordScreenState extends ConsumerState<SetPasswordScreen> {
 
 class _BulletText extends StatelessWidget {
   final String text;
+
   const _BulletText(this.text);
 
   @override

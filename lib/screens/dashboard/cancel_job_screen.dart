@@ -96,7 +96,10 @@ class _CancelJobScreenState extends ConsumerState<CancelJobScreen> {
                   ),
                   child: Text(
                     ref.t('jobs.go_to_my_jobs'),
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),
@@ -110,7 +113,7 @@ class _CancelJobScreenState extends ConsumerState<CancelJobScreen> {
   void _handleSubmit() {
     if (_selectedReason == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-         SnackBar(
+        SnackBar(
           content: Text(ref.t('jobs.select_reason')),
           backgroundColor: Colors.red,
         ),
@@ -121,7 +124,7 @@ class _CancelJobScreenState extends ConsumerState<CancelJobScreen> {
     if (_selectedReason == ref.t('jobs.other') &&
         _otherReasonController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-         SnackBar(
+        SnackBar(
           content: Text(ref.t('jobs.provide_reason')),
           backgroundColor: Colors.red,
         ),
@@ -137,7 +140,10 @@ class _CancelJobScreenState extends ConsumerState<CancelJobScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7F8),
-      appBar: CustomAppBar(title: ref.t('jobs.cancel_job'), showbackButton: true),
+      appBar: CustomAppBar(
+        title: ref.t('jobs.cancel_job'),
+        showbackButton: true,
+      ),
       body: Column(
         children: [
           // Header
@@ -225,7 +231,9 @@ class _CancelJobScreenState extends ConsumerState<CancelJobScreen> {
                                           child: TextField(
                                             controller: _otherReasonController,
                                             decoration: InputDecoration(
-                                              hintText: ref.t('jobs.write_reason'),
+                                              hintText: ref.t(
+                                                'jobs.write_reason',
+                                              ),
                                               hintStyle: TextStyle(
                                                 color: Colors.grey.shade400,
                                               ),
@@ -301,9 +309,3 @@ class _CancelJobScreenState extends ConsumerState<CancelJobScreen> {
     );
   }
 }
-
-
-
-
-
-

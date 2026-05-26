@@ -1,7 +1,10 @@
 // API Configuration
+import 'package:flutter/foundation.dart';
+
 class ApiConfig {
-  static const String baseUrl = 'https://admin.fixify.expert/api';
-  // static const String baseUrl = 'https://test.fixify.expert/api';
+  static const String baseUrl = kDebugMode ? testurl : liveurl;
+  static const String liveurl = 'https://admin.fixify.expert/api';
+  static const String testurl = 'https://admin.fixify.expert/api';
 
   // Partner endpoints
   static const String partnerLogin = '/partner/login';
@@ -41,6 +44,8 @@ class ApiConfig {
   static const String partnerJobCompleted = '/partner/job-completed';
   static const String partnerSubmitJobReport = '/partner/submit-job-report';
   static const String partnerRatingCustomer = '/partner/rating-customer';
+  static const String call = '/call';
+
   static String partnerJobDetails(String token) =>
       '/partner/single-job-details/$token';
 

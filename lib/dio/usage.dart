@@ -43,7 +43,6 @@
 //   }
 // }
 
-
 // // Example usage in a Flutter widget
 // user_screen.dart
 // import 'package:flutter/material.dart';
@@ -98,8 +97,6 @@
 //   }
 // }
 
-
-
 // user_notifier.dart
 // @riverpod
 // class UserNotifier extends _$UserNotifier {
@@ -108,7 +105,7 @@
 
 //   Future<void> loadUser(int id) async {
 //     state = const AsyncLoading();
-    
+
 //     final repo = ref.read(userRepositoryProvider.notifier);
 //     final result = await repo.getUser(id);
 
@@ -126,7 +123,7 @@
 //     final userState = ref.watch(userNotifierProvider);
 
 //     return userState.when(
-//       data: (user) => user != null 
+//       data: (user) => user != null
 //           ? Text(user.name)
 //           : const Text('No user'),
 //       loading: () => const CircularProgressIndicator(),

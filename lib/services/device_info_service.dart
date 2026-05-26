@@ -1,4 +1,5 @@
 import 'dart:io';
+
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -15,7 +16,7 @@ class DeviceInfoService {
       // Try to get from cache first
       final prefs = await SharedPreferences.getInstance();
       final cachedToken = prefs.getString(_deviceTokenKey);
-      
+
       if (cachedToken != null && cachedToken.isNotEmpty) {
         print('📱 [DeviceInfoService] Using cached device token');
         return cachedToken;
@@ -24,7 +25,7 @@ class DeviceInfoService {
       // Request FCM token
       print('📱 [DeviceInfoService] Requesting FCM token...');
       final messaging = FirebaseMessaging.instance;
-      
+
       // Request permission for iOS
       if (Platform.isIOS) {
         final settings = await messaging.requestPermission(
@@ -39,18 +40,20 @@ class DeviceInfoService {
       }
 
       final token = await messaging.getToken();
-      
+
       if (token != null && token.isNotEmpty) {
         // Cache the token
         await prefs.setString(_deviceTokenKey, token);
-        print('✅ [DeviceInfoService] Device token obtained: ${token.substring(0, 20)}...');
-        
+        print(
+          '✅ [DeviceInfoService] Device token obtained: ${token.substring(0, 20)}...',
+        );
+
         // Listen for token refresh
         messaging.onTokenRefresh.listen((newToken) async {
           await prefs.setString(_deviceTokenKey, newToken);
           print('🔄 [DeviceInfoService] Device token refreshed');
         });
-        
+
         return token;
       } else {
         print('❌ [DeviceInfoService] Failed to get device token');
@@ -79,7 +82,7 @@ class DeviceInfoService {
       // Try to get from cache first
       final prefs = await SharedPreferences.getInstance();
       final cachedClientId = prefs.getString(_ga4ClientIdKey);
-      
+
       if (cachedClientId != null && cachedClientId.isNotEmpty) {
         print('📊 [DeviceInfoService] Using cached GA4 client ID');
         return cachedClientId;
@@ -88,30 +91,34 @@ class DeviceInfoService {
       // Get GA4 client ID from Firebase Analytics
       print('📊 [DeviceInfoService] Getting GA4 client ID...');
       final analytics = FirebaseAnalytics.instance;
-      
+
       // Get app instance ID (which is used as client ID in GA4)
       final appInstanceId = await analytics.appInstanceId;
-      
+
       if (appInstanceId != null && appInstanceId.isNotEmpty) {
         // Cache the client ID
         await prefs.setString(_ga4ClientIdKey, appInstanceId);
-        print('✅ [DeviceInfoService] GA4 client ID obtained: ${appInstanceId.substring(0, 20)}...');
+        print(
+          '✅ [DeviceInfoService] GA4 client ID obtained: ${appInstanceId.substring(0, 20)}...',
+        );
         return appInstanceId;
       } else {
         // Generate a fallback client ID using device info
         final deviceInfo = DeviceInfoPlugin();
         String fallbackId;
-        
+
         if (Platform.isAndroid) {
           final androidInfo = await deviceInfo.androidInfo;
-          fallbackId = '${androidInfo.id}_${DateTime.now().millisecondsSinceEpoch}';
+          fallbackId =
+              '${androidInfo.id}_${DateTime.now().millisecondsSinceEpoch}';
         } else if (Platform.isIOS) {
           final iosInfo = await deviceInfo.iosInfo;
-          fallbackId = '${iosInfo.identifierForVendor ?? 'unknown'}_${DateTime.now().millisecondsSinceEpoch}';
+          fallbackId =
+              '${iosInfo.identifierForVendor ?? 'unknown'}_${DateTime.now().millisecondsSinceEpoch}';
         } else {
           fallbackId = 'unknown_${DateTime.now().millisecondsSinceEpoch}';
         }
-        
+
         await prefs.setString(_ga4ClientIdKey, fallbackId);
         print('⚠️ [DeviceInfoService] Using fallback GA4 client ID');
         return fallbackId;
@@ -131,20 +138,24 @@ class DeviceInfoService {
   // Initialize device info (call this in splash screen)
   static Future<Map<String, String?>> initializeDeviceInfo() async {
     print('🚀 [DeviceInfoService] Initializing device info...');
-    
+
     final deviceToken = await getDeviceToken();
     final platform = getPlatform();
     final ga4ClientId = await getGA4ClientId();
-    
+
     // Cache platform
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_platformKey, platform);
-    
+
     print('📱 [DeviceInfoService] Device info initialized:');
     print('   - Platform: $platform');
-    print('   - Device Token: ${deviceToken != null ? "${deviceToken}" : "null"}');
-    print('   - GA4 Client ID: ${ga4ClientId != null ? "${ga4ClientId.substring(0, 20)}..." : "null"}');
-    
+    print(
+      '   - Device Token: ${deviceToken != null ? "${deviceToken}" : "null"}',
+    );
+    print(
+      '   - GA4 Client ID: ${ga4ClientId != null ? "${ga4ClientId.substring(0, 20)}..." : "null"}',
+    );
+
     return {
       'deviceToken': deviceToken,
       'platform': platform,
@@ -162,7 +173,3 @@ class DeviceInfoService {
     };
   }
 }
-
-
-
-

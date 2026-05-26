@@ -5,7 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class AddAdditionalServiceSheet extends ConsumerStatefulWidget {
   final String token;
+
   const AddAdditionalServiceSheet({super.key, required this.token});
+
   @override
   ConsumerState<AddAdditionalServiceSheet> createState() =>
       _AddAdditionalServiceSheetState();
@@ -30,7 +32,8 @@ class AddAdditionalServiceSheet extends ConsumerStatefulWidget {
   }
 }
 
-class _AddAdditionalServiceSheetState extends ConsumerState<AddAdditionalServiceSheet> {
+class _AddAdditionalServiceSheetState
+    extends ConsumerState<AddAdditionalServiceSheet> {
   TextEditingController serviceNameController = TextEditingController();
 
   TextEditingController priceController = TextEditingController();
@@ -125,23 +128,20 @@ class _AddAdditionalServiceSheetState extends ConsumerState<AddAdditionalService
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () async {
-                      final result = await ref.read(userServiceProvider).addAdditionalItem(
-  bookingToken: widget.token,
-  item: serviceNameController.text,
-  price: int.parse(priceController.text),
-  quantity: 1,
-);
+                      final result = await ref
+                          .read(userServiceProvider)
+                          .addAdditionalItem(
+                            bookingToken: widget.token,
+                            item: serviceNameController.text,
+                            price: int.parse(priceController.text),
+                            quantity: 1,
+                          );
 
-result.fold(
-  (failure) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(failure.message)),
-    );
-  },
-  (data) {
-  
-  },
-);
+                      result.fold((failure) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(failure.message)),
+                        );
+                      }, (data) {});
 
                       Navigator.pop(
                         context,

@@ -1,4 +1,3 @@
-
 import 'package:fixify_admin/config/app_colors.dart';
 import 'package:fixify_admin/helpers/translate_helper.dart';
 import 'package:fixify_admin/screens/dashboard/dashboard_screen.dart';
@@ -7,9 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:page_transition/page_transition.dart';
+
 import '../../providers/auth_provider.dart';
 import '../../providers/location_provider.dart' show userServiceProvider;
-
 import 'country_picker_screen.dart';
 import 'otp_verification_screen.dart';
 
@@ -39,7 +38,9 @@ class _PhoneVerificationScreenState
   Future<void> _checkExistingToken() async {
     final authState = ref.read(authProvider);
     if (authState.authToken != null && authState.authToken!.isNotEmpty) {
-      print('✅ [PhoneVerificationScreen] Token exists, navigating to dashboard');
+      print(
+        '✅ [PhoneVerificationScreen] Token exists, navigating to dashboard',
+      );
       if (mounted) {
         Navigator.pushReplacement(
           context,
@@ -71,17 +72,22 @@ class _PhoneVerificationScreenState
 
     try {
       final userService = ref.read(userServiceProvider);
-      final phoneNumber = _phoneController.text.trim().replaceAll(RegExp(r'[^\d]'), '');
+      final phoneNumber = _phoneController.text.trim().replaceAll(
+        RegExp(r'[^\d]'),
+        '',
+      );
       final selectedCountry = ref.read(selectedCountryProvider);
-      
+
       // Get device info
       final deviceInfo = await DeviceInfoService.getCachedDeviceInfo();
       final deviceToken = deviceInfo['deviceToken'];
       final platform = deviceInfo['platform'];
-      
+
       print('📱 [PhoneVerificationScreen] Calling partner login API');
       print('📝 [PhoneVerificationScreen] Phone: $phoneNumber');
-      print('📱 [PhoneVerificationScreen] Device Token: ${deviceToken != null ? "${deviceToken}..." : "null"}');
+      print(
+        '📱 [PhoneVerificationScreen] Device Token: ${deviceToken != null ? "${deviceToken}..." : "null"}',
+      );
       print('📱 [PhoneVerificationScreen] Platform: $platform');
 
       final result = await userService.partnerLogin(
@@ -110,7 +116,7 @@ class _PhoneVerificationScreenState
           });
 
           print('📊 [PhoneVerificationScreen] Login response: $data');
-          
+
           final status = data['status'] as bool? ?? false;
           final message = data['message'] as String? ?? '';
           final accountStatus = data['Account_status'] as String?;
@@ -118,7 +124,7 @@ class _PhoneVerificationScreenState
           if (status == true) {
             // OTP sent successfully
             print('✅ [PhoneVerificationScreen] OTP sent successfully');
-            
+
             // Update auth state with phone number and OTP
             final authState = ref.read(authProvider);
             ref.read(authProvider.notifier).state = authState.copyWith(
@@ -139,12 +145,14 @@ class _PhoneVerificationScreenState
           } else {
             // Handle different error scenarios
             String errorMessage = message;
-            
-            if (message.contains('not registered') || 
-                message.toLowerCase().contains('mobile number not registered')) {
+
+            if (message.contains('not registered') ||
+                message.toLowerCase().contains(
+                  'mobile number not registered',
+                )) {
               errorMessage = ref.t('auth.account_in_review');
-            } else if (accountStatus == 'pending' || 
-                       message.toLowerCase().contains('not active')) {
+            } else if (accountStatus == 'pending' ||
+                message.toLowerCase().contains('not active')) {
               errorMessage = ref.t('auth.account_not_active');
             }
 
@@ -305,15 +313,18 @@ class _PhoneVerificationScreenState
                               color: const Color(0xFFE5E7EB),
                             ),
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 4),
+                              horizontal: 12,
+                              vertical: 4,
+                            ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Container(
                                   padding: const EdgeInsets.all(8),
                                   decoration: const BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: Colors.white),
+                                    shape: BoxShape.circle,
+                                    color: Colors.white,
+                                  ),
                                   child: Text(
                                     selectedCountry.flag,
                                     style: const TextStyle(fontSize: 14),
@@ -355,11 +366,14 @@ class _PhoneVerificationScreenState
                             style: const TextStyle(fontSize: 18),
                             decoration: InputDecoration(
                               hintText: ref.t('auth.type_phone_number'),
-                              hintStyle:
-                                  const TextStyle(fontSize: 18, color: Colors.grey),
+                              hintStyle: const TextStyle(
+                                fontSize: 18,
+                                color: Colors.grey,
+                              ),
                               border: InputBorder.none,
-                              contentPadding:
-                                  const EdgeInsets.symmetric(horizontal: 12),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                              ),
                             ),
                             onChanged: (value) {
                               setState(() {});
@@ -404,34 +418,38 @@ class _PhoneVerificationScreenState
                           ? _handleLogin
                           : null,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _phoneController.text.length >= 10
-                        ? AppColors.primary
-                        : const Color(0xFFE0E0E0),
-                    foregroundColor: _phoneController.text.length >= 10
-                        ? Colors.white
-                        : Colors.grey,
+                    backgroundColor:
+                        _phoneController.text.length >= 10
+                            ? AppColors.primary
+                            : const Color(0xFFE0E0E0),
+                    foregroundColor:
+                        _phoneController.text.length >= 10
+                            ? Colors.white
+                            : Colors.grey,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(35),
                     ),
                     elevation: 0,
                   ),
-                  child: _isLoading
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(Colors.white),
+                  child:
+                      _isLoading
+                          ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
+                            ),
+                          )
+                          : Text(
+                            ref.t('auth.verify'),
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                        )
-                      : Text(
-                          ref.t('auth.verify'),
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
                 ),
               ),
             ),

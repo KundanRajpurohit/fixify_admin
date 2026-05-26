@@ -9,7 +9,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:page_transition/page_transition.dart';
 
-
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
@@ -32,13 +31,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       vsync: this,
     );
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
 
     _animationController.forward();
 
@@ -69,16 +64,21 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   Future<void> _checkLanguageAndNavigate() async {
     // First check if language has been selected
     final languageNotifier = ref.read(languageProvider.notifier);
-    final hasSelectedLanguage = await languageNotifier.hasLanguageBeenSelected();
+    final hasSelectedLanguage =
+        await languageNotifier.hasLanguageBeenSelected();
 
-    print('🌐 [SplashScreen] Language selection check: hasSelectedLanguage = $hasSelectedLanguage');
+    print(
+      '🌐 [SplashScreen] Language selection check: hasSelectedLanguage = $hasSelectedLanguage',
+    );
 
     // Only show language selection screen if language has NOT been selected
     if (!hasSelectedLanguage) {
       // Navigate to language selection screen only if no language is selected
-      print('🌐 [SplashScreen] No language selected - Navigating to InitialLanguageSelectionScreen');
+      print(
+        '🌐 [SplashScreen] No language selected - Navigating to InitialLanguageSelectionScreen',
+      );
       if (!mounted) return;
-      
+
       Navigator.pushReplacement(
         context,
         PageTransition(
@@ -91,14 +91,16 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     }
 
     // Language is already selected - skip language selection screen and proceed with auth-based navigation
-    print('🌐 [SplashScreen] Language already selected - Skipping language selection screen');
+    print(
+      '🌐 [SplashScreen] Language already selected - Skipping language selection screen',
+    );
     print('🌐 [SplashScreen] Proceeding with auth-based navigation');
     _navigateBasedOnAuthState();
   }
 
   void _navigateBasedOnAuthState() {
     final authState = ref.read(authProvider);
-    
+
     print('🚀 [SplashScreen] Checking authentication state...');
     print('🔑 [SplashScreen] Auth token: ${authState.authToken}');
     print('👤 [SplashScreen] User token: ${authState.userToken}');
@@ -107,9 +109,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     // Case 1: Authorization token exists - User is fully authenticated
     if (authState.authToken != null && authState.authToken!.isNotEmpty) {
-      print('✅ [SplashScreen] Authorization token found - User is fully authenticated');
+      print(
+        '✅ [SplashScreen] Authorization token found - User is fully authenticated',
+      );
       print('🎯 [SplashScreen] Navigating to MainAppScreen');
-      
+
       Navigator.pushReplacement(
         context,
         PageTransition(
@@ -121,9 +125,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     }
     // Case 2: Only user token exists - User saved location but didn't complete OTP verification
     else if (authState.userToken != null && authState.userToken!.isNotEmpty) {
-      print('📍 [SplashScreen] Only user token found - User saved location but needs OTP verification');
+      print(
+        '📍 [SplashScreen] Only user token found - User saved location but needs OTP verification',
+      );
       print('🎯 [SplashScreen] Navigating to PhoneVerificationScreen');
-      
+
       Navigator.pushReplacement(
         context,
         PageTransition(
@@ -135,9 +141,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     }
     // Case 3: No tokens exist - User needs to start from beginning
     else {
-      print('🆕 [SplashScreen] No tokens found - User needs to start from beginning');
+      print(
+        '🆕 [SplashScreen] No tokens found - User needs to start from beginning',
+      );
       print('🎯 [SplashScreen] Navigating to OnboardingScreen');
-      
+
       Navigator.pushReplacement(
         context,
         PageTransition(
@@ -208,4 +216,3 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     );
   }
 }
-

@@ -1,4 +1,3 @@
-
 import 'package:fixify_admin/config/app_colors.dart';
 import 'package:fixify_admin/helpers/translate_helper.dart';
 import 'package:flutter/material.dart';
@@ -19,9 +18,7 @@ class LogoutResultDialog extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
@@ -36,9 +33,10 @@ class LogoutResultDialog extends ConsumerWidget {
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: isSuccess 
-                    ? AppColors.primary.withOpacity(0.1)
-                    : Colors.red.withOpacity(0.1),
+                color:
+                    isSuccess
+                        ? AppColors.primary.withOpacity(0.1)
+                        : Colors.red.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -47,12 +45,14 @@ class LogoutResultDialog extends ConsumerWidget {
                 color: isSuccess ? AppColors.primary : Colors.red,
               ),
             ),
-            
+
             const SizedBox(height: 20),
-            
+
             // Title
             Text(
-              isSuccess ? ref.t('profile.logout_successful') : ref.t('profile.logout_failed'),
+              isSuccess
+                  ? ref.t('profile.logout_successful')
+                  : ref.t('profile.logout_failed'),
               style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -60,9 +60,9 @@ class LogoutResultDialog extends ConsumerWidget {
               ),
               textAlign: TextAlign.center,
             ),
-            
+
             const SizedBox(height: 12),
-            
+
             // Message
             Text(
               message,
@@ -73,9 +73,9 @@ class LogoutResultDialog extends ConsumerWidget {
               ),
               textAlign: TextAlign.center,
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Action Button
             SizedBox(
               width: double.infinity,
@@ -88,7 +88,9 @@ class LogoutResultDialog extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    isSuccess ? ref.t('profile.login') : ref.t('profile.try_again'),
+                    isSuccess
+                        ? ref.t('profile.login')
+                        : ref.t('profile.try_again'),
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,

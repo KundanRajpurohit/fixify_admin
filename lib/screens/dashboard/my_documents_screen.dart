@@ -1,4 +1,5 @@
 import 'dart:io';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:fixify_admin/components/custom_app_bar.dart';
 import 'package:fixify_admin/config/app_colors.dart';
@@ -111,7 +112,7 @@ class _MyDocumentsScreenState extends ConsumerState<MyDocumentsScreen> {
   Future<void> _submitDocuments() async {
     if (!_hasChanges) {
       ScaffoldMessenger.of(context).showSnackBar(
-         SnackBar(
+        SnackBar(
           content: Text(ref.t('dashboard.please_select_at_least_one_document')),
           backgroundColor: Colors.orange,
         ),
@@ -176,81 +177,91 @@ class _MyDocumentsScreenState extends ConsumerState<MyDocumentsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7F8),
-      appBar: CustomAppBar(title: ref.t('profile.my_documents'), showbackButton: true),
-      body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-              ),
-            )
-          : Stack(
-              children: [
-                SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Instruction Card
-                      _buildInstructionCard(),
-                      const SizedBox(height: 16),
-
-                      // Aadhaar Card Section
-                      _buildDocumentCard(
-                        title: 'Aadhaar Card',
-                        imageUrl: _profileData?['national_id'],
-                        isVerified: _profileData?['national_id_verification'] ?? false,
-                        selectedFile: _nationalIdFile,
-                        onPickFile: () => _pickFile('national_id'),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Address Proof Section
-                      _buildAddressProofCard(),
-                      const SizedBox(height: 16),
-
-                      // Service License Section
-                      _buildServiceLicenseCard(),
-                      const SizedBox(height: 100), // Space for submit button
-                    ],
-                  ),
+      appBar: CustomAppBar(
+        title: ref.t('profile.my_documents'),
+        showbackButton: true,
+      ),
+      body:
+          _isLoading
+              ? const Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
                 ),
+              )
+              : Stack(
+                children: [
+                  SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Instruction Card
+                        _buildInstructionCard(),
+                        const SizedBox(height: 16),
 
-                // Submit Button (Fixed at bottom)
-                Positioned(
-                  left: 16,
-                  right: 16,
-                  bottom: 16,
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: 54,
-                    child: ElevatedButton(
-                      onPressed: _isSubmitting ? null : _submitDocuments,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _hasChanges ? _green : _green.withOpacity(0.5),
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
+                        // Aadhaar Card Section
+                        _buildDocumentCard(
+                          title: 'Aadhaar Card',
+                          imageUrl: _profileData?['national_id'],
+                          isVerified:
+                              _profileData?['national_id_verification'] ??
+                              false,
+                          selectedFile: _nationalIdFile,
+                          onPickFile: () => _pickFile('national_id'),
                         ),
-                        textStyle: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      child: _isSubmitting
-                          ? const SizedBox(
-                              width: 22,
-                              height: 22,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                              ),
-                            )
-                          : const Text('Submit Documents'),
+                        const SizedBox(height: 16),
+
+                        // Address Proof Section
+                        _buildAddressProofCard(),
+                        const SizedBox(height: 16),
+
+                        // Service License Section
+                        _buildServiceLicenseCard(),
+                        const SizedBox(height: 100), // Space for submit button
+                      ],
                     ),
                   ),
-                ),
-              ],
-            ),
+
+                  // Submit Button (Fixed at bottom)
+                  Positioned(
+                    left: 16,
+                    right: 16,
+                    bottom: 16,
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 54,
+                      child: ElevatedButton(
+                        onPressed: _isSubmitting ? null : _submitDocuments,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              _hasChanges ? _green : _green.withOpacity(0.5),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          textStyle: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        child:
+                            _isSubmitting
+                                ? const SizedBox(
+                                  width: 22,
+                                  height: 22,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white,
+                                    ),
+                                  ),
+                                )
+                                : const Text('Submit Documents'),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
     );
   }
 
@@ -295,10 +306,7 @@ class _MyDocumentsScreenState extends ConsumerState<MyDocumentsScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            '• ',
-            style: TextStyle(fontSize: 16, color: Colors.grey),
-          ),
+          const Text('• ', style: TextStyle(fontSize: 16, color: Colors.grey)),
           Expanded(
             child: Text(
               text,
@@ -361,26 +369,28 @@ class _MyDocumentsScreenState extends ConsumerState<MyDocumentsScreen> {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: showSelectedFile
-                    ? Image.file(
-                        selectedFile,
-                        fit: BoxFit.cover,
-                      )
-                    : Image.network(
-                        imageUrl!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return const Center(
-                            child: Icon(Icons.broken_image, size: 48, color: Colors.grey),
-                          );
-                        },
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) return child;
-                          return const Center(
-                            child: CircularProgressIndicator(),
-                          );
-                        },
-                      ),
+                child:
+                    showSelectedFile
+                        ? Image.file(selectedFile, fit: BoxFit.cover)
+                        : Image.network(
+                          imageUrl!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Center(
+                              child: Icon(
+                                Icons.broken_image,
+                                size: 48,
+                                color: Colors.grey,
+                              ),
+                            );
+                          },
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return const Center(
+                              child: CircularProgressIndicator(),
+                            );
+                          },
+                        ),
               ),
             ),
           const SizedBox(height: 16),
@@ -448,26 +458,28 @@ class _MyDocumentsScreenState extends ConsumerState<MyDocumentsScreen> {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: showSelectedFile
-                    ? Image.file(
-                        _proofNationalIdFile!,
-                        fit: BoxFit.cover,
-                      )
-                    : Image.network(
-                        imageUrl!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return const Center(
-                            child: Icon(Icons.broken_image, size: 48, color: Colors.grey),
-                          );
-                        },
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) return child;
-                          return const Center(
-                            child: CircularProgressIndicator(),
-                          );
-                        },
-                      ),
+                child:
+                    showSelectedFile
+                        ? Image.file(_proofNationalIdFile!, fit: BoxFit.cover)
+                        : Image.network(
+                          imageUrl!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Center(
+                              child: Icon(
+                                Icons.broken_image,
+                                size: 48,
+                                color: Colors.grey,
+                              ),
+                            );
+                          },
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return const Center(
+                              child: CircularProgressIndicator(),
+                            );
+                          },
+                        ),
               ),
             ),
           if (hasImage && isVerified) ...[
@@ -594,26 +606,28 @@ class _MyDocumentsScreenState extends ConsumerState<MyDocumentsScreen> {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: showSelectedFile
-                    ? Image.file(
-                        _servicesLicenseFile!,
-                        fit: BoxFit.cover,
-                      )
-                    : Image.network(
-                        imageUrl!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return const Center(
-                            child: Icon(Icons.broken_image, size: 48, color: Colors.grey),
-                          );
-                        },
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) return child;
-                          return const Center(
-                            child: CircularProgressIndicator(),
-                          );
-                        },
-                      ),
+                child:
+                    showSelectedFile
+                        ? Image.file(_servicesLicenseFile!, fit: BoxFit.cover)
+                        : Image.network(
+                          imageUrl!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Center(
+                              child: Icon(
+                                Icons.broken_image,
+                                size: 48,
+                                color: Colors.grey,
+                              ),
+                            );
+                          },
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return const Center(
+                              child: CircularProgressIndicator(),
+                            );
+                          },
+                        ),
               ),
             ),
           if (!hasImage && !showSelectedFile) ...[
@@ -630,10 +644,7 @@ class _MyDocumentsScreenState extends ConsumerState<MyDocumentsScreen> {
                   SizedBox(width: 8),
                   Text(
                     'JPG, PNG, PDF',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey,
-                    ),
+                    style: TextStyle(fontSize: 14, color: Colors.grey),
                   ),
                 ],
               ),
@@ -653,7 +664,11 @@ class _MyDocumentsScreenState extends ConsumerState<MyDocumentsScreen> {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              child: Text(hasImage || showSelectedFile ? ref.t('common.edit') : ref.t('auth.upload')),
+              child: Text(
+                hasImage || showSelectedFile
+                    ? ref.t('common.edit')
+                    : ref.t('auth.upload'),
+              ),
             ),
           ),
         ],
@@ -685,11 +700,7 @@ class _MyDocumentsScreenState extends ConsumerState<MyDocumentsScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(
-                  Icons.check_circle,
-                  color: _green,
-                  size: 64,
-                ),
+                const Icon(Icons.check_circle, color: _green, size: 64),
                 const SizedBox(height: 16),
                 const Text(
                   'Documents Successfully Submitted!',
@@ -740,5 +751,3 @@ class _MyDocumentsScreenState extends ConsumerState<MyDocumentsScreen> {
     });
   }
 }
-
-

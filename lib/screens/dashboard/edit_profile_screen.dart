@@ -34,10 +34,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   final TextEditingController _newPhoneController = TextEditingController();
   final List<TextEditingController> _otpControllers = List.generate(
     4,
-        (index) => TextEditingController(),
+    (index) => TextEditingController(),
   );
   final List<FocusNode> _otpFocusNodes = List.generate(
-      4, (index) => FocusNode());
+    4,
+    (index) => FocusNode(),
+  );
   Timer? _otpTimer;
   int _otpCountdown = 60;
   bool _canResendOTP = false;
@@ -66,7 +68,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       final result = await userService.getPartnerProfile();
 
       result.fold(
-            (failure) {
+        (failure) {
           if (mounted) {
             setState(() {
               _isLoadingProfile = false;
@@ -79,7 +81,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             );
           }
         },
-            (data) {
+        (data) {
           if (mounted) {
             setState(() {
               _profileData = data['data'];
@@ -108,7 +110,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       final nameParts = name.split(' ');
       _firstNameController.text = nameParts.isNotEmpty ? nameParts[0] : '';
       _lastNameController.text =
-      nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
+          nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
       _phoneNumberController.text = mobile;
     }
   }
@@ -211,8 +213,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       context: context,
       barrierDismissible: false,
       builder:
-          (context) =>
-          AlertDialog(
+          (context) => AlertDialog(
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -272,7 +273,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     );
   }
 
-
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -287,8 +287,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
       // Update profile with image, name, and mobile
       final fullName =
-      '${_firstNameController.text.trim()} ${_lastNameController.text.trim()}'
-          .trim();
+          '${_firstNameController.text.trim()} ${_lastNameController.text.trim()}'
+              .trim();
       final result = await userService.updatePartnerProfile(
         name: fullName,
         mobile: _phoneNumberController.text.trim(),
@@ -296,15 +296,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       );
 
       result.fold(
-            (failure) {
+        (failure) {
           if (mounted) {
-            _showErrorDialog(
-              'Profile Update Failed',
-              failure.message,
-            );
+            _showErrorDialog('Profile Update Failed', failure.message);
           }
         },
-            (data) {
+        (data) {
           if (mounted) {
             _showSuccessDialog();
           }
@@ -339,10 +336,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           ),
           title: const Text(
             'Change Phone Number',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -374,34 +368,42 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               child: Text(ref.t('common.cancel')),
             ),
             ElevatedButton(
-              onPressed: _isUpdatingMobile ? null : () async {
-                final newPhone = _newPhoneController.text.trim();
-                if (newPhone.isEmpty || newPhone.length < 10) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Please enter a valid phone number'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                  return;
-                }
-                Navigator.pop(context);
-                await _sendContactNumberOTP(newPhone);
-              },
+              onPressed:
+                  _isUpdatingMobile
+                      ? null
+                      : () async {
+                        final newPhone = _newPhoneController.text.trim();
+                        if (newPhone.isEmpty || newPhone.length < 10) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Please enter a valid phone number',
+                              ),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                          return;
+                        }
+                        Navigator.pop(context);
+                        await _sendContactNumberOTP(newPhone);
+                      },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
               ),
-              child: _isUpdatingMobile
-                  ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                ),
-              )
-                  : const Text('Continue'),
+              child:
+                  _isUpdatingMobile
+                      ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
+                        ),
+                      )
+                      : const Text('Continue'),
             ),
           ],
         );
@@ -421,17 +423,14 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       if (!mounted) return false;
 
       return result.fold(
-            (failure) {
+        (failure) {
           setState(() {
             _isUpdatingMobile = false;
           });
-          _showErrorDialog(
-            'Update Failed',
-            failure.message,
-          );
+          _showErrorDialog('Update Failed', failure.message);
           return false;
         },
-            (data) {
+        (data) {
           setState(() {
             _isUpdatingMobile = false;
             _newPhoneNumber = phoneNumber;
@@ -482,10 +481,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _isVerifyingOTP = false;
     _startOTPTimer();
 
-    final formattedPhone = _newPhoneNumber?.replaceAllMapped(
-      RegExp(r'(\d{2})(\d{2})(\d{3})(\d+)'),
+    final formattedPhone =
+        _newPhoneNumber?.replaceAllMapped(
+          RegExp(r'(\d{2})(\d{2})(\d{3})(\d+)'),
           (m) => '${m.group(1)} ${m.group(2)} ${m.group(3)} ${m.group(4)}',
-    ) ??
+        ) ??
         '';
     final fullPhoneNumber = '+91 $formattedPhone';
 
@@ -500,10 +500,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
           ),
           padding: EdgeInsets.only(
-            bottom: MediaQuery
-                .of(context)
-                .viewInsets
-                .bottom,
+            bottom: MediaQuery.of(context).viewInsets.bottom,
           ),
           child: SafeArea(
             child: Padding(
@@ -544,10 +541,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   // Instructions
                   Text(
                     'We\'ve sent a code via SMS to $fullPhoneNumber',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Colors.black87,
-                    ),
+                    style: const TextStyle(fontSize: 16, color: Colors.black87),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 40),
@@ -575,7 +569,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide(
-                                  color: Colors.grey.shade300),
+                                color: Colors.grey.shade300,
+                              ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -587,7 +582,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                             disabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide(
-                                  color: Colors.grey.shade300),
+                                color: Colors.grey.shade300,
+                              ),
                             ),
                           ),
                           onChanged: (value) {
@@ -598,9 +594,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                 _otpFocusNodes[index].unfocus();
                                 // Auto-verify when all 4 digits are entered
                                 Future.delayed(
-                                    const Duration(milliseconds: 300), () {
-                                  _verifyContactNumberOTP();
-                                });
+                                  const Duration(milliseconds: 300),
+                                  () {
+                                    _verifyContactNumberOTP();
+                                  },
+                                );
                               }
                             }
                           },
@@ -611,16 +609,14 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   if (_isVerifyingOTP) ...[
                     const SizedBox(height: 24),
                     const CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Color(
-                          0xFF217043)),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Color(0xFF217043),
+                      ),
                     ),
                     const SizedBox(height: 8),
                     const Text(
                       'Verifying...',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey,
-                      ),
+                      style: TextStyle(fontSize: 14, color: Colors.grey),
                     ),
                   ],
                   const SizedBox(height: 32),
@@ -632,11 +628,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       Text(
                         _canResendOTP
                             ? 'Didn\'t receive the code?'
-                            : 'Resend via SMS in ${(_otpCountdown ~/ 60)
-                            .toString()
-                            .padLeft(2, '0')}:${(_otpCountdown % 60)
-                            .toString()
-                            .padLeft(2, '0')}',
+                            : 'Resend via SMS in ${(_otpCountdown ~/ 60).toString().padLeft(2, '0')}:${(_otpCountdown % 60).toString().padLeft(2, '0')}',
                         style: TextStyle(
                           fontSize: 14,
                           color: _canResendOTP ? Colors.black87 : Colors.grey,
@@ -648,7 +640,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                             if (_newPhoneNumber != null) {
                               _startOTPTimer();
                               final otpSent = await _sendContactNumberOTP(
-                                  _newPhoneNumber!);
+                                _newPhoneNumber!,
+                              );
                               if (!otpSent && mounted) {
                                 // If OTP sending failed, close the bottom sheet
                                 Navigator.pop(context);
@@ -670,10 +663,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   // Terms
                   const Text(
                     'By verifying your phone number, you accept our Terms and Conditions',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey,
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
                     textAlign: TextAlign.center,
                   ),
                 ],
@@ -705,7 +695,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       if (!mounted) return;
 
       result.fold(
-            (failure) {
+        (failure) {
           setState(() {
             _isVerifyingOTP = false;
           });
@@ -714,12 +704,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             controller.clear();
           }
           _otpFocusNodes[0].requestFocus();
-          _showErrorDialog(
-            'Verification Failed',
-            failure.message,
-          );
+          _showErrorDialog('Verification Failed', failure.message);
         },
-            (data) {
+        (data) {
           setState(() {
             _isVerifyingOTP = false;
           });
@@ -775,10 +762,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               const SizedBox(height: 12),
               const Text(
                 'Your contact number has been updated successfully.',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey,
-                ),
+                style: TextStyle(fontSize: 14, color: Colors.grey),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
@@ -836,10 +820,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               const SizedBox(height: 12),
               Text(
                 message,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey,
-                ),
+                style: const TextStyle(fontSize: 14, color: Colors.grey),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
@@ -877,398 +858,433 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       },
       child: Scaffold(
         backgroundColor: const Color(0xFFF5F7F8),
-        body: _isLoadingProfile
-            ? const Center(
-          child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-          ),
-        )
-            : Column(
-          children: [
-            // Header
-            Container(
-              padding: const EdgeInsets.fromLTRB(16, 50, 16, 16),
-              decoration: BoxDecoration(
-                color: AppColors.secondary.withOpacity(0.4),
-              ),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.black87),
-                    onPressed: () => Navigator.pop(context, true),
-                  ),
-                  const Expanded(
-                    child: Text(
-                      'Edit Profile',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
+        body:
+            _isLoadingProfile
+                ? const Center(
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      AppColors.primary,
                     ),
                   ),
-                  // Notification icon removed - using CustomAppBar instead
-                  const SizedBox.shrink(),
-                ],
-              ),
-            ),
-
-            // Content
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    children: [
-                      Align(
-                        alignment: Alignment.topRight,
-                        child: ElevatedButton(
-                          onPressed: _isLoading ? null : _saveProfile,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 10,
-                              horizontal: 10,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                          ),
-                          child: _isLoading
-                              ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.white,
-                              ),
-                            ),
-                          )
-                              : Text(
-                            ref.t('common.save'),
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
+                )
+                : Column(
+                  children: [
+                    // Header
+                    Container(
+                      padding: const EdgeInsets.fromLTRB(16, 50, 16, 16),
+                      decoration: BoxDecoration(
+                        color: AppColors.secondary.withOpacity(0.4),
                       ),
-
-                      Stack(
+                      child: Row(
                         children: [
-                          CircleAvatar(
-                            radius: 50,
-                            backgroundColor: Colors.grey.shade200,
-                            backgroundImage: _profileImage != null
-                                ? FileImage(_profileImage!)
-                                : (_imageUrl != null
-                                ? NetworkImage(_imageUrl!)
-                                : null)
-                            as ImageProvider?,
-                            child: _profileImage == null && _imageUrl == null
-                                ? const Icon(
-                              Icons.person,
-                              size: 50,
-                              color: Colors.grey,
-                            )
-                                : null,
+                          IconButton(
+                            icon: const Icon(
+                              Icons.arrow_back,
+                              color: Colors.black87,
+                            ),
+                            onPressed: () => Navigator.pop(context, true),
                           ),
-                          Positioned(
-                            bottom: 0,
-                            right: 0,
-                            child: GestureDetector(
-                              onTap: _showImageOptions,
-                              child: Container(
-                                width: 36,
-                                height: 36,
-                                decoration: BoxDecoration(
-                                  color: AppColors.primary,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: Colors.white,
-                                    width: 2,
-                                  ),
-                                ),
-                                child: const Icon(
-                                  Icons.camera_alt,
-                                  color: Colors.white,
-                                  size: 18,
-                                ),
+                          const Expanded(
+                            child: Text(
+                              'Edit Profile',
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
                               ),
                             ),
                           ),
+                          // Notification icon removed - using CustomAppBar instead
+                          const SizedBox.shrink(),
                         ],
                       ),
+                    ),
 
-                      const SizedBox(height: 32),
-
-                      // Personal Information Card
-                      Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 10,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // First Name
-                            Text(
-                              ref.t('auth.first_name'),
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.black87,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            TextFormField(
-                              controller: _firstNameController,
-                              decoration: InputDecoration(
-                                hintText: ref.t('auth.enter_first_name'),
-                                filled: true,
-                                fillColor: Colors.grey.shade50,
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(
-                                    color: Colors.grey.shade200,
-                                  ),
-                                ),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(
-                                    color: Colors.grey.shade200,
-                                  ),
-                                ),
-                              ),
-                              validator: (value) {
-                                if (value == null || value
-                                    .trim()
-                                    .isEmpty) {
-                                  return ref.t('auth.please_enter_first_name');
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 20),
-
-                            // Last Name
-                            Text(
-                              ref.t('auth.last_name'),
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.black87,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            TextFormField(
-                              controller: _lastNameController,
-                              decoration: InputDecoration(
-                                hintText: ref.t('auth.enter_last_name'),
-                                filled: true,
-                                fillColor: Colors.grey.shade50,
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(
-                                    color: Colors.grey.shade200,
-                                  ),
-                                ),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(
-                                    color: Colors.grey.shade200,
-                                  ),
-                                ),
-                              ),
-                              validator: (value) {
-                                if (value == null || value
-                                    .trim()
-                                    .isEmpty) {
-                                  return ref.t('auth.please_enter_last_name');
-                                }
-                                return null;
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Contact Information Card
-                      Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 10,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text(
-                                  'Contact Information',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black87,
-                                  ),
-                                ),
-                                ElevatedButton(
-                                  onPressed: () {
-                                    _showPhoneNumberDialog();
-                                  },
+                    // Content
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(16),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            children: [
+                              Align(
+                                alignment: Alignment.topRight,
+                                child: ElevatedButton(
+                                  onPressed: _isLoading ? null : _saveProfile,
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: AppColors.primary,
                                     foregroundColor: Colors.white,
                                     padding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 8,
+                                      vertical: 10,
+                                      horizontal: 10,
                                     ),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(30),
                                     ),
                                   ),
-                                  child: const Text(
-                                    'Change',
-                                    style: TextStyle(fontSize: 17),
-                                  ),
+                                  child:
+                                      _isLoading
+                                          ? const SizedBox(
+                                            width: 20,
+                                            height: 20,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              valueColor:
+                                                  AlwaysStoppedAnimation<Color>(
+                                                    Colors.white,
+                                                  ),
+                                            ),
+                                          )
+                                          : Text(
+                                            ref.t('common.save'),
+                                            style: const TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
                                 ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            const Text(
-                              'Phone Number',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.black87,
                               ),
-                            ),
-                            const SizedBox(height: 8),
-                            TextFormField(
-                              controller: _phoneNumberController,
-                              decoration: InputDecoration(
-                                hintText: 'Phone Number',
-                                prefixIcon: Container(
-                                  padding: const EdgeInsets.all(12),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Text(
-                                        '🇮🇳',
-                                        style: TextStyle(fontSize: 20),
-                                      ),
-                                      const SizedBox(width: 4),
-                                      const Text(
-                                        '+91',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
+
+                              Stack(
+                                children: [
+                                  CircleAvatar(
+                                    radius: 50,
+                                    backgroundColor: Colors.grey.shade200,
+                                    backgroundImage:
+                                        _profileImage != null
+                                            ? FileImage(_profileImage!)
+                                            : (_imageUrl != null
+                                                    ? NetworkImage(_imageUrl!)
+                                                    : null)
+                                                as ImageProvider?,
+                                    child:
+                                        _profileImage == null &&
+                                                _imageUrl == null
+                                            ? const Icon(
+                                              Icons.person,
+                                              size: 50,
+                                              color: Colors.grey,
+                                            )
+                                            : null,
+                                  ),
+                                  Positioned(
+                                    bottom: 0,
+                                    right: 0,
+                                    child: GestureDetector(
+                                      onTap: _showImageOptions,
+                                      child: Container(
+                                        width: 36,
+                                        height: 36,
+                                        decoration: BoxDecoration(
+                                          color: AppColors.primary,
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: Colors.white,
+                                            width: 2,
+                                          ),
+                                        ),
+                                        child: const Icon(
+                                          Icons.camera_alt,
+                                          color: Colors.white,
+                                          size: 18,
                                         ),
                                       ),
-                                      const SizedBox(width: 4),
-                                      Icon(
-                                        Icons.keyboard_arrow_down,
-                                        color: Colors.grey.shade600,
-                                        size: 20,
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              const SizedBox(height: 32),
+
+                              // Personal Information Card
+                              Container(
+                                padding: const EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.05),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // First Name
+                                    Text(
+                                      ref.t('auth.first_name'),
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.black87,
                                       ),
-                                    ],
-                                  ),
-                                ),
-                                suffixIcon: _phoneNumberController.text
-                                    .isNotEmpty
-                                    ? IconButton(
-                                  icon: const Icon(Icons.close, size: 20),
-                                  onPressed: () {
-                                    setState(() {
-                                      _phoneNumberController.clear();
-                                    });
-                                  },
-                                )
-                                    : null,
-                                filled: true,
-                                fillColor: Colors.grey.shade50,
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(
-                                    color: Colors.grey.shade200,
-                                  ),
-                                ),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(
-                                    color: Colors.grey.shade200,
-                                  ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    TextFormField(
+                                      controller: _firstNameController,
+                                      decoration: InputDecoration(
+                                        hintText: ref.t(
+                                          'auth.enter_first_name',
+                                        ),
+                                        filled: true,
+                                        fillColor: Colors.grey.shade50,
+                                        enabledBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                          borderSide: BorderSide(
+                                            color: Colors.grey.shade200,
+                                          ),
+                                        ),
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                          borderSide: BorderSide(
+                                            color: Colors.grey.shade200,
+                                          ),
+                                        ),
+                                      ),
+                                      validator: (value) {
+                                        if (value == null ||
+                                            value.trim().isEmpty) {
+                                          return ref.t(
+                                            'auth.please_enter_first_name',
+                                          );
+                                        }
+                                        return null;
+                                      },
+                                    ),
+                                    const SizedBox(height: 20),
+
+                                    // Last Name
+                                    Text(
+                                      ref.t('auth.last_name'),
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    TextFormField(
+                                      controller: _lastNameController,
+                                      decoration: InputDecoration(
+                                        hintText: ref.t('auth.enter_last_name'),
+                                        filled: true,
+                                        fillColor: Colors.grey.shade50,
+                                        enabledBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                          borderSide: BorderSide(
+                                            color: Colors.grey.shade200,
+                                          ),
+                                        ),
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                          borderSide: BorderSide(
+                                            color: Colors.grey.shade200,
+                                          ),
+                                        ),
+                                      ),
+                                      validator: (value) {
+                                        if (value == null ||
+                                            value.trim().isEmpty) {
+                                          return ref.t(
+                                            'auth.please_enter_last_name',
+                                          );
+                                        }
+                                        return null;
+                                      },
+                                    ),
+                                  ],
                                 ),
                               ),
-                              keyboardType: TextInputType.phone,
-                              enabled: false, // Disabled as per UI
-                            ),
-                            // if (_profileData?['email'] != null) ...[
-                            //   const SizedBox(height: 20),
-                            //   const Text(
-                            //     'Email',
-                            //     style: TextStyle(
-                            //       fontSize: 16,
-                            //       fontWeight: FontWeight.w500,
-                            //       color: Colors.black87,
-                            //     ),
-                            //   ),
-                            //   const SizedBox(height: 8),
-                            //   TextFormField(
-                            //     initialValue: _profileData!['email'] ?? '',
-                            //     decoration: InputDecoration(
-                            //       hintText: 'Email Address',
-                            //       prefixIcon: const Icon(Icons.email_outlined),
-                            //       filled: true,
-                            //       fillColor: Colors.grey.shade50,
-                            //       enabledBorder: OutlineInputBorder(
-                            //         borderRadius: BorderRadius.circular(12),
-                            //         borderSide: BorderSide(
-                            //           color: Colors.grey.shade200,
-                            //         ),
-                            //       ),
-                            //       border: OutlineInputBorder(
-                            //         borderRadius: BorderRadius.circular(12),
-                            //         borderSide: BorderSide(
-                            //           color: Colors.grey.shade200,
-                            //         ),
-                            //       ),
-                            //     ),
-                            //     enabled: false,
-                            //   ),
-                            // ],
-                          ],
+                              const SizedBox(height: 16),
+
+                              // Contact Information Card
+                              Container(
+                                padding: const EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.05),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        const Text(
+                                          'Contact Information',
+                                          style: TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.black87,
+                                          ),
+                                        ),
+                                        ElevatedButton(
+                                          onPressed: () {
+                                            _showPhoneNumberDialog();
+                                          },
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: AppColors.primary,
+                                            foregroundColor: Colors.white,
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 16,
+                                              vertical: 8,
+                                            ),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(30),
+                                            ),
+                                          ),
+                                          child: const Text(
+                                            'Change',
+                                            style: TextStyle(fontSize: 17),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 12),
+                                    const Text(
+                                      'Phone Number',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    TextFormField(
+                                      controller: _phoneNumberController,
+                                      decoration: InputDecoration(
+                                        hintText: 'Phone Number',
+                                        prefixIcon: Container(
+                                          padding: const EdgeInsets.all(12),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              const Text(
+                                                '🇮🇳',
+                                                style: TextStyle(fontSize: 20),
+                                              ),
+                                              const SizedBox(width: 4),
+                                              const Text(
+                                                '+91',
+                                                style: TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 4),
+                                              Icon(
+                                                Icons.keyboard_arrow_down,
+                                                color: Colors.grey.shade600,
+                                                size: 20,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        suffixIcon:
+                                            _phoneNumberController
+                                                    .text
+                                                    .isNotEmpty
+                                                ? IconButton(
+                                                  icon: const Icon(
+                                                    Icons.close,
+                                                    size: 20,
+                                                  ),
+                                                  onPressed: () {
+                                                    setState(() {
+                                                      _phoneNumberController
+                                                          .clear();
+                                                    });
+                                                  },
+                                                )
+                                                : null,
+                                        filled: true,
+                                        fillColor: Colors.grey.shade50,
+                                        enabledBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                          borderSide: BorderSide(
+                                            color: Colors.grey.shade200,
+                                          ),
+                                        ),
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                          borderSide: BorderSide(
+                                            color: Colors.grey.shade200,
+                                          ),
+                                        ),
+                                      ),
+                                      keyboardType: TextInputType.phone,
+                                      enabled: false, // Disabled as per UI
+                                    ),
+                                    // if (_profileData?['email'] != null) ...[
+                                    //   const SizedBox(height: 20),
+                                    //   const Text(
+                                    //     'Email',
+                                    //     style: TextStyle(
+                                    //       fontSize: 16,
+                                    //       fontWeight: FontWeight.w500,
+                                    //       color: Colors.black87,
+                                    //     ),
+                                    //   ),
+                                    //   const SizedBox(height: 8),
+                                    //   TextFormField(
+                                    //     initialValue: _profileData!['email'] ?? '',
+                                    //     decoration: InputDecoration(
+                                    //       hintText: 'Email Address',
+                                    //       prefixIcon: const Icon(Icons.email_outlined),
+                                    //       filled: true,
+                                    //       fillColor: Colors.grey.shade50,
+                                    //       enabledBorder: OutlineInputBorder(
+                                    //         borderRadius: BorderRadius.circular(12),
+                                    //         borderSide: BorderSide(
+                                    //           color: Colors.grey.shade200,
+                                    //         ),
+                                    //       ),
+                                    //       border: OutlineInputBorder(
+                                    //         borderRadius: BorderRadius.circular(12),
+                                    //         borderSide: BorderSide(
+                                    //           color: Colors.grey.shade200,
+                                    //         ),
+                                    //       ),
+                                    //     ),
+                                    //     enabled: false,
+                                    //   ),
+                                    // ],
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                            ],
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 16),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

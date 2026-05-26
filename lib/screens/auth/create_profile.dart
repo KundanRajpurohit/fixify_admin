@@ -12,13 +12,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:page_transition/page_transition.dart';
+
 import '../../providers/location_provider.dart';
 
 class CreateAccountScreen extends ConsumerStatefulWidget {
   const CreateAccountScreen({super.key});
 
   @override
-  ConsumerState<CreateAccountScreen> createState() => _CreateAccountScreenState();
+  ConsumerState<CreateAccountScreen> createState() =>
+      _CreateAccountScreenState();
 }
 
 class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
@@ -79,7 +81,9 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
           });
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('${ref.t('auth.failed_to_load_services')}: ${failure.message}'),
+              content: Text(
+                '${ref.t('auth.failed_to_load_services')}: ${failure.message}',
+              ),
               backgroundColor: Colors.red,
             ),
           );
@@ -98,7 +102,9 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${ref.t('auth.error_loading_services')}: ${e.toString()}'),
+          content: Text(
+            '${ref.t('auth.error_loading_services')}: ${e.toString()}',
+          ),
           backgroundColor: Colors.red,
         ),
       );
@@ -114,7 +120,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
     final email = _emailController.text.trim();
     if (email.isNotEmpty && !email.contains('@')) {
       ScaffoldMessenger.of(context).showSnackBar(
-         SnackBar(
+        SnackBar(
           content: Text(ref.t('auth.please_enter_valid_email')),
           backgroundColor: Colors.red,
         ),
@@ -126,7 +132,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
     final phoneNumber = _phoneNumberController.text.trim();
     if (phoneNumber.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-         SnackBar(
+        SnackBar(
           content: Text(ref.t('auth.please_enter_phone')),
           backgroundColor: Colors.red,
         ),
@@ -143,14 +149,17 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
       final fullName =
           '${_firstNameController.text.trim()} ${_lastNameController.text.trim()}'
               .trim();
-      
+
       // Use phone number as entered (API expects just the number without dial code)
-      final mobileNumber = phoneNumber.replaceAll(RegExp(r'[^\d]'), ''); // Remove any non-digits
+      final mobileNumber = phoneNumber.replaceAll(
+        RegExp(r'[^\d]'),
+        '',
+      ); // Remove any non-digits
 
       // Validate service selection
       if (_selectedService == null || _selectedService!.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-           SnackBar(
+          SnackBar(
             content: Text(ref.t('auth.please_select_service')),
             backgroundColor: Colors.red,
           ),
@@ -171,7 +180,9 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
       print('   - mobile: $mobileNumber');
       print('   - email: $email');
       print('   - services: $_selectedService');
-      print('   - deviceToken: ${deviceToken != null ? "${deviceToken.substring(0, 20)}..." : "null"}');
+      print(
+        '   - deviceToken: ${deviceToken != null ? "${deviceToken.substring(0, 20)}..." : "null"}',
+      );
       print('   - platform: $platform');
 
       final result = await userService.partnerRegister(
@@ -220,9 +231,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
             PageTransition(
               type: PageTransitionType.fade,
               duration: const Duration(milliseconds: 500),
-              child: const OTPVerificationScreen(
-                isCreateAccount: true,
-              ),
+              child: const OTPVerificationScreen(isCreateAccount: true),
             ),
           );
         },
@@ -298,7 +307,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                     ),
                     const SizedBox(height: 20),
                     _buildServicesCard(),
-                    SizedBox(height:15.h),
+                    SizedBox(height: 15.h),
                     SizedBox(
                       width: double.infinity,
                       height: 56,
@@ -312,22 +321,25 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                           ),
                           elevation: 3,
                         ),
-                        child: _isLoading
-                            ? const SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        child:
+                            _isLoading
+                                ? const SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white,
+                                    ),
+                                  ),
+                                )
+                                : Text(
+                                  ref.t('common.continue'),
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
-                              )
-                            : Text(
-                                ref.t('common.continue'),
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
                       ),
                     ).animate().scale(duration: 200.ms, delay: 200.ms),
                   ],
@@ -703,10 +715,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
               value: _selectedService,
               decoration: InputDecoration(
                 hintText: ref.t('auth.select_service'),
-                hintStyle: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey.shade600,
-                ),
+                hintStyle: TextStyle(fontSize: 16, color: Colors.grey.shade600),
                 filled: true,
                 fillColor: Colors.grey.shade50,
                 // contentPadding: const EdgeInsets.symmetric(
@@ -734,26 +743,28 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                   size: 22,
                 ),
               ),
-              items: _services.map((service) {
-                return DropdownMenuItem<String>(
-                  value: service,
-                  child: Text(
-                    service,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Colors.black87,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                );
-              }).toList(),
-              onChanged: _isLoadingServices
-                  ? null
-                  : (value) {
-                      setState(() {
-                        _selectedService = value;
-                      });
-                    },
+              items:
+                  _services.map((service) {
+                    return DropdownMenuItem<String>(
+                      value: service,
+                      child: Text(
+                        service,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.black87,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    );
+                  }).toList(),
+              onChanged:
+                  _isLoadingServices
+                      ? null
+                      : (value) {
+                        setState(() {
+                          _selectedService = value;
+                        });
+                      },
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return ref.t('auth.please_select_service');
@@ -766,10 +777,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                 size: 24,
               ),
               dropdownColor: Colors.white,
-              style: const TextStyle(
-                fontSize: 16,
-                color: Colors.black87,
-              ),
+              style: const TextStyle(fontSize: 16, color: Colors.black87),
               isExpanded: true,
               menuMaxHeight: 300,
             ),
@@ -880,7 +888,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-         SnackBar(
+        SnackBar(
           content: Text(ref.t('auth.image_selection_failed')),
           backgroundColor: Colors.red,
         ),
@@ -894,7 +902,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
-       SnackBar(
+      SnackBar(
         content: Text(ref.t('auth.profile_photo_removed')),
         backgroundColor: Colors.green,
       ),

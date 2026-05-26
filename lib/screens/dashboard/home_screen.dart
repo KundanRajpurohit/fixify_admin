@@ -5,10 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:page_transition/page_transition.dart';
+
 import 'dashboard_screen.dart';
 
 class HomeDashboardScreen extends ConsumerStatefulWidget {
   final ValueNotifier<int> tabNotifier;
+
   const HomeDashboardScreen({super.key, required this.tabNotifier});
 
   @override
@@ -31,6 +33,7 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen>
   DateTime? _startDate;
   DateTime? _endDate;
   Map<String, dynamic>? _customDateData;
+
   Future<void> _refreshDashboard() async {
     await _loadDashboardData();
     await _loadOnlineStatus();
@@ -127,7 +130,11 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen>
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(value ? ref.t('dashboard.go_online_success') : ref.t('dashboard.go_offline_success')),
+            content: Text(
+              value
+                  ? ref.t('dashboard.go_online_success')
+                  : ref.t('dashboard.go_offline_success'),
+            ),
             backgroundColor: Colors.green,
           ),
         );
@@ -217,7 +224,10 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF6F7F9),
-      appBar: CustomAppBar(title: ref.t('dashboard.dashboard'), showbackButton: false),
+      appBar: CustomAppBar(
+        title: ref.t('dashboard.dashboard'),
+        showbackButton: false,
+      ),
       body: Column(
         children: [
           Expanded(
@@ -708,6 +718,7 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen>
 /// Very simple curved line to mimic the mini charts.
 class _SimpleCurvePainter extends CustomPainter {
   final Color color;
+
   _SimpleCurvePainter(this.color);
 
   @override

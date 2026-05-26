@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:fixify_admin/components/bottom_popup.dart';
 import 'package:fixify_admin/components/custom_app_bar.dart';
 import 'package:fixify_admin/config/app_colors.dart';
 import 'package:fixify_admin/helpers/translate_helper.dart';
+import 'package:fixify_admin/providers/auth_provider.dart';
 import 'package:fixify_admin/providers/jobtimer.dart';
 import 'package:fixify_admin/providers/location_provider.dart';
 import 'package:fixify_admin/screens/dashboard/cancel_job_screen.dart';
@@ -11,7 +14,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'dart:async';
 
 class JobDetailsScreen extends ConsumerStatefulWidget {
   final String token;
@@ -35,6 +37,7 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
   Map<String, dynamic>? jobDetails;
   bool _loading = true;
   AdditionalService? service;
+
   Future<void> _openAddServiceSheet() async {
     final result = await showModalBottomSheet<AdditionalService>(
       context: context,
@@ -112,19 +115,131 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
     (_) => TextEditingController(),
   );
   final List<FocusNode> _otpFocusNodes = List.generate(4, (_) => FocusNode());
-  Future<void> _makePhoneCall(String phoneNumber) async {
-    final Uri phoneUri = Uri(scheme: 'tel', path: phoneNumber);
-    if (await canLaunchUrl(phoneUri)) {
-      await launchUrl(phoneUri);
-    } else {
-      if (mounted) {
+
+  String _valueAsString(dynamic value, {String fallback = ''}) {
+    final text = value?.toString().trim() ?? '';
+    return text.isEmpty ? fallback : text;
+  }
+
+  String _formattedAmount(dynamic amount) {
+    final value =
+        amount is num ? amount : num.tryParse(amount?.toString() ?? '');
+    if (value == null) return '₹0';
+    return value % 1 == 0
+        ? '₹${value.toInt()}'
+        : '₹${value.toStringAsFixed(2)}';
+  }
+
+  bool get _isPaymentUnpaid {
+    return _valueAsString(jobDetails?['payment_status']).toLowerCase() ==
+        'unpaid';
+  }
+
+  bool get _canUseCustomerActions {
+    final status = _valueAsString(jobDetails?['work_status']).toLowerCase();
+    return status != 'past' &&
+        status != 'completed' &&
+        status != 'cancelled' &&
+        status != 'canceled';
+  }
+
+  Future<void> _initiateMaskedCall() async {
+    if (!_canUseCustomerActions) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Calls are not available for this job.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    final authState = ref.read(authProvider);
+    final callerNumber = (authState.phoneNumber ?? '').trim();
+    final receiverNumber = _valueAsString(jobDetails?['UserMobile']);
+    final maskedContact = _valueAsString(jobDetails?['showcontact']);
+
+    if (callerNumber.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Login phone number is not available.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    if (receiverNumber.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Customer contact is not available yet.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    if (maskedContact.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Masked contact is not available yet.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    final result = await ref
+        .read(userServiceProvider)
+        .initiateMaskedCall(
+          callerNumber: callerNumber,
+          receiverNumber: receiverNumber,
+        );
+
+    if (!mounted) return;
+
+    result.fold(
+      (failure) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(ref.t('dashboard.unable_to_make_phone_call')),
+            content: Text('Failed to connect call: ${failure.message}'),
             backgroundColor: Colors.red,
           ),
         );
-      }
+      },
+      (_) async {
+        final phoneUri = Uri(scheme: 'tel', path: maskedContact);
+        final launched = await launchUrl(
+          phoneUri,
+          mode: LaunchMode.externalApplication,
+        );
+
+        if (!launched && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Unable to open phone dialer.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      },
+    );
+  }
+
+  Future<void> _openCustomerMap() async {
+    if (!_canUseCustomerActions) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Map is not available for this job.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    final address = _valueAsString(jobDetails?['UserAddress']);
+    if (address.isNotEmpty) {
+      await openMap(address);
     }
   }
 
@@ -135,14 +250,10 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
       'https://www.google.com/maps/search/?api=1&query=$encodedAddress',
     );
 
-    if (!await launchUrl(
-      googleMapsUrl,
-      mode: LaunchMode.externalApplication,
-    )) {
+    if (!await launchUrl(googleMapsUrl, mode: LaunchMode.externalApplication)) {
       throw 'Could not open the map.';
     }
   }
-
 
   Future<void> _handleAcceptJob() async {
     // Show loading dialog
@@ -431,128 +542,130 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
       builder: (BuildContext context) {
         return StatefulBuilder(
           builder: (context, setSheetState) {
-            return Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-              ),
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom,
-                left: 24,
-                right: 24,
-                top: 24,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Enter Customer OTP',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Ask the customer to show the OTP and enter it below to start the job.',
-                    style: TextStyle(
-                      fontSize: 17,
-                      color: Color(0xff4B5563),
-                      height: 1.5,
-                    ),
-                    textAlign: TextAlign.left,
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: List.generate(4, (index) {
-                      return SizedBox(
-                        width: 60,
-                        child: TextField(
-                          controller: _otpControllers[index],
-                          focusNode: _otpFocusNodes[index],
-                          textAlign: TextAlign.center,
-                          keyboardType: TextInputType.number,
-                          maxLength: 1,
-                          style: const TextStyle(
+            return SafeArea(
+              child: Container(
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                  left: 24,
+                  right: 24,
+                  top: 24,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Enter Customer OTP',
+                          style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
+                            color: Colors.black87,
                           ),
-                          decoration: InputDecoration(
-                            counterText: '',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Ask the customer to show the OTP and enter it below to start the job.',
+                      style: TextStyle(
+                        fontSize: 17,
+                        color: Color(0xff4B5563),
+                        height: 1.5,
+                      ),
+                      textAlign: TextAlign.left,
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: List.generate(4, (index) {
+                        return SizedBox(
+                          width: 60,
+                          child: TextField(
+                            controller: _otpControllers[index],
+                            focusNode: _otpFocusNodes[index],
+                            textAlign: TextAlign.center,
+                            keyboardType: TextInputType.number,
+                            maxLength: 1,
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
                             ),
+                            decoration: InputDecoration(
+                              counterText: '',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            onChanged: (value) {
+                              if (value.isNotEmpty && index < 3) {
+                                _otpFocusNodes[index + 1].requestFocus();
+                              }
+                            },
                           ),
-                          onChanged: (value) {
-                            if (value.isNotEmpty && index < 3) {
-                              _otpFocusNodes[index + 1].requestFocus();
-                            }
-                          },
+                        );
+                      }),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Resend via SMS in 00:57',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey.shade600,
+                          ),
                         ),
-                      );
-                    }),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Resend via SMS in 00:57',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.grey.shade600,
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          final otp = _otpControllers.map((c) => c.text).join();
+                          if (otp.length == 4) {
+                            Navigator.pop(context); // Close bottom sheet
+                            await _handleVerifyOtp(otp, mobile);
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Please enter complete OTP'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        final otp = _otpControllers.map((c) => c.text).join();
-                        if (otp.length == 4) {
-                          Navigator.pop(context); // Close bottom sheet
-                          await _handleVerifyOtp(otp, mobile);
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Please enter complete OTP'),
-                              backgroundColor: Colors.red,
-                            ),
-                          );
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                      ),
-                      child: const Text(
-                        'Verify & Start Job',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
+                        child: const Text(
+                          'Verify & Start Job',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 24),
-                ],
+                    const SizedBox(height: 24),
+                  ],
+                ),
               ),
             );
           },
@@ -1091,6 +1204,58 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
             label: ref.t('dashboard.payment'),
             value: (jobDetails?['price'] ?? 0).toString(),
           ),
+          if (_isPaymentUnpaid) ...[
+            const Divider(height: 24),
+            _buildPayLaterCard(),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPayLaterCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF6E5),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFF4D28C)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(
+              Icons.payments_outlined,
+              color: Color(0xFF704B21),
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              ref.t('dashboard.pay_later'),
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF704B21),
+              ),
+            ),
+          ),
+          Text(
+            _formattedAmount(jobDetails?['price']),
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF704B21),
+            ),
+          ),
         ],
       ),
     );
@@ -1131,22 +1296,23 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
           _buildDetailRowWithAction(
             icon: Icons.phone,
             label: ref.t('dashboard.contact_number'),
-            value: jobDetails?['UserMobile'] ?? "Not Available",
+            value: _valueAsString(
+              jobDetails?['showcontact'],
+              fallback: 'Not Available',
+            ),
             actionText: ref.t('dashboard.call_now'),
-            onAction: () => _makePhoneCall(jobDetails?['UserMobile']),
+            onAction: _canUseCustomerActions ? _initiateMaskedCall : null,
           ),
           const Divider(height: 24),
           _buildDetailRowWithAction(
             icon: Icons.location_on,
             label: ref.t('dashboard.address'),
-            value: jobDetails?['UserAddress'],
+            value: _valueAsString(
+              jobDetails?['UserAddress'],
+              fallback: 'Not Available',
+            ),
             actionText: ref.t('dashboard.view_map'),
-            onAction: () {
-              final address = jobDetails?['UserAddress'];
-              if (address != null && address.isNotEmpty) {
-                openMap(address);
-              }
-            },
+            onAction: _canUseCustomerActions ? _openCustomerMap : null,
           ),
         ],
       ),
@@ -1251,7 +1417,7 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
     required String label,
     required String value,
     required String actionText,
-    required VoidCallback onAction,
+    required VoidCallback? onAction,
   }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1299,8 +1465,11 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
               onPressed: onAction,
               child: Text(
                 actionText,
-                style: const TextStyle(
-                  color: AppColors.primary,
+                style: TextStyle(
+                  color:
+                      onAction == null
+                          ? Colors.grey.shade500
+                          : AppColors.primary,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -1421,4 +1590,3 @@ class ServiceListCard extends StatelessWidget {
     );
   }
 }
-

@@ -1,9 +1,9 @@
+import 'package:fixify_admin/components/custom_app_bar.dart';
 import 'package:fixify_admin/helpers/translate_helper.dart';
+import 'package:fixify_admin/models/vendor_model.dart';
 import 'package:fixify_admin/providers/location_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:fixify_admin/components/custom_app_bar.dart';
-import 'package:fixify_admin/models/vendor_model.dart';
 
 class VendorListScreen extends ConsumerStatefulWidget {
   const VendorListScreen({super.key});
@@ -53,13 +53,16 @@ class _VendorListScreenState extends ConsumerState<VendorListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7F8),
-      appBar: CustomAppBar(title: ref.t('profile.our_vendors'), showbackButton: true),
+      appBar: CustomAppBar(
+        title: ref.t('profile.our_vendors'),
+        showbackButton: true,
+      ),
 
       body:
           _isLoading
-              ?  Center(child: CircularProgressIndicator())
+              ? Center(child: CircularProgressIndicator())
               : _vendors.isEmpty
-              ?  Center(
+              ? Center(
                 child: Text(
                   ref.t('dashboard.no_vendors_found'),
                   style: TextStyle(fontSize: 16, color: Colors.grey),

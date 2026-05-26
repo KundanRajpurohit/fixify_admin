@@ -1,6 +1,7 @@
 import 'dart:convert';
-import 'package:flutter/services.dart';
+
 import 'package:fixify_admin/providers/language_provider.dart';
+import 'package:flutter/services.dart';
 
 class TranslationService {
   static Map<String, dynamic> _localizedStrings = {};
@@ -28,7 +29,7 @@ class TranslationService {
       }
     }
   }
-  
+
   static Future<void> reloadTranslations(AppLanguage language) async {
     await loadTranslations(language);
   }
@@ -63,4 +64,3 @@ class TranslationService {
 
   static AppLanguage get currentLanguage => _currentLanguage;
 }
-

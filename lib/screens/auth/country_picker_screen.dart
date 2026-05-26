@@ -1,6 +1,7 @@
 import 'package:fixify_admin/helpers/translate_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../providers/auth_provider.dart';
 
 class CountryPickerScreen extends ConsumerStatefulWidget {
@@ -27,10 +28,13 @@ class _CountryPickerScreenState extends ConsumerState<CountryPickerScreen> {
     final selectedCountry = ref.watch(selectedCountryProvider);
 
     // Filter countries based on search query
-    final filteredCountries = countries.where((country) {
-      return country.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          country.dialCode.contains(_searchQuery);
-    }).toList();
+    final filteredCountries =
+        countries.where((country) {
+          return country.name.toLowerCase().contains(
+                _searchQuery.toLowerCase(),
+              ) ||
+              country.dialCode.contains(_searchQuery);
+        }).toList();
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -82,8 +86,10 @@ class _CountryPickerScreenState extends ConsumerState<CountryPickerScreen> {
                     hintStyle: const TextStyle(color: Colors.grey),
                     prefixIcon: const Icon(Icons.search, color: Colors.grey),
                     border: InputBorder.none,
-                    contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                   ),
                   onChanged: (value) {
                     setState(() {
@@ -105,15 +111,21 @@ class _CountryPickerScreenState extends ConsumerState<CountryPickerScreen> {
                   final isSelected = country.code == selectedCountry.code;
 
                   return Container(
-                    margin:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color:
                           isSelected ? const Color(0xFFE8F5E8) : Colors.white,
                       borderRadius: BorderRadius.circular(12),
-                      border: isSelected
-                          ? Border.all(color: const Color(0xFF2E7D32), width: 1)
-                          : null,
+                      border:
+                          isSelected
+                              ? Border.all(
+                                color: const Color(0xFF2E7D32),
+                                width: 1,
+                              )
+                              : null,
                     ),
                     child: ListTile(
                       leading: Text(
@@ -125,31 +137,34 @@ class _CountryPickerScreenState extends ConsumerState<CountryPickerScreen> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
-                          color: isSelected
-                              ? const Color(0xFF2E7D32)
-                              : Colors.black87,
+                          color:
+                              isSelected
+                                  ? const Color(0xFF2E7D32)
+                                  : Colors.black87,
                         ),
                       ),
                       subtitle: Text(
                         country.dialCode,
                         style: TextStyle(
                           fontSize: 14,
-                          color: isSelected
-                              ? const Color(0xFF2E7D32)
-                              : Colors.grey,
+                          color:
+                              isSelected
+                                  ? const Color(0xFF2E7D32)
+                                  : Colors.grey,
                         ),
                       ),
-                      trailing: isSelected
-                          ? const Icon(
-                              Icons.check_circle,
-                              color: Color(0xFF2E7D32),
-                              size: 20,
-                            )
-                          : const Icon(
-                              Icons.arrow_forward_ios,
-                              color: Colors.grey,
-                              size: 16,
-                            ),
+                      trailing:
+                          isSelected
+                              ? const Icon(
+                                Icons.check_circle,
+                                color: Color(0xFF2E7D32),
+                                size: 20,
+                              )
+                              : const Icon(
+                                Icons.arrow_forward_ios,
+                                color: Colors.grey,
+                                size: 16,
+                              ),
                       onTap: () {
                         Navigator.pop(context, country);
                       },

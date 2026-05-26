@@ -122,26 +122,26 @@ class _TransactionHistoryScreenState
     }
 
     // Sort dates - Today first, then by date (newest first)
-    final sortedKeys = grouped.keys.toList()
-      ..sort((a, b) {
-        if (a == 'Today') return -1;
-        if (b == 'Today') return 1;
-        if (a == 'Yesterday') {
-          if (b == 'Today') return 1;
-          return -1;
-        }
-        if (b == 'Yesterday') {
+    final sortedKeys =
+        grouped.keys.toList()..sort((a, b) {
           if (a == 'Today') return -1;
-          return 1;
-        }
-        try {
-          final dateA = DateFormat('dd MMM yyyy').parse(a);
-          final dateB = DateFormat('dd MMM yyyy').parse(b);
-          return dateB.compareTo(dateA);
-        } catch (e) {
-          return a.compareTo(b);
-        }
-      });
+          if (b == 'Today') return 1;
+          if (a == 'Yesterday') {
+            if (b == 'Today') return 1;
+            return -1;
+          }
+          if (b == 'Yesterday') {
+            if (a == 'Today') return -1;
+            return 1;
+          }
+          try {
+            final dateA = DateFormat('dd MMM yyyy').parse(a);
+            final dateB = DateFormat('dd MMM yyyy').parse(b);
+            return dateB.compareTo(dateA);
+          } catch (e) {
+            return a.compareTo(b);
+          }
+        });
 
     final sortedMap = <String, List<dynamic>>{};
     for (final key in sortedKeys) {
@@ -178,44 +178,51 @@ class _TransactionHistoryScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FB),
-      appBar: CustomAppBar(title: ref.t('profile.transaction_history'), showbackButton: true),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _errorMessage != null &&
+      appBar: CustomAppBar(
+        title: ref.t('profile.transaction_history'),
+        showbackButton: true,
+      ),
+      body:
+          _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _errorMessage != null &&
                   ((_transactionData?.withdrawalData.isEmpty ?? true) &&
                       (_transactionData?.data.isEmpty ?? true))
               ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        _errorMessage!,
-                        style: const TextStyle(color: Colors.red),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: _loadTransactionHistory,
-                        child: Text(ref.t('common.retry')),
-                      ),
-                    ],
-                  ),
-                )
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      _errorMessage!,
+                      style: const TextStyle(color: Colors.red),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: _loadTransactionHistory,
+                      child: Text(ref.t('common.retry')),
+                    ),
+                  ],
+                ),
+              )
               : Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: ListView(
-          children: [
-            const SizedBox(height: 18),
-            const Text(
-              'View all your completed payouts and earnings.',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-            ),
-            const SizedBox(height: 24),
-                      _buildTransactionList(),
-            const SizedBox(height: 16),
-          ],
-        ),
-      ),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: ListView(
+                  children: [
+                    const SizedBox(height: 18),
+                    const Text(
+                      'View all your completed payouts and earnings.',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    _buildTransactionList(),
+                    const SizedBox(height: 16),
+                  ],
+                ),
+              ),
     );
   }
 
@@ -228,36 +235,34 @@ class _TransactionHistoryScreenState
           padding: EdgeInsets.all(32.0),
           child: Text(
             'No transactions found',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey,
-            ),
+            style: TextStyle(fontSize: 16, color: Colors.grey),
           ),
         ),
       );
     }
 
     return Column(
-      children: groupedTransactions.entries.map((entry) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _DateDivider(label: entry.key),
-            const SizedBox(height: 16),
-            ...entry.value.map((item) {
-              return Column(
-                children: [
-                  if (item is WithdrawalTransactionItem)
-                    _WithdrawalTransactionCard(item: item)
-                  else if (item is TransactionHistoryItem)
-                    _TransactionCard(item: item),
-                  const SizedBox(height: 16),
-                ],
-              );
-            }),
-          ],
-        );
-      }).toList(),
+      children:
+          groupedTransactions.entries.map((entry) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _DateDivider(label: entry.key),
+                const SizedBox(height: 16),
+                ...entry.value.map((item) {
+                  return Column(
+                    children: [
+                      if (item is WithdrawalTransactionItem)
+                        _WithdrawalTransactionCard(item: item)
+                      else if (item is TransactionHistoryItem)
+                        _TransactionCard(item: item),
+                      const SizedBox(height: 16),
+                    ],
+                  );
+                }),
+              ],
+            );
+          }).toList(),
     );
   }
 }
@@ -296,7 +301,8 @@ class _TransactionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final borderColor = item.type == TransactionType.credit
+    final borderColor =
+        item.type == TransactionType.credit
             ? const Color(0xFF1EC37F)
             : const Color(0xFFFF5B5B);
 

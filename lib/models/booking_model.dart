@@ -16,7 +16,8 @@ class CheckoutData {
   });
 
   factory CheckoutData.fromJson(Map<String, dynamic> json) {
-    final items = (json['checkout_items'] as List<dynamic>?)
+    final items =
+        (json['checkout_items'] as List<dynamic>?)
             ?.map((item) => CheckoutItem.fromJson(item))
             .toList() ??
         [];
@@ -85,7 +86,8 @@ class BookingOrderResponse {
 
   factory BookingOrderResponse.fromJson(Map<String, dynamic> json) {
     final data = json['data'] ?? {};
-    final cartItems = (data['cart_items'] as List<dynamic>?)
+    final cartItems =
+        (data['cart_items'] as List<dynamic>?)
             ?.map((item) => BookingCartItem.fromJson(item))
             .toList() ??
         [];
@@ -230,7 +232,8 @@ class UserAddressResponse {
   factory UserAddressResponse.fromJson(Map<String, dynamic> json) {
     final user = json['user'] ?? {};
     final defaultAddr = json['defaultAddress'];
-    final addressesList = (json['addresses'] as List<dynamic>?)
+    final addressesList =
+        (json['addresses'] as List<dynamic>?)
             ?.map((addr) => UserAddress.fromJson(addr))
             .toList() ??
         [];
@@ -240,7 +243,8 @@ class UserAddressResponse {
       name: user['name'] ?? '',
       mobile: user['mobile'] ?? '',
       email: user['email'] ?? '',
-      defaultAddress: defaultAddr != null ? UserAddress.fromJson(defaultAddr) : null,
+      defaultAddress:
+          defaultAddr != null ? UserAddress.fromJson(defaultAddr) : null,
       addresses: addressesList,
     );
   }
@@ -262,9 +266,10 @@ class BookingListResponse {
 
   factory BookingListResponse.fromJson(Map<String, dynamic> json) {
     final bookingsList = json['data'] as List?;
-    List<BookingItem> parsedBookings = bookingsList != null
-        ? bookingsList.map((i) => BookingItem.fromJson(i)).toList()
-        : [];
+    List<BookingItem> parsedBookings =
+        bookingsList != null
+            ? bookingsList.map((i) => BookingItem.fromJson(i)).toList()
+            : [];
 
     return BookingListResponse(
       status: json['status'] ?? false,
@@ -304,9 +309,10 @@ class BookingItem {
 
   factory BookingItem.fromJson(Map<String, dynamic> json) {
     final detailsList = json['booking_details'] as List?;
-    List<BookingDetail> parsedDetails = detailsList != null
-        ? detailsList.map((i) => BookingDetail.fromJson(i)).toList()
-        : [];
+    List<BookingDetail> parsedDetails =
+        detailsList != null
+            ? detailsList.map((i) => BookingDetail.fromJson(i)).toList()
+            : [];
 
     return BookingItem(
       bookingId: json['booking_id'] ?? '',
@@ -346,4 +352,3 @@ class BookingDetail {
     );
   }
 }
-

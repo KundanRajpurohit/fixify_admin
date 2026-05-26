@@ -1,9 +1,11 @@
-import 'package:dio/dio.dart';
-import 'package:fpdart/fpdart.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:io';
+
+import 'package:dio/dio.dart';
+import 'package:fpdart/fpdart.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+
 import '../config/api_config.dart';
 import '../dio/resulr.dart';
 import '../models/earnings_model.dart';
@@ -761,8 +763,7 @@ class UserService {
   Future<ApiResult<Map<String, dynamic>>> partnerVerifyOtp({
     required String mobile,
     required String otp,
-  }) async
-  {
+  }) async {
     try {
       print('🔐 [UserService] Starting partnerVerifyOtp API call');
       print('📝 [UserService] Request data:');
@@ -1111,63 +1112,63 @@ class UserService {
       return left(UnknownFailure(e.toString()));
     }
   }
+
   Future<ApiResult<Map<String, dynamic>>> addAdditionalItem({
-  required String bookingToken,
-  required String item,
-  required int price,
-  required int quantity,
-}) async {
-  try {
-    print('➕ [UserService] Starting addAdditionalItem API call');
-    print('🌐 [UserService] API endpoint: ${ApiConfig.partnerAddAdditionalItem}');
-    print('🧾 [UserService] Booking token: $bookingToken');
-    print('📦 [UserService] Item: $item | Price: $price | Qty: $quantity');
-
-    final authToken = await getAuthToken();
-    if (authToken == null) {
-      print('❌ [UserService] No authorization token found');
-      return left(const UnauthorizedFailure());
-    }
-
-    final response = await _dio.post(
-      ApiConfig.partnerAddAdditionalItem,
-      data: FormData.fromMap({
-        'bookingtoken': bookingToken,
-        'item': item,
-        'price': price,
-        'quantity': quantity,
-      }),
-      options: Options(
-        headers: {'Authorization': 'Bearer $authToken'},
-      ),
-    );
-
-    print('📥 [UserService] API Response Status: ${response.statusCode}');
-    print('📦 [UserService] API Response Body: ${response.data}');
-
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      print('✅ [UserService] Additional item added successfully');
-      return right(response.data);
-    } else {
+    required String bookingToken,
+    required String item,
+    required int price,
+    required int quantity,
+  }) async {
+    try {
+      print('➕ [UserService] Starting addAdditionalItem API call');
       print(
-        '⚠️ [UserService] Failed to add additional item: Status ${response.statusCode}',
+        '🌐 [UserService] API endpoint: ${ApiConfig.partnerAddAdditionalItem}',
       );
-      return left(
-        ServerFailure(
-          'Failed to add additional item',
-          response.statusCode ?? 500,
-        ),
-      );
-    }
-  } on DioException catch (e) {
-    print('❌ [UserService] DioException occurred');
-    return left(_handleDioError(e));
-  } catch (e) {
-    print('❌ [UserService] Unknown error: $e');
-    return left(UnknownFailure(e.toString()));
-  }
-}
+      print('🧾 [UserService] Booking token: $bookingToken');
+      print('📦 [UserService] Item: $item | Price: $price | Qty: $quantity');
 
+      final authToken = await getAuthToken();
+      if (authToken == null) {
+        print('❌ [UserService] No authorization token found');
+        return left(const UnauthorizedFailure());
+      }
+
+      final response = await _dio.post(
+        ApiConfig.partnerAddAdditionalItem,
+        data: FormData.fromMap({
+          'bookingtoken': bookingToken,
+          'item': item,
+          'price': price,
+          'quantity': quantity,
+        }),
+        options: Options(headers: {'Authorization': 'Bearer $authToken'}),
+      );
+
+      print('📥 [UserService] API Response Status: ${response.statusCode}');
+      print('📦 [UserService] API Response Body: ${response.data}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print('✅ [UserService] Additional item added successfully');
+        return right(response.data);
+      } else {
+        print(
+          '⚠️ [UserService] Failed to add additional item: Status ${response.statusCode}',
+        );
+        return left(
+          ServerFailure(
+            'Failed to add additional item',
+            response.statusCode ?? 500,
+          ),
+        );
+      }
+    } on DioException catch (e) {
+      print('❌ [UserService] DioException occurred');
+      return left(_handleDioError(e));
+    } catch (e) {
+      print('❌ [UserService] Unknown error: $e');
+      return left(UnknownFailure(e.toString()));
+    }
+  }
 
   Future<ApiResult<Map<String, dynamic>>> startJob({
     required String bookingToken,
@@ -1194,7 +1195,7 @@ class UserService {
     }
   }
 
- Future<ApiResult<Map<String, dynamic>>> endJob({
+  Future<ApiResult<Map<String, dynamic>>> endJob({
     required String bookingToken,
   }) async {
     try {
@@ -1518,6 +1519,49 @@ class UserService {
     }
   }
 
+  Future<ApiResult<Map<String, dynamic>>> initiateMaskedCall({
+    required String callerNumber,
+    required String receiverNumber,
+  }) async {
+    try {
+      print('📞 [UserService] Starting initiateMaskedCall API call');
+      final authToken = await getAuthToken();
+      if (authToken == null) {
+        return left(const UnauthorizedFailure());
+      }
+
+      final formData = FormData.fromMap({
+        'caller_number': callerNumber,
+        'receiver_number': receiverNumber,
+      });
+
+      final response = await _dio.post(
+        ApiConfig.call,
+        data: formData,
+        options: Options(headers: {'Authorization': 'Bearer $authToken'}),
+      );
+
+      final data = response.data;
+      if ((response.statusCode == 200 || response.statusCode == 201) &&
+          data is Map<String, dynamic>) {
+        return right(Map<String, dynamic>.from(data));
+      }
+
+      return left(
+        ServerFailure(
+          data is Map<String, dynamic>
+              ? data['message']?.toString() ?? 'Failed to initiate call'
+              : 'Failed to initiate call',
+          response.statusCode ?? 500,
+        ),
+      );
+    } on DioException catch (e) {
+      return left(_handleDioError(e));
+    } catch (e) {
+      return left(UnknownFailure(e.toString()));
+    }
+  }
+
   // Verify Job OTP
   Future<ApiResult<Map<String, dynamic>>> verifyJobOtp({
     required String jobToken,
@@ -1646,7 +1690,7 @@ class UserService {
   Future<ApiResult<Map<String, dynamic>>> ratingCustomer({
     required String jobToken,
     required String review,
-    required String comment,
+    String? comment,
   }) async {
     try {
       print('⭐ [UserService] Starting ratingCustomer API call');
@@ -1658,7 +1702,8 @@ class UserService {
       final formData = FormData.fromMap({
         'job_token': jobToken,
         'review': review,
-        'comment': comment,
+        if (comment != null && comment.trim().isNotEmpty)
+          'comment': comment.trim(),
       });
 
       final response = await _dio.post(

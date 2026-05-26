@@ -1,13 +1,15 @@
+import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:permission_handler/permission_handler.dart';
+
 import '../config/api_config.dart';
-import '../services/user_service.dart';
 import '../dio/resulr.dart';
+import '../services/user_service.dart';
 import 'auth_provider.dart';
 
 // Location state model
@@ -68,7 +70,7 @@ class LocationNotifier extends StateNotifier<LocationState> {
   final UserService _userService;
   final Ref _ref;
   GoogleMapController? _mapController;
-  
+
   // Default location (Delhi, India)
   static const LatLng _defaultLocation = LatLng(28.6139, 77.2090);
 
@@ -86,7 +88,7 @@ class LocationNotifier extends StateNotifier<LocationState> {
     try {
       // Check current permission status first
       final permissionStatus = await Permission.location.status;
-      
+
       PermissionStatus permission;
       if (permissionStatus.isDenied) {
         // Request permission if not granted
@@ -102,8 +104,10 @@ class LocationNotifier extends StateNotifier<LocationState> {
         );
 
         // Check if the location is reasonable (within India bounds approximately)
-        if (position.latitude >= 6.0 && position.latitude <= 37.0 &&
-            position.longitude >= 68.0 && position.longitude <= 97.0) {
+        if (position.latitude >= 6.0 &&
+            position.latitude <= 37.0 &&
+            position.longitude >= 68.0 &&
+            position.longitude <= 97.0) {
           final latLng = LatLng(position.latitude, position.longitude);
           state = state.copyWith(
             currentPosition: latLng,
@@ -119,7 +123,8 @@ class LocationNotifier extends StateNotifier<LocationState> {
       } else if (permission.isPermanentlyDenied) {
         state = state.copyWith(
           isLoading: false,
-          error: 'Location permission is permanently denied. Please enable it in app settings.',
+          error:
+              'Location permission is permanently denied. Please enable it in app settings.',
         );
         _useDefaultLocation();
       } else {
@@ -161,13 +166,14 @@ class LocationNotifier extends StateNotifier<LocationState> {
         position: position,
         infoWindow: InfoWindow(
           title: title,
-          snippet: state.addressDetails.isNotEmpty 
-              ? _getSimplifiedAddress(state.addressDetails)
-              : 'Loading address...',
+          snippet:
+              state.addressDetails.isNotEmpty
+                  ? _getSimplifiedAddress(state.addressDetails)
+                  : 'Loading address...',
         ),
       ),
     };
-    
+
     state = state.copyWith(markers: markers);
   }
 
@@ -182,7 +188,7 @@ class LocationNotifier extends StateNotifier<LocationState> {
         ),
       ),
     };
-    
+
     state = state.copyWith(markers: markers);
   }
 
@@ -191,51 +197,60 @@ class LocationNotifier extends StateNotifier<LocationState> {
     final address = addressDetails['address'] ?? '';
     final city = addressDetails['city'] ?? '';
     final state = addressDetails['state'] ?? '';
-    
+
     // If address contains "Model Town", extract relevant parts and remove Pakistan references
     if (address.toLowerCase().contains('model town')) {
       final parts = address.split(',');
       final relevantParts = <String>[];
-      
+
       for (final part in parts) {
         final trimmed = part.trim();
         // Skip parts that contain Pakistan or Lahore
-        if (trimmed.toLowerCase().contains('pakistan') || 
+        if (trimmed.toLowerCase().contains('pakistan') ||
             trimmed.toLowerCase().contains('lahore')) {
           continue;
         }
-        
-        if (trimmed.toLowerCase().contains('model town') || 
+
+        if (trimmed.toLowerCase().contains('model town') ||
             trimmed.toLowerCase().contains('phase') ||
             trimmed.toLowerCase().contains('pocket')) {
           relevantParts.add(trimmed);
         }
       }
-      
+
       if (relevantParts.isNotEmpty) {
         return '${relevantParts.join(', ')}, $city, $state';
       }
     }
-    
+
     // For other addresses, clean up and return
     String cleanAddress = address;
     // Remove Pakistan/Lahore references from any address
-    cleanAddress = cleanAddress.replaceAll(RegExp(r',?\s*(Lahore|Pakistan).*', caseSensitive: false), '');
-    
-    return cleanAddress.isNotEmpty ? '$cleanAddress, $city, $state' : 'Address not found';
+    cleanAddress = cleanAddress.replaceAll(
+      RegExp(r',?\s*(Lahore|Pakistan).*', caseSensitive: false),
+      '',
+    );
+
+    return cleanAddress.isNotEmpty
+        ? '$cleanAddress, $city, $state'
+        : 'Address not found';
   }
 
-  Future<void> _getAddressFromCoordinates(LatLng position, [String? title]) async {
+  Future<void> _getAddressFromCoordinates(
+    LatLng position, [
+    String? title,
+  ]) async {
     try {
-      final url = 'https://maps.googleapis.com/maps/api/geocode/json?latlng=${position.latitude},${position.longitude}&key=${ApiConfig.googlePlacesApiKey}';
+      final url =
+          'https://maps.googleapis.com/maps/api/geocode/json?latlng=${position.latitude},${position.longitude}&key=${ApiConfig.googlePlacesApiKey}';
       final response = await http.get(Uri.parse(url));
-      
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['status'] == 'OK' && data['results'].isNotEmpty) {
           final result = data['results'][0];
           final addressComponents = result['address_components'];
-          
+
           Map<String, String> addressData = {
             'address': '',
             'state': '',
@@ -243,34 +258,37 @@ class LocationNotifier extends StateNotifier<LocationState> {
             'landmark': '',
             'pincode': '',
           };
-          
+
           // Parse address components
           for (var component in addressComponents) {
             final types = component['types'];
             final longName = component['long_name'];
-            
+
             if (types.contains('street_number') || types.contains('route')) {
-              addressData['address'] = addressData['address']?.isEmpty == true 
-                  ? longName 
-                  : '${addressData['address']}, $longName';
+              addressData['address'] =
+                  addressData['address']?.isEmpty == true
+                      ? longName
+                      : '${addressData['address']}, $longName';
             } else if (types.contains('administrative_area_level_1')) {
               addressData['state'] = longName;
-            } else if (types.contains('locality') || types.contains('administrative_area_level_2')) {
+            } else if (types.contains('locality') ||
+                types.contains('administrative_area_level_2')) {
               addressData['city'] = longName;
             } else if (types.contains('postal_code')) {
               addressData['pincode'] = longName;
-            } else if (types.contains('point_of_interest') || types.contains('establishment')) {
+            } else if (types.contains('point_of_interest') ||
+                types.contains('establishment')) {
               addressData['landmark'] = longName;
             }
           }
-          
+
           // If no specific address found, use formatted address
           if (addressData['address']?.isEmpty == true) {
             addressData['address'] = result['formatted_address'] ?? '';
           }
-          
+
           state = state.copyWith(addressDetails: addressData);
-          
+
           // Update marker info window with the fetched address
           if (title != null) {
             _updateMarkerInfo(position, title);
@@ -282,14 +300,15 @@ class LocationNotifier extends StateNotifier<LocationState> {
       // Fallback to coordinates
       state = state.copyWith(
         addressDetails: {
-          'address': '${position.latitude.toStringAsFixed(6)}, ${position.longitude.toStringAsFixed(6)}',
+          'address':
+              '${position.latitude.toStringAsFixed(6)}, ${position.longitude.toStringAsFixed(6)}',
           'state': '',
           'city': '',
           'landmark': '',
           'pincode': '',
         },
       );
-      
+
       // Update marker info window with coordinates as fallback
       if (title != null) {
         _updateMarkerInfo(position, title);
@@ -317,28 +336,29 @@ class LocationNotifier extends StateNotifier<LocationState> {
       return;
     }
 
-    state = state.copyWith(
-      isSearching: true,
-      searchQuery: query,
-    );
+    state = state.copyWith(isSearching: true, searchQuery: query);
 
     try {
       final encodedQuery = Uri.encodeComponent(query);
-      final url = 'https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$encodedQuery&key=${ApiConfig.googlePlacesApiKey}&components=country:in&types=geocode';
-      
+      final url =
+          'https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$encodedQuery&key=${ApiConfig.googlePlacesApiKey}&components=country:in&types=geocode';
+
       final response = await http.get(Uri.parse(url));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        
+
         if (data['status'] == 'OK' && data['predictions'] != null) {
           List<Map<String, dynamic>> suggestions = [];
           for (var prediction in data['predictions']) {
             suggestions.add({
               'place_id': prediction['place_id'],
               'description': prediction['description'],
-              'main_text': prediction['structured_formatting']?['main_text'] ?? prediction['description'],
-              'secondary_text': prediction['structured_formatting']?['secondary_text'],
+              'main_text':
+                  prediction['structured_formatting']?['main_text'] ??
+                  prediction['description'],
+              'secondary_text':
+                  prediction['structured_formatting']?['secondary_text'],
             });
           }
 
@@ -347,30 +367,21 @@ class LocationNotifier extends StateNotifier<LocationState> {
             isSearching: false,
           );
         } else {
-          state = state.copyWith(
-            searchSuggestions: [],
-            isSearching: false,
-          );
+          state = state.copyWith(searchSuggestions: [], isSearching: false);
         }
       } else {
-        state = state.copyWith(
-          searchSuggestions: [],
-          isSearching: false,
-        );
+        state = state.copyWith(searchSuggestions: [], isSearching: false);
       }
     } catch (e) {
       print('Error searching places: $e');
-      state = state.copyWith(
-        searchSuggestions: [],
-        isSearching: false,
-      );
+      state = state.copyWith(searchSuggestions: [], isSearching: false);
     }
   }
-  
 
   Future<void> selectPlace(Map<String, dynamic> place) async {
     try {
-      final url = 'https://maps.googleapis.com/maps/api/place/details/json?place_id=${place['place_id']}&key=${ApiConfig.googlePlacesApiKey}&fields=geometry,formatted_address,address_components';
+      final url =
+          'https://maps.googleapis.com/maps/api/place/details/json?place_id=${place['place_id']}&key=${ApiConfig.googlePlacesApiKey}&fields=geometry,formatted_address,address_components';
       final response = await http.get(Uri.parse(url));
 
       if (response.statusCode == 200) {
@@ -395,16 +406,19 @@ class LocationNotifier extends StateNotifier<LocationState> {
             final longName = component['long_name'];
 
             if (types.contains('street_number') || types.contains('route')) {
-              addressData['address'] = addressData['address']?.isEmpty == true
-                  ? longName
-                  : '${addressData['address']}, $longName';
+              addressData['address'] =
+                  addressData['address']?.isEmpty == true
+                      ? longName
+                      : '${addressData['address']}, $longName';
             } else if (types.contains('administrative_area_level_1')) {
               addressData['state'] = longName;
-            } else if (types.contains('locality') || types.contains('administrative_area_level_2')) {
+            } else if (types.contains('locality') ||
+                types.contains('administrative_area_level_2')) {
               addressData['city'] = longName;
             } else if (types.contains('postal_code')) {
               addressData['pincode'] = longName;
-            } else if (types.contains('point_of_interest') || types.contains('establishment')) {
+            } else if (types.contains('point_of_interest') ||
+                types.contains('establishment')) {
               addressData['landmark'] = longName;
             }
           }
@@ -415,7 +429,8 @@ class LocationNotifier extends StateNotifier<LocationState> {
           }
 
           state = state.copyWith(
-            currentPosition: latLng, // Update current position to the searched location
+            currentPosition: latLng,
+            // Update current position to the searched location
             selectedPosition: latLng,
             addressDetails: addressData,
             searchSuggestions: [],
@@ -456,14 +471,15 @@ class LocationNotifier extends StateNotifier<LocationState> {
     }
   }
 
-  Future<ApiResult<Map<String, dynamic>>> saveLocation() async
-  {
+  Future<ApiResult<Map<String, dynamic>>> saveLocation() async {
     print('🗺️ [LocationProvider] Starting saveLocation...');
     print('📍 [LocationProvider] Selected position: ${state.selectedPosition}');
     print('📋 [LocationProvider] Address details: ${state.addressDetails}');
 
     if (state.selectedPosition == null || state.addressDetails.isEmpty) {
-      print('❌ [LocationProvider] No location selected or address details empty');
+      print(
+        '❌ [LocationProvider] No location selected or address details empty',
+      );
       return left(const ServerFailure('No location selected', 400));
     }
 
@@ -496,13 +512,14 @@ class LocationNotifier extends StateNotifier<LocationState> {
           if (data['status'] == true && data['data'] != null) {
             final userData = data['data'];
             print('👤 [LocationProvider] Setting user data in auth provider');
-            _ref.read(authProvider.notifier).setUserData(
-              userData['userid'],
-              userData['token'],
-            );
+            _ref
+                .read(authProvider.notifier)
+                .setUserData(userData['userid'], userData['token']);
             print('✅ [LocationProvider] User data set successfully');
           } else {
-            print('❌ [LocationProvider] Response status is false or data is null');
+            print(
+              '❌ [LocationProvider] Response status is false or data is null',
+            );
           }
         },
       );
@@ -512,10 +529,7 @@ class LocationNotifier extends StateNotifier<LocationState> {
       print('❌ [LocationProvider] Exception occurred: $e');
       print('❌ [LocationProvider] Exception type: ${e.runtimeType}');
 
-      state = state.copyWith(
-        isSaving: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isSaving: false, error: e.toString());
       return left(UnknownFailure(e.toString()));
     }
   }
@@ -525,10 +539,7 @@ class LocationNotifier extends StateNotifier<LocationState> {
   }
 
   void clearSearch() {
-    state = state.copyWith(
-      searchSuggestions: [],
-      searchQuery: '',
-    );
+    state = state.copyWith(searchSuggestions: [], searchQuery: '');
   }
 }
 
@@ -538,7 +549,9 @@ final userServiceProvider = Provider<UserService>((ref) {
   throw UnimplementedError('UserService must be provided');
 });
 
-final locationProvider = StateNotifierProvider<LocationNotifier, LocationState>((ref) {
-  final userService = ref.watch(userServiceProvider);
-  return LocationNotifier(userService, ref);
-});
+final locationProvider = StateNotifierProvider<LocationNotifier, LocationState>(
+  (ref) {
+    final userService = ref.watch(userServiceProvider);
+    return LocationNotifier(userService, ref);
+  },
+);

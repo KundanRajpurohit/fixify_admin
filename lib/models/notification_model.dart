@@ -11,7 +11,8 @@ class NotificationResponse {
   });
 
   factory NotificationResponse.fromJson(Map<String, dynamic> json) {
-    final notificationsList = (json['data'] as List<dynamic>?)
+    final notificationsList =
+        (json['data'] as List<dynamic>?)
             ?.map((item) => NotificationItem.fromJson(item))
             .toList() ??
         [];
@@ -80,5 +81,3 @@ class NotificationItem {
     }
   }
 }
-
-

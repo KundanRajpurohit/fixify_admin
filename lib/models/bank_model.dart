@@ -68,7 +68,10 @@ class BankAccount {
 
   factory BankAccount.fromJson(Map<String, dynamic> json) {
     return BankAccount(
-      id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? ''),
+      id:
+          json['id'] is int
+              ? json['id']
+              : int.tryParse(json['id']?.toString() ?? ''),
       partnerid: json['partnerid']?.toString(),
       accountHolderName: json['account_holder_name'] ?? '',
       bankName: json['bank'] ?? '',
@@ -128,7 +131,8 @@ class BankValidationRules {
       type: 'PSB',
       shortCode: 'BOB',
       ifscPrefix: 'BARB',
-      logoImageUrl: 'https://bankofbaroda.bank.in/-/media/project/bob/countrywebsites/india/icons/bob-logo.svg',
+      logoImageUrl:
+          'https://bankofbaroda.bank.in/-/media/project/bob/countrywebsites/india/icons/bob-logo.svg',
       accountValidation: AccountValidation(
         minLength: 14,
         maxLength: 14,
@@ -152,7 +156,8 @@ class BankValidationRules {
       type: 'PSB',
       shortCode: 'UBI',
       ifscPrefix: 'UBIN',
-      logoImageUrl: 'https://www.unionbankofindia.bank.in/img/header/ubi_logo.png',
+      logoImageUrl:
+          'https://www.unionbankofindia.bank.in/img/header/ubi_logo.png',
       accountValidation: AccountValidation(
         minLength: 15,
         maxLength: 15,
@@ -164,7 +169,8 @@ class BankValidationRules {
       type: 'PSB',
       shortCode: 'BOI',
       ifscPrefix: 'BKID',
-      logoImageUrl: 'https://bankofindia.bank.in/o/boi-global-theme/images/boi/logos/boi_en_US_logo.png',
+      logoImageUrl:
+          'https://bankofindia.bank.in/o/boi-global-theme/images/boi/logos/boi_en_US_logo.png',
       accountValidation: AccountValidation(
         minLength: 15,
         maxLength: 15,
@@ -176,7 +182,8 @@ class BankValidationRules {
       type: 'PSB',
       shortCode: 'INDB',
       ifscPrefix: 'IDIB',
-      logoImageUrl: 'https://imgs.search.brave.com/7IHUYS1Y-KcWG0TjeWf7kfSGYvBs2msHB7RdB5ct5NM/rs:fit:500:0:0:0/g:ce/aHR0cHM6Ly91cGxv/YWQud2lraW1lZGlh/Lm9yZy93aWtpcGVk/aWEvZW4vdGh1bWIv/Yi9iYy9JbmRpYW5f/QmFua19sb2dvLnN2/Zy81MTJweC1JbmRp/YW5fQmFua19sb2dv/LnN2Zy5wbmc',
+      logoImageUrl:
+          'https://imgs.search.brave.com/7IHUYS1Y-KcWG0TjeWf7kfSGYvBs2msHB7RdB5ct5NM/rs:fit:500:0:0:0/g:ce/aHR0cHM6Ly91cGxv/YWQud2lraW1lZGlh/Lm9yZy93aWtpcGVk/aWEvZW4vdGh1bWIv/Yi9iYy9JbmRpYW5f/QmFua19sb2dvLnN2/Zy81MTJweC1JbmRp/YW5fQmFua19sb2dv/LnN2Zy5wbmc',
       accountValidation: AccountValidation(
         minLength: 9,
         maxLength: 18,
@@ -515,7 +522,7 @@ class BankValidationRules {
       }
     }
   }
-  
+
   static BankInfo? getBankByShortCode(String shortCode) {
     try {
       return banks.firstWhere(
@@ -567,6 +574,3 @@ class BankValidationRules {
     return null;
   }
 }
-
-
-

@@ -23,12 +23,12 @@ class LanguageNotifier extends StateNotifier<AppLanguage> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final languageCode = prefs.getString(_languageKey) ?? 'en';
-      
+
       final language = AppLanguage.values.firstWhere(
         (lang) => lang.code == languageCode,
         orElse: () => AppLanguage.english,
       );
-      
+
       state = language;
     } catch (e) {
       print('Error loading language: $e');
@@ -41,22 +41,22 @@ class LanguageNotifier extends StateNotifier<AppLanguage> {
   Future<bool> hasLanguageBeenSelected() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      
+
       // Check if language selection flag is set
       final flagSet = prefs.getBool(_languageSelectedKey) ?? false;
-      
+
       // Also check if a language code is stored (fallback check)
       final languageCode = prefs.getString(_languageKey);
       final languageStored = languageCode != null && languageCode.isNotEmpty;
-      
+
       // Return true if either condition is met
       final hasSelected = flagSet || languageStored;
-      
+
       print('🌐 [LanguageProvider] Language selection check:');
       print('   Flag set: $flagSet');
       print('   Language stored: $languageStored (code: $languageCode)');
       print('   Has selected: $hasSelected');
-      
+
       return hasSelected;
     } catch (e) {
       print('❌ [LanguageProvider] Error checking language selection: $e');
@@ -68,7 +68,10 @@ class LanguageNotifier extends StateNotifier<AppLanguage> {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_languageKey, language.code);
-      await prefs.setBool(_languageSelectedKey, true); // Mark language as selected
+      await prefs.setBool(
+        _languageSelectedKey,
+        true,
+      ); // Mark language as selected
       state = language;
     } catch (e) {
       print('Error saving language: $e');
@@ -76,7 +79,8 @@ class LanguageNotifier extends StateNotifier<AppLanguage> {
   }
 }
 
-final languageProvider = StateNotifierProvider<LanguageNotifier, AppLanguage>((ref) {
+final languageProvider = StateNotifierProvider<LanguageNotifier, AppLanguage>((
+  ref,
+) {
   return LanguageNotifier();
 });
-

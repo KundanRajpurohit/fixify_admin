@@ -25,10 +25,7 @@ class VendorLocation {
   final double latitude;
   final double longitude;
 
-  VendorLocation({
-    required this.latitude,
-    required this.longitude,
-  });
+  VendorLocation({required this.latitude, required this.longitude});
 
   factory VendorLocation.fromJson(Map<String, dynamic> json) {
     return VendorLocation(

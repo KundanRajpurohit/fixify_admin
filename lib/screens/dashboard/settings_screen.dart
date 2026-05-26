@@ -26,7 +26,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     'Saturday': false,
     'Sunday': false,
   };
-  
+
   bool _isLoading = true;
   bool _isUpdating = false;
 
@@ -57,7 +57,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             });
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('${ref.t('settings.failed_to_load_availability')}: ${failure.message}'),
+                content: Text(
+                  '${ref.t('settings.failed_to_load_availability')}: ${failure.message}',
+                ),
                 backgroundColor: Colors.red,
               ),
             );
@@ -69,13 +71,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             if (availabilityData != null) {
               setState(() {
                 // Map API response (lowercase days, string "true"/"false") to UI state
-                _weeklyAvailability['Monday'] = availabilityData['mon']?.toString().toLowerCase() == 'true';
-                _weeklyAvailability['Tuesday'] = availabilityData['tue']?.toString().toLowerCase() == 'true';
-                _weeklyAvailability['Wednesday'] = availabilityData['wed']?.toString().toLowerCase() == 'true';
-                _weeklyAvailability['Thursday'] = availabilityData['thu']?.toString().toLowerCase() == 'true';
-                _weeklyAvailability['Friday'] = availabilityData['fri']?.toString().toLowerCase() == 'true';
-                _weeklyAvailability['Saturday'] = availabilityData['sat']?.toString().toLowerCase() == 'true';
-                _weeklyAvailability['Sunday'] = availabilityData['sun']?.toString().toLowerCase() == 'true';
+                _weeklyAvailability['Monday'] =
+                    availabilityData['mon']?.toString().toLowerCase() == 'true';
+                _weeklyAvailability['Tuesday'] =
+                    availabilityData['tue']?.toString().toLowerCase() == 'true';
+                _weeklyAvailability['Wednesday'] =
+                    availabilityData['wed']?.toString().toLowerCase() == 'true';
+                _weeklyAvailability['Thursday'] =
+                    availabilityData['thu']?.toString().toLowerCase() == 'true';
+                _weeklyAvailability['Friday'] =
+                    availabilityData['fri']?.toString().toLowerCase() == 'true';
+                _weeklyAvailability['Saturday'] =
+                    availabilityData['sat']?.toString().toLowerCase() == 'true';
+                _weeklyAvailability['Sunday'] =
+                    availabilityData['sun']?.toString().toLowerCase() == 'true';
                 _isLoading = false;
               });
             } else {
@@ -122,7 +131,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             });
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('${ref.t('settings.failed_to_update_availability')}: ${failure.message}'),
+                content: Text(
+                  '${ref.t('settings.failed_to_update_availability')}: ${failure.message}',
+                ),
                 backgroundColor: Colors.red,
                 duration: const Duration(seconds: 2),
               ),
@@ -137,7 +148,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             // Show success message briefly
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('${ref.t('settings.availability_updated').replaceAll('{day}', ref.t('settings.${day.toLowerCase()}'))}'),
+                content: Text(
+                  '${ref.t('settings.availability_updated').replaceAll('{day}', ref.t('settings.${day.toLowerCase()}'))}',
+                ),
                 backgroundColor: Colors.green,
                 duration: const Duration(seconds: 1),
               ),
@@ -166,43 +179,125 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7F8),
-      appBar: CustomAppBar(title: ref.t('settings.settings'), showbackButton: false),
+      appBar: CustomAppBar(
+        title: ref.t('settings.settings'),
+        showbackButton: false,
+      ),
       body: Column(
         children: [
           // Header
 
           // Content
           Expanded(
-            child: _isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-                    ),
-                  )
-                : SingleChildScrollView(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      children: [
-                        // Language Selection Card
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              PageTransition(
-                                type: PageTransitionType.rightToLeft,
-                                duration: const Duration(milliseconds: 300),
-                                child: const LanguageSelectionScreen(),
+            child:
+                _isLoading
+                    ? const Center(
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          AppColors.primary,
+                        ),
+                      ),
+                    )
+                    : SingleChildScrollView(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        children: [
+                          // Language Selection Card
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                PageTransition(
+                                  type: PageTransitionType.rightToLeft,
+                                  duration: const Duration(milliseconds: 300),
+                                  child: const LanguageSelectionScreen(),
+                                ),
+                              ).then((shouldReload) {
+                                if (shouldReload == true) {
+                                  // Reload or rebuild if needed
+                                  setState(() {});
+                                }
+                              });
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(20),
+                              margin: const EdgeInsets.only(bottom: 16),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.05),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
                               ),
-                            ).then((shouldReload) {
-                              if (shouldReload == true) {
-                                // Reload or rebuild if needed
-                                setState(() {});
-                              }
-                            });
-                          },
-                          child: Container(
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Container(
+                                        width: 40,
+                                        height: 40,
+                                        decoration: BoxDecoration(
+                                          color: AppColors.secondary
+                                              .withOpacity(0.2),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                        ),
+                                        child: const Icon(
+                                          Icons.language,
+                                          color: AppColors.primary,
+                                          size: 24,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            ref.t('settings.language'),
+                                            style: const TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w600,
+                                              color: Colors.black87,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Consumer(
+                                            builder: (context, ref, child) {
+                                              final currentLanguage = ref.watch(
+                                                languageProvider,
+                                              );
+                                              return Text(
+                                                currentLanguage.name,
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  color: Colors.grey.shade600,
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                  Icon(
+                                    Icons.chevron_right,
+                                    color: Colors.grey.shade400,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          // Set Weekly Availability Card
+                          Container(
                             padding: const EdgeInsets.all(20),
-                            margin: const EdgeInsets.only(bottom: 16),
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(16),
@@ -214,162 +309,99 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 ),
                               ],
                             ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Row(
-                                  children: [
-                                    Container(
-                                      width: 40,
-                                      height: 40,
-                                      decoration: BoxDecoration(
-                                        color: AppColors.secondary.withOpacity(0.2),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: const Icon(
-                                        Icons.language,
-                                        color: AppColors.primary,
-                                        size: 24,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          ref.t('settings.language'),
-                                          style: const TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w600,
-                                            color: Colors.black87,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Consumer(
-                                          builder: (context, ref, child) {
-                                            final currentLanguage = ref.watch(languageProvider);
-                                            return Text(
-                                              currentLanguage.name,
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                color: Colors.grey.shade600,
+                                Text(
+                                  ref.t('settings.set_weekly_availability'),
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                                const SizedBox(height: 20),
+                                ..._weeklyAvailability.entries.map((entry) {
+                                  final day = entry.key;
+                                  final isAvailable = entry.value;
+                                  final isLast =
+                                      entry == _weeklyAvailability.entries.last;
+
+                                  return Column(
+                                    children: [
+                                      Row(
+                                        children: [
+                                          // Day Initial Icon
+                                          Container(
+                                            width: 40,
+                                            height: 40,
+                                            decoration: BoxDecoration(
+                                              color: AppColors.secondary
+                                                  .withOpacity(0.2),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                            child: Center(
+                                              child: Text(
+                                                _getDayInitial(day),
+                                                style: const TextStyle(
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: AppColors.primary,
+                                                ),
                                               ),
-                                            );
-                                          },
+                                            ),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          // Day Name
+                                          Expanded(
+                                            child: Text(
+                                              ref.t(
+                                                'settings.${day.toLowerCase()}',
+                                              ),
+                                              style: const TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w500,
+                                                color: Colors.black87,
+                                              ),
+                                            ),
+                                          ),
+                                          // Toggle Switch
+                                          Switch(
+                                            value: isAvailable,
+                                            onChanged:
+                                                _isUpdating
+                                                    ? null
+                                                    : (value) {
+                                                      _updateDayAvailability(
+                                                        day,
+                                                        value,
+                                                      );
+                                                    },
+                                            activeColor: AppColors.primary,
+                                          ),
+                                        ],
+                                      ),
+                                      if (!isLast) ...[
+                                        const SizedBox(height: 16),
+                                        Divider(
+                                          height: 1,
+                                          color: Colors.grey.shade200,
                                         ),
+                                        const SizedBox(height: 16),
                                       ],
-                                    ),
-                                  ],
-                                ),
-                                Icon(
-                                  Icons.chevron_right,
-                                  color: Colors.grey.shade400,
-                                ),
+                                    ],
+                                  );
+                                }).toList(),
                               ],
                             ),
                           ),
-                        ),
-                        // Set Weekly Availability Card
-                        Container(
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                blurRadius: 10,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                ref.t('settings.set_weekly_availability'),
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                              const SizedBox(height: 20),
-                              ..._weeklyAvailability.entries.map((entry) {
-                                final day = entry.key;
-                                final isAvailable = entry.value;
-                                final isLast = entry == _weeklyAvailability.entries.last;
-
-                                return Column(
-                                  children: [
-                                    Row(
-                                      children: [
-                                        // Day Initial Icon
-                                        Container(
-                                          width: 40,
-                                          height: 40,
-                                          decoration: BoxDecoration(
-                                            color: AppColors.secondary.withOpacity(0.2),
-                                            borderRadius: BorderRadius.circular(8),
-                                          ),
-                                          child: Center(
-                                            child: Text(
-                                              _getDayInitial(day),
-                                              style: const TextStyle(
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.bold,
-                                                color: AppColors.primary,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 12),
-                                        // Day Name
-                                        Expanded(
-                                          child: Text(
-                                            ref.t('settings.${day.toLowerCase()}'),
-                                            style: const TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w500,
-                                              color: Colors.black87,
-                                            ),
-                                          ),
-                                        ),
-                                        // Toggle Switch
-                                        Switch(
-                                          value: isAvailable,
-                                          onChanged: _isUpdating
-                                              ? null
-                                              : (value) {
-                                                  _updateDayAvailability(day, value);
-                                                },
-                                          activeColor: AppColors.primary,
-                                        ),
-                                      ],
-                                    ),
-                                    if (!isLast) ...[
-                                      const SizedBox(height: 16),
-                                      Divider(
-                                        height: 1,
-                                        color: Colors.grey.shade200,
-                                      ),
-                                      const SizedBox(height: 16),
-                                    ],
-                                  ],
-                                );
-                              }).toList(),
-                            ],
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
           ),
         ],
       ),
     );
   }
 }
-
-
-

@@ -7,6 +7,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:page_transition/page_transition.dart';
+
 import 'get_started_screen.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
@@ -24,17 +25,17 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     OnboardingPage(
       title: ref.t('onboarding.manage_work_easily'),
       description: ref.t('onboarding.manage_work_description'),
-      illustration:  _BookingServicesIllustration(),
+      illustration: _BookingServicesIllustration(),
     ),
     OnboardingPage(
       title: ref.t('onboarding.secure_instant_earnings'),
       description: ref.t('onboarding.secure_earnings_description'),
-      illustration:  _SkilledProfessionalsIllustration(),
+      illustration: _SkilledProfessionalsIllustration(),
     ),
     OnboardingPage(
       title: ref.t('onboarding.get_help_whenever'),
       description: ref.t('onboarding.get_help_description'),
-      illustration:  _PaymentIllustration(),
+      illustration: _PaymentIllustration(),
     ),
   ];
 
@@ -104,7 +105,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                             const SizedBox(height: 40),
                             Text(
                                   _pages[_currentPage].title,
-                                  style:  TextStyle(
+                                  style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 26.sp,
                                     fontWeight: FontWeight.bold,
@@ -118,7 +119,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                             const SizedBox(height: 20),
                             Text(
                                   _pages[_currentPage].description,
-                                  style:  TextStyle(
+                                  style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 15.sp,
                                     height: 1.4,
@@ -131,7 +132,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                 .slideY(begin: 0.2),
                           ],
                         ),
-              
+
                         // Navigation button with segmented ring
                         GestureDetector(
                           onTap: () {

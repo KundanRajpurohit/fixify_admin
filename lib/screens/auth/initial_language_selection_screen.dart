@@ -1,7 +1,7 @@
 import 'package:fixify_admin/config/app_colors.dart';
 import 'package:fixify_admin/providers/language_provider.dart';
-import 'package:fixify_admin/services/translation_service.dart';
 import 'package:fixify_admin/screens/auth/splash_screen.dart';
+import 'package:fixify_admin/services/translation_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:page_transition/page_transition.dart';
@@ -102,10 +102,7 @@ class _InitialLanguageSelectionScreenState
               const SizedBox(height: 8),
               Text(
                 'Choose your preferred language to continue',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey.shade600,
-                ),
+                style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 40),
@@ -125,9 +122,10 @@ class _InitialLanguageSelectionScreenState
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: isSelected
-                            ? AppColors.primary
-                            : Colors.grey.shade300,
+                        color:
+                            isSelected
+                                ? AppColors.primary
+                                : Colors.grey.shade300,
                         width: isSelected ? 2 : 1,
                       ),
                       boxShadow: [
@@ -144,18 +142,20 @@ class _InitialLanguageSelectionScreenState
                           width: 50,
                           height: 50,
                           decoration: BoxDecoration(
-                            color: isSelected
-                                ? AppColors.primary
-                                : Colors.grey.shade200,
+                            color:
+                                isSelected
+                                    ? AppColors.primary
+                                    : Colors.grey.shade200,
                             shape: BoxShape.circle,
                           ),
                           child: Center(
                             child: Text(
                               language.code.toUpperCase(),
                               style: TextStyle(
-                                color: isSelected
-                                    ? Colors.white
-                                    : Colors.grey.shade700,
+                                color:
+                                    isSelected
+                                        ? Colors.white
+                                        : Colors.grey.shade700,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
                               ),
@@ -171,17 +171,16 @@ class _InitialLanguageSelectionScreenState
                                 language.name,
                                 style: TextStyle(
                                   fontSize: 20,
-                                  fontWeight: isSelected
-                                      ? FontWeight.bold
-                                      : FontWeight.w600,
+                                  fontWeight:
+                                      isSelected
+                                          ? FontWeight.bold
+                                          : FontWeight.w600,
                                   color: Colors.black87,
                                 ),
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                language.code == 'hi'
-                                    ? 'हिंदी'
-                                    : 'English',
+                                language.code == 'hi' ? 'हिंदी' : 'English',
                                 style: TextStyle(
                                   fontSize: 15,
                                   color: Colors.grey.shade600,
@@ -220,18 +219,19 @@ class _InitialLanguageSelectionScreenState
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  child: _isLoading
-                      ? const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              Colors.white,
+                  child:
+                      _isLoading
+                          ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
                             ),
-                          ),
-                        )
-                      : const Text('Continue'),
+                          )
+                          : const Text('Continue'),
                 ),
               ),
               const SizedBox(height: 20),
@@ -242,8 +242,3 @@ class _InitialLanguageSelectionScreenState
     );
   }
 }
-
-
-
-
-

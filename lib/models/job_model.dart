@@ -5,7 +5,8 @@ class JobModel {
   final String workStatus;
   final String dateTime;
   final String token;
-  final String  title;
+  final String title;
+
   JobModel({
     required this.username,
     required this.address,
@@ -20,11 +21,12 @@ class JobModel {
     return JobModel(
       username: json['username'] ?? "",
       address: json['address'] ?? "",
-      price: json['price'], // nullable
+      price: json['price'],
+      // nullable
       workStatus: json['work_status'] ?? "",
       dateTime: json['date_time'] ?? "",
       token: json['token'] ?? "",
-      title:json['title']??"",
+      title: json['title'] ?? "",
     );
   }
 }

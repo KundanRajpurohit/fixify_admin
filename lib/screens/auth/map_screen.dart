@@ -1,4 +1,3 @@
-
 import 'package:fixify_admin/config/app_colors.dart';
 import 'package:fixify_admin/dio/resulr.dart';
 import 'package:fixify_admin/helpers/translate_helper.dart';
@@ -9,10 +8,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:permission_handler/permission_handler.dart';
+
 import '../../providers/auth_provider.dart';
 
 class MapScreen extends ConsumerStatefulWidget {
   final bool isFromProfile;
+
   const MapScreen({super.key, this.isFromProfile = false});
 
   @override
@@ -34,17 +35,17 @@ class _MapScreenState extends ConsumerState<MapScreen> {
 
   Future<void> _checkLocationPermission() async {
     if (_hasCheckedPermission) return;
-    
+
     final permissionStatus = await Permission.location.status;
     final locationState = ref.read(locationProvider);
-    
+
     if (permissionStatus.isDenied || permissionStatus.isPermanentlyDenied) {
       // Show permission dialog if not granted
       if (mounted && locationState.error != null) {
         _showPermissionDialog(permissionStatus.isPermanentlyDenied);
       }
     }
-    
+
     setState(() {
       _hasCheckedPermission = true;
     });
@@ -80,7 +81,9 @@ class _MapScreenState extends ConsumerState<MapScreen> {
               TextButton(
                 onPressed: () {
                   Navigator.of(context).pop();
-                  ref.read(locationProvider.notifier).requestLocationPermission();
+                  ref
+                      .read(locationProvider.notifier)
+                      .requestLocationPermission();
                 },
                 child: Text(ref.t('auth.allow')),
               ),
@@ -116,15 +119,17 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     print('💾 [MapScreen] Save button pressed');
     print('📍 [MapScreen] Current location state:');
     print(
-        '   - Selected position: ${ref.read(locationProvider).selectedPosition}');
+      '   - Selected position: ${ref.read(locationProvider).selectedPosition}',
+    );
     print('   - Address details: ${ref.read(locationProvider).addressDetails}');
     print('   - Is saving: ${ref.read(locationProvider).isSaving}');
 
     final locationState = ref.read(locationProvider);
-    
-    if (locationState.selectedPosition == null || locationState.addressDetails.isEmpty) {
+
+    if (locationState.selectedPosition == null ||
+        locationState.addressDetails.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-         SnackBar(
+        SnackBar(
           content: Text(ref.t('auth.please_select_location')),
           backgroundColor: Colors.red,
         ),
@@ -136,7 +141,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     if (widget.isFromProfile == false) {
       await _savePartnerLocation(locationState);
     } else {
-    final result = await ref.read(locationProvider.notifier).saveLocation();
+      final result = await ref.read(locationProvider.notifier).saveLocation();
       _handleSaveResult(result);
     }
   }
@@ -144,9 +149,9 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   Future<void> _savePartnerLocation(LocationState locationState) async {
     try {
       final userService = ref.read(userServiceProvider);
-      
+
       print('📤 [MapScreen] Calling partner add default address API');
-      
+
       final result = await userService.partnerAddDefaultAddress(
         address: locationState.addressDetails['address'] ?? '',
         state: locationState.addressDetails['state'] ?? '',
@@ -176,10 +181,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         print('❌ [MapScreen] Failure type: ${failure.runtimeType}');
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(failure.message),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text(failure.message), backgroundColor: Colors.red),
         );
       },
       (success) {
@@ -190,15 +192,17 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         if (success['data'] != null) {
           final userData = success['data'];
           if (userData['userid'] != null && userData['token'] != null) {
-            ref.read(authProvider.notifier).setUserData(
-              userData['userid'].toString(),
-              userData['token'].toString(),
-            );
+            ref
+                .read(authProvider.notifier)
+                .setUserData(
+                  userData['userid'].toString(),
+                  userData['token'].toString(),
+                );
           }
         }
 
         ScaffoldMessenger.of(context).showSnackBar(
-           SnackBar(
+          SnackBar(
             content: Text(ref.t('map.location_saved')),
             backgroundColor: Colors.green,
           ),
@@ -240,8 +244,10 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                   children: [
                     IconButton(
                       onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.arrow_back_ios,
-                          color: Colors.black87),
+                      icon: const Icon(
+                        Icons.arrow_back_ios,
+                        color: Colors.black87,
+                      ),
                     ),
                     Text(
                       ref.t('auth.choose_your_location'),
@@ -263,10 +269,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                 padding: const EdgeInsets.all(16),
                 child: Text(
                   ref.t('auth.select_location_service'),
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Colors.black87,
-                  ),
+                  style: const TextStyle(fontSize: 16, color: Colors.black87),
                 ),
               ),
 
@@ -286,31 +289,39 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                         decoration: InputDecoration(
                           hintText: ref.t('auth.search_location'),
                           hintStyle: const TextStyle(color: Colors.grey),
-                          prefixIcon: locationState.isSearching
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: Padding(
-                                    padding: EdgeInsets.all(12),
-                                    child: CircularProgressIndicator(
-                                        strokeWidth: 2),
+                          prefixIcon:
+                              locationState.isSearching
+                                  ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: Padding(
+                                      padding: EdgeInsets.all(12),
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    ),
+                                  )
+                                  : const Icon(
+                                    Icons.search,
+                                    color: Colors.grey,
                                   ),
-                                )
-                              : const Icon(Icons.search, color: Colors.grey),
                           border: InputBorder.none,
                           contentPadding: const EdgeInsets.all(16),
-                          suffixIcon: _searchController.text.isNotEmpty
-                              ? IconButton(
-                                  icon: const Icon(Icons.clear,
-                                      color: Colors.grey),
-                                  onPressed: () {
-                                    _searchController.clear();
-                                    ref
-                                        .read(locationProvider.notifier)
-                                        .clearSearch();
-                                  },
-                                )
-                              : null,
+                          suffixIcon:
+                              _searchController.text.isNotEmpty
+                                  ? IconButton(
+                                    icon: const Icon(
+                                      Icons.clear,
+                                      color: Colors.grey,
+                                    ),
+                                    onPressed: () {
+                                      _searchController.clear();
+                                      ref
+                                          .read(locationProvider.notifier)
+                                          .clearSearch();
+                                    },
+                                  )
+                                  : null,
                         ),
                         onChanged: (value) {
                           ref
@@ -339,33 +350,39 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                         constraints: const BoxConstraints(maxHeight: 300),
                         child: ListView.builder(
                           shrinkWrap: true,
-                          itemCount: locationState.searchSuggestions.length > 5
-                              ? 5
-                              : locationState.searchSuggestions.length,
+                          itemCount:
+                              locationState.searchSuggestions.length > 5
+                                  ? 5
+                                  : locationState.searchSuggestions.length,
                           itemBuilder: (context, index) {
                             final suggestion =
                                 locationState.searchSuggestions[index];
                             return Container(
                               decoration: BoxDecoration(
-                                border: index <
-                                        (locationState.searchSuggestions
-                                                        .length >
-                                                    5
-                                                ? 5
-                                                : locationState
-                                                    .searchSuggestions.length) -
-                                            1
-                                    ? Border(
-                                        bottom: BorderSide(
-                                          color: Colors.grey.shade200,
-                                          width: 0.5,
-                                        ),
-                                      )
-                                    : null,
+                                border:
+                                    index <
+                                            (locationState
+                                                            .searchSuggestions
+                                                            .length >
+                                                        5
+                                                    ? 5
+                                                    : locationState
+                                                        .searchSuggestions
+                                                        .length) -
+                                                1
+                                        ? Border(
+                                          bottom: BorderSide(
+                                            color: Colors.grey.shade200,
+                                            width: 0.5,
+                                          ),
+                                        )
+                                        : null,
                               ),
                               child: ListTile(
-                                leading: const Icon(Icons.location_on,
-                                    color: Color(0xFF217043)),
+                                leading: const Icon(
+                                  Icons.location_on,
+                                  color: Color(0xFF217043),
+                                ),
                                 title: Text(
                                   suggestion['main_text'] ??
                                       suggestion['description'],
@@ -374,15 +391,16 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                                     fontSize: 14,
                                   ),
                                 ),
-                                subtitle: suggestion['secondary_text'] != null
-                                    ? Text(
-                                        suggestion['secondary_text'],
-                                        style: const TextStyle(
-                                          color: Colors.grey,
-                                          fontSize: 12,
-                                        ),
-                                      )
-                                    : null,
+                                subtitle:
+                                    suggestion['secondary_text'] != null
+                                        ? Text(
+                                          suggestion['secondary_text'],
+                                          style: const TextStyle(
+                                            color: Colors.grey,
+                                            fontSize: 12,
+                                          ),
+                                        )
+                                        : null,
                                 dense: true,
                                 onTap: () {
                                   ref
@@ -435,7 +453,8 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                       Text(
                         locationState.addressDetails.isNotEmpty
                             ? _getSimplifiedAddress(
-                                locationState.addressDetails)
+                              locationState.addressDetails,
+                            )
                             : ref.t('auth.loading_address'),
                         style: const TextStyle(
                           fontSize: 14,
@@ -474,12 +493,15 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                         child: GestureDetector(
                           onTap: () async {
                             // Check permission before using current location
-                            final permissionStatus = await Permission.location.status;
-                            if (permissionStatus.isDenied || permissionStatus.isPermanentlyDenied) {
+                            final permissionStatus =
+                                await Permission.location.status;
+                            if (permissionStatus.isDenied ||
+                                permissionStatus.isPermanentlyDenied) {
                               if (permissionStatus.isPermanentlyDenied) {
                                 _showPermissionDialog(true);
                               } else {
-                                final permission = await Permission.location.request();
+                                final permission =
+                                    await Permission.location.request();
                                 if (permission.isGranted) {
                                   _useCurrentLocation();
                                 } else {
@@ -501,7 +523,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                         ),
                       ),
                       // Show error message if permission was denied
-                      if (locationState.error != null && 
+                      if (locationState.error != null &&
                           locationState.error!.contains('permission'))
                         Padding(
                           padding: const EdgeInsets.only(top: 8),
@@ -512,8 +534,8 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                               fontSize: 12,
                             ),
                             textAlign: TextAlign.center,
+                          ),
                         ),
-                      ),
                     ],
                   ),
                 ),
@@ -525,10 +547,11 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                 child: ElevatedButton(
-                  onPressed: locationState.selectedPosition != null &&
-                          !locationState.isSaving
-                      ? _saveLocation
-                      : null,
+                  onPressed:
+                      locationState.selectedPosition != null &&
+                              !locationState.isSaving
+                          ? _saveLocation
+                          : null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
@@ -537,23 +560,25 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
-                  child: locationState.isSaving
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(Colors.white),
+                  child:
+                      locationState.isSaving
+                          ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
+                            ),
+                          )
+                          : Text(
+                            ref.t('common.save'),
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                        )
-                      : Text(
-                          ref.t('common.save'),
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
                 ),
               ),
             ],
@@ -598,7 +623,9 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     String cleanAddress = address;
     // Remove Pakistan/Lahore references from any address
     cleanAddress = cleanAddress.replaceAll(
-        RegExp(r',?\s*(Lahore|Pakistan).*', caseSensitive: false), '');
+      RegExp(r',?\s*(Lahore|Pakistan).*', caseSensitive: false),
+      '',
+    );
 
     return cleanAddress.isNotEmpty
         ? '$cleanAddress, $city, $state'

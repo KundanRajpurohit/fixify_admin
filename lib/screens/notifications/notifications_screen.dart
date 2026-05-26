@@ -9,14 +9,16 @@ class NotificationsScreen extends ConsumerStatefulWidget {
   const NotificationsScreen({super.key});
 
   @override
-  ConsumerState<NotificationsScreen> createState() => _NotificationsScreenState();
+  ConsumerState<NotificationsScreen> createState() =>
+      _NotificationsScreenState();
 }
 
 class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   bool _isLoading = true;
   String? _errorMessage;
   List<NotificationItem> _notifications = [];
-  Set<String> _markingAsRead = {}; // Track which notifications are being marked as read
+  Set<String> _markingAsRead =
+      {}; // Track which notifications are being marked as read
 
   @override
   void initState() {
@@ -63,7 +65,8 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   }
 
   Future<void> _markAsRead(NotificationItem notification) async {
-    if (notification.markAsRead || _markingAsRead.contains(notification.notificationToken)) {
+    if (notification.markAsRead ||
+        _markingAsRead.contains(notification.notificationToken)) {
       return;
     }
 
@@ -122,81 +125,87 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FB),
-      appBar: CustomAppBar(title: ref.t('notifications.notifications'), showbackButton: true),
-      body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF217043)),
-              ),
-            )
-          : _errorMessage != null && _notifications.isEmpty
+      appBar: CustomAppBar(
+        title: ref.t('notifications.notifications'),
+        showbackButton: true,
+      ),
+      body:
+          _isLoading
+              ? const Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF217043)),
+                ),
+              )
+              : _errorMessage != null && _notifications.isEmpty
               ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        _errorMessage!,
-                        style: const TextStyle(color: Colors.red),
-                        textAlign: TextAlign.center,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      _errorMessage!,
+                      style: const TextStyle(color: Colors.red),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: _loadNotifications,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF217043),
+                        foregroundColor: Colors.white,
                       ),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: _loadNotifications,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF217043),
-                          foregroundColor: Colors.white,
-                        ),
-                        child: Text(ref.t('common.retry')),
-                      ),
-                    ],
-                  ),
-                )
+                      child: Text(ref.t('common.retry')),
+                    ),
+                  ],
+                ),
+              )
               : _notifications.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.notifications_none,
-                            size: 64,
-                            color: Colors.grey.shade400,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            ref.t('notifications.no_notifications'),
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            ref.t('notifications.all_read'),
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey.shade500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  : RefreshIndicator(
-                      onRefresh: _loadNotifications,
-                      color: const Color(0xFF217043),
-                      child: ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: _notifications.length,
-                        itemBuilder: (context, index) {
-                          final notification = _notifications[index];
-                          return _NotificationCard(
-                            notification: notification,
-                            onTap: () => _markAsRead(notification),
-                            isMarkingAsRead: _markingAsRead.contains(notification.notificationToken),
-                          );
-                        },
+              ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.notifications_none,
+                      size: 64,
+                      color: Colors.grey.shade400,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      ref.t('notifications.no_notifications'),
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey.shade600,
                       ),
                     ),
+                    const SizedBox(height: 8),
+                    Text(
+                      ref.t('notifications.all_read'),
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade500,
+                      ),
+                    ),
+                  ],
+                ),
+              )
+              : RefreshIndicator(
+                onRefresh: _loadNotifications,
+                color: const Color(0xFF217043),
+                child: ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: _notifications.length,
+                  itemBuilder: (context, index) {
+                    final notification = _notifications[index];
+                    return _NotificationCard(
+                      notification: notification,
+                      onTap: () => _markAsRead(notification),
+                      isMarkingAsRead: _markingAsRead.contains(
+                        notification.notificationToken,
+                      ),
+                    );
+                  },
+                ),
+              ),
     );
   }
 }
@@ -223,9 +232,10 @@ class _NotificationCard extends StatelessWidget {
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: notification.markAsRead
-                ? Colors.grey.shade200
-                : const Color(0xFF217043),
+            color:
+                notification.markAsRead
+                    ? Colors.grey.shade200
+                    : const Color(0xFF217043),
             width: notification.markAsRead ? 1 : 2,
           ),
           boxShadow: [
@@ -244,16 +254,18 @@ class _NotificationCard extends StatelessWidget {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: notification.markAsRead
-                    ? Colors.grey.shade200
-                    : const Color(0xFF217043).withOpacity(0.1),
+                color:
+                    notification.markAsRead
+                        ? Colors.grey.shade200
+                        : const Color(0xFF217043).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
                 Icons.notifications,
-                color: notification.markAsRead
-                    ? Colors.grey.shade400
-                    : const Color(0xFF217043),
+                color:
+                    notification.markAsRead
+                        ? Colors.grey.shade400
+                        : const Color(0xFF217043),
                 size: 24,
               ),
             ),
@@ -270,9 +282,10 @@ class _NotificationCard extends StatelessWidget {
                           notification.message,
                           style: TextStyle(
                             fontSize: 15,
-                            fontWeight: notification.markAsRead
-                                ? FontWeight.normal
-                                : FontWeight.w600,
+                            fontWeight:
+                                notification.markAsRead
+                                    ? FontWeight.normal
+                                    : FontWeight.w600,
                             color: Colors.black87,
                             height: 1.4,
                           ),
@@ -303,10 +316,7 @@ class _NotificationCard extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(
                     notification.formattedDate,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade600,
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                   ),
                 ],
               ),
@@ -317,5 +327,3 @@ class _NotificationCard extends StatelessWidget {
     );
   }
 }
-
-

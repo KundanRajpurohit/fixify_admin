@@ -1,4 +1,5 @@
 import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:fixify_admin/dio/resulr.dart';
 import 'package:fixify_admin/dio/token_interceptor.dart';
@@ -10,10 +11,8 @@ class ApiHandler {
   late final Dio _dio;
   final TokenManager _tokenManager;
 
-  ApiHandler({
-    required String baseUrl,
-    required TokenManager tokenManager,
-  }) : _tokenManager = tokenManager {
+  ApiHandler({required String baseUrl, required TokenManager tokenManager})
+    : _tokenManager = tokenManager {
     _dio = Dio(
       BaseOptions(
         baseUrl: baseUrl,
@@ -37,9 +36,7 @@ class ApiHandler {
     );
 
     // ✅ Token attach + refresh ONLY
-    _dio.interceptors.add(
-      TokenInterceptor(tokenManager: _tokenManager),
-    );
+    _dio.interceptors.add(TokenInterceptor(tokenManager: _tokenManager));
 
     // ❗ UnauthorizedInterceptor is added OUTSIDE
     // (usually in main.dart so it has navigatorKey)
@@ -63,10 +60,7 @@ class ApiHandler {
     Map<String, dynamic>? data,
     T Function(dynamic json)? parser,
   }) {
-    return _handleRequest<T>(
-      () => _dio.post(endpoint, data: data),
-      parser,
-    );
+    return _handleRequest<T>(() => _dio.post(endpoint, data: data), parser);
   }
 
   Future<ApiResult<T>> put<T>({
@@ -74,20 +68,14 @@ class ApiHandler {
     Map<String, dynamic>? data,
     T Function(dynamic json)? parser,
   }) {
-    return _handleRequest<T>(
-      () => _dio.put(endpoint, data: data),
-      parser,
-    );
+    return _handleRequest<T>(() => _dio.put(endpoint, data: data), parser);
   }
 
   Future<ApiResult<T>> delete<T>({
     required String endpoint,
     T Function(dynamic json)? parser,
   }) {
-    return _handleRequest<T>(
-      () => _dio.delete(endpoint),
-      parser,
-    );
+    return _handleRequest<T>(() => _dio.delete(endpoint), parser);
   }
 
   // ---------------- CORE HANDLER ----------------

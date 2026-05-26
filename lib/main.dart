@@ -1,4 +1,7 @@
+import 'package:clarity_flutter/clarity_flutter.dart'; // 🆕 Add Clarity import
 import 'package:dio/dio.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:fixify_admin/config/api_config.dart';
 import 'package:fixify_admin/dio/auth_interceptor.dart';
 import 'package:fixify_admin/dio/token_interceptor.dart';
@@ -11,14 +14,11 @@ import 'package:fixify_admin/screens/auth/splash_screen.dart';
 import 'package:fixify_admin/services/notification_service.dart';
 import 'package:fixify_admin/services/translation_service.dart';
 import 'package:fixify_admin/services/user_service.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:clarity_flutter/clarity_flutter.dart'; // 🆕 Add Clarity import
 
 // Global navigator key for handling 401 redirects
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -34,8 +34,8 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   print('📝 [Background] Body: ${message.notification?.body}');
   print('📝 [Background] Data: ${message.data}');
 
-  // Handle background notification logic here
-  // You can save to database, update UI state, etc.
+  final notificationService = NotificationService();
+  await notificationService.showBackgroundNotification(message);
 }
 
 void main() async {
@@ -80,7 +80,7 @@ void main() async {
     final prefs = await SharedPreferences.getInstance();
     final languageCode = prefs.getString('app_language') ?? 'en';
     final language = AppLanguage.values.firstWhere(
-          (lang) => lang.code == languageCode,
+      (lang) => lang.code == languageCode,
       orElse: () => AppLanguage.english,
     );
     await TranslationService.loadTranslations(language);
@@ -181,9 +181,7 @@ void main() async {
   print('👤 [Main] UserService initialized');
 
   // 🆕 Configure Clarity Analytics
-  final clarityConfig = ClarityConfig(
-    projectId: 'vao6wyj0ty',
-  );
+  final clarityConfig = ClarityConfig(projectId: 'vao6wyj0ty');
 
   // 🆕 Wrap the app with ClarityWidget
   runApp(

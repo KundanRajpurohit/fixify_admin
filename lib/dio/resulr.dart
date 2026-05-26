@@ -6,7 +6,7 @@ typedef ApiResult<T> = Either<ApiFailure, T>;
 sealed class ApiFailure {
   final String message;
   final int? statusCode;
-  
+
   const ApiFailure(this.message, [this.statusCode]);
 }
 
@@ -19,8 +19,8 @@ class UnauthorizedFailure extends ApiFailure {
 }
 
 class ServerFailure extends ApiFailure {
-  const ServerFailure(String message, int statusCode) 
-      : super(message, statusCode);
+  const ServerFailure(String message, int statusCode)
+    : super(message, statusCode);
 }
 
 class ParseFailure extends ApiFailure {

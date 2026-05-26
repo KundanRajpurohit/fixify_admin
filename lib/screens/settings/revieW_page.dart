@@ -75,7 +75,7 @@ class RatingPage extends ConsumerWidget {
               const SizedBox(height: 4),
               Text(
                 '273 ${ref.t('dashboard.reviews')}',
-                style:  TextStyle(fontSize: 13, color: Colors.grey),
+                style: TextStyle(fontSize: 13, color: Colors.grey),
               ),
             ],
           ),

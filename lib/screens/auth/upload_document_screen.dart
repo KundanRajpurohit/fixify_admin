@@ -12,7 +12,8 @@ class UploadDocumentsScreen extends ConsumerStatefulWidget {
   const UploadDocumentsScreen({super.key});
 
   @override
-  ConsumerState<UploadDocumentsScreen> createState() => _UploadDocumentsScreenState();
+  ConsumerState<UploadDocumentsScreen> createState() =>
+      _UploadDocumentsScreenState();
 }
 
 class _UploadDocumentsScreenState extends ConsumerState<UploadDocumentsScreen> {
@@ -54,10 +55,10 @@ class _UploadDocumentsScreenState extends ConsumerState<UploadDocumentsScreen> {
   Future<void> _submit() async {
     if (!_canSubmit) {
       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(ref.t('auth.upload_aadhaar')),
-            backgroundColor: Colors.red,
-          ),
+        SnackBar(
+          content: Text(ref.t('auth.upload_aadhaar')),
+          backgroundColor: Colors.red,
+        ),
       );
       return;
     }
@@ -66,7 +67,7 @@ class _UploadDocumentsScreenState extends ConsumerState<UploadDocumentsScreen> {
 
     try {
       final userService = ref.read(userServiceProvider);
-      
+
       print('📄 [UploadDocuments] Uploading documents:');
       print('   - national_id: ${_aadhaarFile?.path}');
       print('   - proof_national_id: ${_addressFile?.path}');
@@ -92,7 +93,7 @@ class _UploadDocumentsScreenState extends ConsumerState<UploadDocumentsScreen> {
         },
         (data) {
           setState(() => _isSubmitting = false);
-          
+
           print('✅ [UploadDocuments] Documents uploaded successfully');
           print('📊 [UploadDocuments] Response: $data');
 
@@ -221,7 +222,7 @@ class _UploadDocumentsScreenState extends ConsumerState<UploadDocumentsScreen> {
           ),
         ],
       ),
-      child:  Column(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
@@ -337,6 +338,7 @@ class _UploadDocumentsScreenState extends ConsumerState<UploadDocumentsScreen> {
 
 class _BulletText extends StatelessWidget {
   final String text;
+
   const _BulletText(this.text);
 
   @override

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:fixify_admin/config/app_colors.dart';
 import 'package:fixify_admin/dio/resulr.dart';
 import 'package:fixify_admin/helpers/translate_helper.dart';
@@ -6,8 +8,6 @@ import 'package:fixify_admin/screens/dashboard/rate_customer_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
-import 'package:page_transition/page_transition.dart';
 
 class CompleteJobScreen extends ConsumerStatefulWidget {
   final Map<String, dynamic> job;
@@ -63,7 +63,7 @@ class _CompleteJobScreenState extends ConsumerState<CompleteJobScreen> {
     }
 
     if (_selectedImages.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(ref.t('dashboard.please_upload_at_least_one_photo')),
           backgroundColor: Colors.red,
@@ -105,12 +105,9 @@ class _CompleteJobScreenState extends ConsumerState<CompleteJobScreen> {
               // 3️⃣ Navigate to Rate Customer screen
               if (!mounted) return;
 
-              Navigator.push(
-                context,
-                PageTransition(
-                  type: PageTransitionType.rightToLeft,
-                  duration: const Duration(milliseconds: 300),
-                  child: RateCustomerScreen(job: widget.job),
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(
+                  builder: (_) => RateCustomerScreen(job: widget.job),
                 ),
               );
             },
@@ -123,9 +120,7 @@ class _CompleteJobScreenState extends ConsumerState<CompleteJobScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            e is ApiFailure
-                ? e.message
-                : ref.t('common.try_again'),
+            e is ApiFailure ? e.message : ref.t('common.try_again'),
           ),
           backgroundColor: Colors.red,
         ),
@@ -190,7 +185,9 @@ class _CompleteJobScreenState extends ConsumerState<CompleteJobScreen> {
             // Content
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
                 child: Form(
                   key: _formKey,
                   child: Column(
@@ -212,7 +209,12 @@ class _CompleteJobScreenState extends ConsumerState<CompleteJobScreen> {
 
             // Submit Button
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.fromLTRB(
+                16,
+                16,
+                16,
+                16 + MediaQuery.of(context).padding.bottom,
+              ),
               decoration: BoxDecoration(
                 color: Colors.white,
                 boxShadow: [
@@ -502,4 +504,3 @@ class _CompleteJobScreenState extends ConsumerState<CompleteJobScreen> {
     );
   }
 }
-

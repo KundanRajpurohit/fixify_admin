@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+
 import 'home_screen.dart';
 import 'my_jobs_screen.dart';
 import 'profile_screen.dart';
@@ -10,12 +11,16 @@ import 'settings_screen.dart';
 
 class HomePageScreen extends ConsumerStatefulWidget {
   final int initialIndex;
+  final int initialMyJobsTabIndex;
+  final bool showPastAssignedJobs;
   final String? userId;
   final String? sessionId;
 
   const HomePageScreen({
     super.key,
     this.initialIndex = 0,
+    this.initialMyJobsTabIndex = 0,
+    this.showPastAssignedJobs = false,
     this.userId,
     this.sessionId,
   });
@@ -61,7 +66,10 @@ class _HomePageScreenState extends ConsumerState<HomePageScreen> {
   Widget build(BuildContext context) {
     final screens = [
       HomeDashboardScreen(tabNotifier: _tabNotifier),
-      MyJobsScreen(),
+      MyJobsScreen(
+        initialTabIndex: widget.initialMyJobsTabIndex,
+        showPastAssignedJobs: widget.showPastAssignedJobs,
+      ),
       const SettingsScreen(),
       const ProfileScreen(),
     ];

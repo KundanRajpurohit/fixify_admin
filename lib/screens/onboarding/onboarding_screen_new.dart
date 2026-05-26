@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:page_transition/page_transition.dart';
+
 import 'get_started_screen.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
@@ -20,17 +21,17 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     OnboardingPage(
       title: ref.t('onboarding.manage_work_easily'),
       description: ref.t('onboarding.manage_work_description'),
-      illustration:  _BookingServicesIllustration(),
+      illustration: _BookingServicesIllustration(),
     ),
     OnboardingPage(
       title: ref.t('onboarding.skilled_professionals'),
       description: ref.t('onboarding.skilled_professionals_description'),
-      illustration:  _SkilledProfessionalsIllustration(),
+      illustration: _SkilledProfessionalsIllustration(),
     ),
     OnboardingPage(
       title: ref.t('onboarding.hassle_free_payments'),
       description: ref.t('onboarding.hassle_free_payments_description'),
-      illustration:  _PaymentIllustration(),
+      illustration: _PaymentIllustration(),
     ),
   ];
 

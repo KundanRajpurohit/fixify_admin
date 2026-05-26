@@ -5,13 +5,13 @@ import 'package:fixify_admin/main.dart' show navigatorKey;
 import 'package:fixify_admin/providers/auth_provider.dart';
 import 'package:fixify_admin/providers/location_provider.dart'
     show userServiceProvider;
+import 'package:fixify_admin/screens/auth/phone_verification_screen.dart';
 import 'package:fixify_admin/screens/dashboard/bank_accounts_screen.dart';
 import 'package:fixify_admin/screens/dashboard/edit_profile_screen.dart';
 import 'package:fixify_admin/screens/dashboard/my_documents_screen.dart';
 import 'package:fixify_admin/screens/dashboard/privacy_policy_screen.dart';
 import 'package:fixify_admin/screens/dashboard/terms_of_service_screen.dart';
 import 'package:fixify_admin/screens/dashboard/vendor_list_page.dart';
-import 'package:fixify_admin/screens/auth/phone_verification_screen.dart';
 import 'package:fixify_admin/screens/settings/earnings_dashboard_screen.dart';
 import 'package:fixify_admin/screens/settings/revieW_page.dart';
 import 'package:fixify_admin/screens/settings/transaction_history.dart';
@@ -94,7 +94,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7F8),
-      appBar: CustomAppBar(title: ref.t('profile.my_profile'), showbackButton: false),
+      appBar: CustomAppBar(
+        title: ref.t('profile.my_profile'),
+        showbackButton: false,
+      ),
       body:
           _isLoading
               ? const Center(
@@ -277,7 +280,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             const SizedBox(height: 16),
             _buildDocumentItem(ref.t('auth.aadhaar_card'), nationalIdVerified),
             const Divider(height: 24),
-            _buildDocumentItem(ref.t('auth.address_proof'), proofNationalIdVerified),
+            _buildDocumentItem(
+              ref.t('auth.address_proof'),
+              proofNationalIdVerified,
+            ),
             const Divider(height: 24),
             _buildDocumentItem(
               ref.t('auth.service_license_if_applicable'),
@@ -413,7 +419,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               // Navigate to rating & reviews
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) =>  RatingPage()),
+                MaterialPageRoute(builder: (context) => RatingPage()),
               );
             },
           ),
@@ -478,11 +484,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     context: context,
                     builder:
                         (context) => AlertDialog(
-                          title: Text(ref.t('profile.notification_permission_title')),
+                          title: Text(
+                            ref.t('profile.notification_permission_title'),
+                          ),
                           content: Text(
                             status.isPermanentlyDenied
-                                ? ref.t('profile.notification_permission_content_permanently_denied')
-                                : ref.t('profile.notification_permission_content_denied'),
+                                ? ref.t(
+                                  'profile.notification_permission_content_permanently_denied',
+                                )
+                                : ref.t(
+                                  'profile.notification_permission_content_denied',
+                                ),
                           ),
                           actions: [
                             TextButton(
@@ -503,8 +515,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       await openAppSettings();
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                           SnackBar(
-                            content: Text(ref.t('profile.enable_notifications_in_settings')),
+                          SnackBar(
+                            content: Text(
+                              ref.t('profile.enable_notifications_in_settings'),
+                            ),
                             backgroundColor: Colors.orange,
                             duration: Duration(seconds: 4),
                           ),
@@ -519,8 +533,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           // Open app settings if permission still not granted
                           await openAppSettings();
                           ScaffoldMessenger.of(context).showSnackBar(
-                             SnackBar(
-                              content: Text(ref.t('profile.enable_notifications_in_settings')),
+                            SnackBar(
+                              content: Text(
+                                ref.t(
+                                  'profile.enable_notifications_in_settings',
+                                ),
+                              ),
                               backgroundColor: Colors.orange,
                               duration: Duration(seconds: 3),
                             ),
@@ -540,7 +558,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       await openAppSettings();
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text(ref.t('profile.enable_notifications_in_settings')),
+                          content: Text(
+                            ref.t('profile.enable_notifications_in_settings'),
+                          ),
                           backgroundColor: Colors.orange,
                           duration: Duration(seconds: 3),
                         ),
@@ -563,7 +583,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     });
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('${ref.t('profile.failed_to_update_notification')}: ${failure.message}'),
+                        content: Text(
+                          '${ref.t('profile.failed_to_update_notification')}: ${failure.message}',
+                        ),
                         backgroundColor: Colors.red,
                       ),
                     );
@@ -695,10 +717,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         );
                       },
                       (data) {
-                        print('✅ [ProfileScreen] Logout successful - navigating to login');
+                        print(
+                          '✅ [ProfileScreen] Logout successful - navigating to login',
+                        );
                       },
                     );
-                    
+
                     // Navigate to PhoneVerificationScreen (login screen) using global navigator key
                     // This is safer than using context after dialog is closed
                     if (navigatorKey.currentState != null) {

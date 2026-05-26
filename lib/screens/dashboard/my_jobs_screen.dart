@@ -10,7 +10,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:page_transition/page_transition.dart';
 
 class MyJobsScreen extends ConsumerStatefulWidget {
-  const MyJobsScreen({super.key});
+  final int initialTabIndex;
+  final bool showPastAssignedJobs;
+
+  const MyJobsScreen({
+    super.key,
+    this.initialTabIndex = 0,
+    this.showPastAssignedJobs = false,
+  });
 
   @override
   ConsumerState<MyJobsScreen> createState() => _MyJobsScreenState();
@@ -19,9 +26,12 @@ class MyJobsScreen extends ConsumerStatefulWidget {
 class _MyJobsScreenState extends ConsumerState<MyJobsScreen>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late TabController _tabController;
-  String _selectedNewJobFilter = 'All Jobs'; // Will be initialized with translation
-  String _selectedAssignedJobFilter = 'All Assigned Jobs'; // Will be initialized with translation
+  String _selectedNewJobFilter =
+      'All Jobs'; // Will be initialized with translation
+  String _selectedAssignedJobFilter =
+      'All Assigned Jobs'; // Will be initialized with translation
   int _selectedTabIndex = 0;
+  bool _didLoadInitialJobs = false;
   bool _isLoading = false;
   List<JobModel> _newJobs = [];
   List<JobModel> _assignedJobs = [];
@@ -187,7 +197,12 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
 
-    _tabController = TabController(length: 2, vsync: this);
+    _selectedTabIndex = widget.initialTabIndex.clamp(0, 1);
+    _tabController = TabController(
+      length: 2,
+      vsync: this,
+      initialIndex: _selectedTabIndex,
+    );
 
     _tabController.addListener(() {
       if (_selectedTabIndex != _tabController.index) {
@@ -209,12 +224,20 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen>
     super.didChangeDependencies();
     // Initialize filters with translated strings after dependencies are available
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && _selectedNewJobFilter == 'All Jobs') {
+      if (mounted && !_didLoadInitialJobs) {
+        _didLoadInitialJobs = true;
         setState(() {
           _selectedNewJobFilter = _newJobFilters.first;
-          _selectedAssignedJobFilter = _assignedJobFilters.first;
+          _selectedAssignedJobFilter =
+              widget.showPastAssignedJobs
+                  ? ref.t('dashboard.past_jobs')
+                  : _assignedJobFilters.first;
         });
-        _loadNewJobs();
+        if (_selectedTabIndex == 0) {
+          _loadNewJobs();
+        } else {
+          _loadAssignedJobs();
+        }
       }
     });
   }
@@ -244,35 +267,38 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen>
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
-        return Container(
-          padding: const EdgeInsets.symmetric(vertical: 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children:
-                _newJobFilters.map((filter) {
-                  final isSelected = _selectedNewJobFilter == filter;
-                  return ListTile(
-                    title: Text(
-                      filter,
-                      style: TextStyle(
-                        fontWeight:
-                            isSelected ? FontWeight.bold : FontWeight.normal,
-                        color: isSelected ? AppColors.primary : Colors.black87,
+        return SafeArea(
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children:
+                  _newJobFilters.map((filter) {
+                    final isSelected = _selectedNewJobFilter == filter;
+                    return ListTile(
+                      title: Text(
+                        filter,
+                        style: TextStyle(
+                          fontWeight:
+                              isSelected ? FontWeight.bold : FontWeight.normal,
+                          color:
+                              isSelected ? AppColors.primary : Colors.black87,
+                        ),
                       ),
-                    ),
-                    trailing:
-                        isSelected
-                            ? Icon(Icons.check, color: AppColors.primary)
-                            : null,
-                    onTap: () {
-                      setState(() {
-                        _selectedNewJobFilter = filter;
-                      });
-                      Navigator.pop(context);
-                      _loadNewJobs();
-                    },
-                  );
-                }).toList(),
+                      trailing:
+                          isSelected
+                              ? Icon(Icons.check, color: AppColors.primary)
+                              : null,
+                      onTap: () {
+                        setState(() {
+                          _selectedNewJobFilter = filter;
+                        });
+                        Navigator.pop(context);
+                        _loadNewJobs();
+                      },
+                    );
+                  }).toList(),
+            ),
           ),
         );
       },
@@ -286,35 +312,38 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen>
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
-        return Container(
-          padding: const EdgeInsets.symmetric(vertical: 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children:
-                _assignedJobFilters.map((filter) {
-                  final isSelected = _selectedAssignedJobFilter == filter;
-                  return ListTile(
-                    title: Text(
-                      filter,
-                      style: TextStyle(
-                        fontWeight:
-                            isSelected ? FontWeight.bold : FontWeight.normal,
-                        color: isSelected ? AppColors.primary : Colors.black87,
+        return SafeArea(
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children:
+                  _assignedJobFilters.map((filter) {
+                    final isSelected = _selectedAssignedJobFilter == filter;
+                    return ListTile(
+                      title: Text(
+                        filter,
+                        style: TextStyle(
+                          fontWeight:
+                              isSelected ? FontWeight.bold : FontWeight.normal,
+                          color:
+                              isSelected ? AppColors.primary : Colors.black87,
+                        ),
                       ),
-                    ),
-                    trailing:
-                        isSelected
-                            ? Icon(Icons.check, color: AppColors.primary)
-                            : null,
-                    onTap: () {
-                      setState(() {
-                        _selectedAssignedJobFilter = filter;
-                      });
-                      Navigator.pop(context);
-                      _loadAssignedJobs();
-                    },
-                  );
-                }).toList(),
+                      trailing:
+                          isSelected
+                              ? Icon(Icons.check, color: AppColors.primary)
+                              : null,
+                      onTap: () {
+                        setState(() {
+                          _selectedAssignedJobFilter = filter;
+                        });
+                        Navigator.pop(context);
+                        _loadAssignedJobs();
+                      },
+                    );
+                  }).toList(),
+            ),
           ),
         );
       },
@@ -342,8 +371,14 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen>
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    _buildPillTab(title: ref.t('dashboard.new_job_request'), index: 0),
-                    _buildPillTab(title: ref.t('dashboard.assigned_job'), index: 1),
+                    _buildPillTab(
+                      title: ref.t('dashboard.new_job_request'),
+                      index: 0,
+                    ),
+                    _buildPillTab(
+                      title: ref.t('dashboard.assigned_job'),
+                      index: 1,
+                    ),
                   ],
                 ),
               ),
@@ -426,7 +461,9 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen>
             Icon(Icons.work_outline, size: 64, color: Colors.grey.shade400),
             const SizedBox(height: 16),
             Text(
-              isNewJob ? ref.t('dashboard.no_new_job_requests') : ref.t('dashboard.no_assigned_jobs'),
+              isNewJob
+                  ? ref.t('dashboard.no_new_job_requests')
+                  : ref.t('dashboard.no_assigned_jobs'),
               style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
             ),
             const SizedBox(height: 20),
@@ -442,7 +479,11 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen>
                         }
                       },
               icon: const Icon(Icons.refresh),
-              label: Text(_isLoading ? ref.t('common.refreshing') : ref.t('common.refresh')),
+              label: Text(
+                _isLoading
+                    ? ref.t('common.refreshing')
+                    : ref.t('common.refresh'),
+              ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,

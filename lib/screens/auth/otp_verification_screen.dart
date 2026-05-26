@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:fixify_admin/helpers/translate_helper.dart';
 import 'package:fixify_admin/screens/auth/map_screen.dart';
 import 'package:fixify_admin/screens/dashboard/terms_of_service_screen.dart';
@@ -6,13 +8,14 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:page_transition/page_transition.dart';
-import 'dart:async';
+
 import '../../providers/auth_provider.dart';
 import '../../providers/location_provider.dart' show userServiceProvider;
 import '../dashboard/dashboard_screen.dart';
 
 class OTPVerificationScreen extends ConsumerStatefulWidget {
   final isCreateAccount;
+
   const OTPVerificationScreen({super.key, this.isCreateAccount = false});
 
   @override
@@ -44,7 +47,9 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
       print('📱 [OTPVerificationScreen] Phone: ${authState.phoneNumber}');
       print('🔢 [OTPVerificationScreen] Received OTP: ${authState.otp}');
       print('👤 [OTPVerificationScreen] User ID: ${authState.userId}');
-      print('🆕 [OTPVerificationScreen] Is Create Account: ${widget.isCreateAccount}');
+      print(
+        '🆕 [OTPVerificationScreen] Is Create Account: ${widget.isCreateAccount}',
+      );
 
       // Pre-fill OTP if available
       if (authState.otp != null && authState.otp!.isNotEmpty) {
@@ -52,14 +57,18 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
         _prefillOTP(authState.otp!);
       } else if (widget.isCreateAccount && authState.phoneNumber != null) {
         // Send OTP automatically for create account flow
-        print('📤 [OTPVerificationScreen] Auto-sending OTP for create account flow');
+        print(
+          '📤 [OTPVerificationScreen] Auto-sending OTP for create account flow',
+        );
         final userService = ref.read(userServiceProvider);
         final result = await userService.partnerSendOtp(
           mobile: authState.phoneNumber!,
         );
         result.fold(
           (failure) {
-            print('❌ [OTPVerificationScreen] Failed to send OTP: ${failure.message}');
+            print(
+              '❌ [OTPVerificationScreen] Failed to send OTP: ${failure.message}',
+            );
           },
           (data) {
             print('✅ [OTPVerificationScreen] OTP sent successfully');
@@ -133,10 +142,10 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
     final authState = ref.read(authProvider);
     if (authState.phoneNumber == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(ref.t('auth.phone_number_not_found')),
-            backgroundColor: Colors.red,
-          ),
+        SnackBar(
+          content: Text(ref.t('auth.phone_number_not_found')),
+          backgroundColor: Colors.red,
+        ),
       );
       return;
     }
@@ -146,10 +155,10 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
 
     if (widget.isCreateAccount) {
       // Use partner Send OTP API for registration flow
-      print('📤 [OTPVerificationScreen] Resending OTP via partnerSendOtp (create account)');
-      final result = await userService.partnerSendOtp(
-        mobile: phoneNumber,
+      print(
+        '📤 [OTPVerificationScreen] Resending OTP via partnerSendOtp (create account)',
       );
+      final result = await userService.partnerSendOtp(mobile: phoneNumber);
       result.fold(
         (failure) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -182,8 +191,10 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
       final deviceInfo = await DeviceInfoService.getCachedDeviceInfo();
       final deviceToken = deviceInfo['deviceToken'];
       final platform = deviceInfo['platform'];
-      
-      print('📤 [OTPVerificationScreen] Resending OTP via partnerLogin (phone verification)');
+
+      print(
+        '📤 [OTPVerificationScreen] Resending OTP via partnerLogin (phone verification)',
+      );
       final result = await userService.partnerLogin(
         mobile: phoneNumber,
         deviceToken: deviceToken,
@@ -213,20 +224,22 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
               _prefillOTP(data['otp'].toString());
             }
             ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(ref.t('auth.otp_sent')),
-            backgroundColor: Colors.green,
-          ),
+              SnackBar(
+                content: Text(ref.t('auth.otp_sent')),
+                backgroundColor: Colors.green,
+              ),
             );
           } else {
             // Handle different error scenarios
             String errorMessage = message;
-            
-            if (message.contains('not registered') || 
-                message.toLowerCase().contains('mobile number not registered')) {
+
+            if (message.contains('not registered') ||
+                message.toLowerCase().contains(
+                  'mobile number not registered',
+                )) {
               errorMessage = ref.t('auth.account_in_review');
-            } else if (accountStatus == 'pending' || 
-                       message.toLowerCase().contains('not active')) {
+            } else if (accountStatus == 'pending' ||
+                message.toLowerCase().contains('not active')) {
               errorMessage = ref.t('auth.account_not_active');
             }
 
@@ -241,7 +254,7 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
         },
       );
     }
-    
+
     _startTimer();
   }
 
@@ -311,14 +324,15 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => WillPopScope(
-        onWillPop: () async => false, // Prevent back button
-        child: const Center(
-          child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF217043)),
+      builder:
+          (context) => WillPopScope(
+            onWillPop: () async => false, // Prevent back button
+            child: const Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF217043)),
+              ),
+            ),
           ),
-        ),
-      ),
     );
 
     print('⏳ [OTPVerificationScreen] Calling verifyOTP...');
@@ -350,12 +364,14 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
       );
 
       result.fold(
-            (failure) {
+        (failure) {
           isSuccess = false;
           errorMessage = failure.message;
-          print('❌ [OTPVerificationScreen] Verification failed: ${failure.message}');
+          print(
+            '❌ [OTPVerificationScreen] Verification failed: ${failure.message}',
+          );
         },
-            (data) {
+        (data) {
           isSuccess = true;
           // Update auth state with token if available
           // The token is already saved to SharedPreferences by partnerVerifyOtp method
@@ -364,7 +380,9 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
               authToken: data['token'],
               isVerified: true,
             );
-            print('✅ [OTPVerificationScreen] Token saved to state (already saved to SharedPreferences by service)');
+            print(
+              '✅ [OTPVerificationScreen] Token saved to state (already saved to SharedPreferences by service)',
+            );
           }
         },
       );
@@ -399,7 +417,9 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
 
     // IMPORTANT: Check again if still mounted before showing result dialog
     if (!mounted) {
-      print('⚠️ [OTPVerificationScreen] Widget not mounted after API call, exiting');
+      print(
+        '⚠️ [OTPVerificationScreen] Widget not mounted after API call, exiting',
+      );
       return;
     }
 
@@ -407,15 +427,19 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
     await showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (dialogContext) => WillPopScope(
-        onWillPop: () async => false, // Prevent back button on dialog
-        child: AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(40),
+      builder:
+          (dialogContext) => WillPopScope(
+            onWillPop: () async => false, // Prevent back button on dialog
+            child: AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(40),
+              ),
+              content:
+                  isSuccess
+                      ? _buildSuccessDialog(dialogContext)
+                      : _buildFailureDialog(dialogContext, errorMessage),
+            ),
           ),
-          content: isSuccess ? _buildSuccessDialog(dialogContext) : _buildFailureDialog(dialogContext, errorMessage),
-        ),
-      ),
     );
   }
 
@@ -459,9 +483,10 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
                 PageTransition(
                   type: PageTransitionType.fade,
                   duration: const Duration(milliseconds: 500),
-                  child: widget.isCreateAccount
-                      ? MapScreen()
-                      : const HomePageScreen(),
+                  child:
+                      widget.isCreateAccount
+                          ? MapScreen()
+                          : const HomePageScreen(),
                 ),
               );
             },
@@ -474,10 +499,7 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
             ),
             child: Text(
               ref.t('common.continue'),
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
           ),
         ),
@@ -538,10 +560,7 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
             ),
             child: Text(
               ref.t('common.try_again'),
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
           ),
         ),
@@ -671,11 +690,12 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
                   RichText(
                     textAlign: TextAlign.center,
                     text: TextSpan(
-                      style: const TextStyle(fontSize: 14, color: Colors.black87),
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.black87,
+                      ),
                       children: [
-                        TextSpan(
-                          text: ref.t('auth.by_verifying'),
-                        ),
+                        TextSpan(text: ref.t('auth.by_verifying')),
                         TextSpan(
                           text: ref.t('auth.term_and_conditions'),
                           style: const TextStyle(
@@ -683,16 +703,17 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
                             fontWeight: FontWeight.w600,
                             decoration: TextDecoration.underline,
                           ),
-                          recognizer: TapGestureRecognizer()
-                            ..onTap = () {
-                              Navigator.push(
-                                context,
-                                PageTransition(
-                                  type: PageTransitionType.rightToLeft,
-                                  child: const TermsOfServiceScreen(),
-                                ),
-                              );
-                            },
+                          recognizer:
+                              TapGestureRecognizer()
+                                ..onTap = () {
+                                  Navigator.push(
+                                    context,
+                                    PageTransition(
+                                      type: PageTransitionType.rightToLeft,
+                                      child: const TermsOfServiceScreen(),
+                                    ),
+                                  );
+                                },
                         ),
                       ],
                     ),

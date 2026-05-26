@@ -1,4 +1,3 @@
-
 import 'package:fixify_admin/config/app_colors.dart';
 import 'package:fixify_admin/helpers/translate_helper.dart';
 import 'package:flutter/material.dart';
@@ -17,9 +16,7 @@ class LogoutDialog extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
@@ -43,9 +40,9 @@ class LogoutDialog extends ConsumerWidget {
                 color: AppColors.primary,
               ),
             ),
-            
+
             const SizedBox(height: 20),
-            
+
             // Title
             Text(
               ref.t('profile.logout_message'),
@@ -56,9 +53,9 @@ class LogoutDialog extends ConsumerWidget {
               ),
               textAlign: TextAlign.center,
             ),
-            
+
             const SizedBox(height: 12),
-            
+
             // Message
             Text(
               ref.t('profile.logout_description'),
@@ -69,9 +66,9 @@ class LogoutDialog extends ConsumerWidget {
               ),
               textAlign: TextAlign.center,
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Buttons
             Row(
               children: [
@@ -97,9 +94,9 @@ class LogoutDialog extends ConsumerWidget {
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(width: 12),
-                
+
                 // Logout Button
                 Expanded(
                   child: GestureDetector(

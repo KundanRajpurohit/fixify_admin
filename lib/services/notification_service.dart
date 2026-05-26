@@ -1,20 +1,29 @@
 import 'dart:async';
 import 'dart:io';
+
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:fixify_admin/main.dart';
+import 'package:fixify_admin/screens/dashboard/job_details_screen.dart';
+import 'package:fixify_admin/screens/notifications/notifications_screen.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:fixify_admin/main.dart';
-import 'package:fixify_admin/screens/notifications/notifications_screen.dart';
-import 'package:fixify_admin/screens/dashboard/job_details_screen.dart';
 
 class NotificationService {
+  static const String channelId = 'fixify_notifications_v2';
+  static const String channelName = 'Fixify Notifications';
+  static const String channelDescription =
+      'Notifications for Fixify Partner app';
+  static const String androidSoundName = 'notification_sound';
+
   static final NotificationService _instance = NotificationService._internal();
+
   factory NotificationService() => _instance;
+
   NotificationService._internal();
 
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
-  final FlutterLocalNotificationsPlugin _localNotifications = 
+  final FlutterLocalNotificationsPlugin _localNotifications =
       FlutterLocalNotificationsPlugin();
 
   bool _isInitialized = false;
@@ -34,14 +43,29 @@ class NotificationService {
 
       // Set up notification channel for Android (must be done FIRST)
       if (Platform.isAndroid) {
-        print('📱 [NotificationService] Setting up Android notification channel...');
+        print(
+          '📱 [NotificationService] Setting up Android notification channel...',
+        );
         await _createNotificationChannel();
       }
 
       // Initialize local notifications plugin
-      print('📱 [NotificationService] Initializing local notifications plugin...');
+      print(
+        '📱 [NotificationService] Initializing local notifications plugin...',
+      );
       await _initializeLocalNotifications();
       print('✅ [NotificationService] Local notifications plugin initialized');
+
+      if (Platform.isIOS) {
+        await _firebaseMessaging.setForegroundNotificationPresentationOptions(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
+        print(
+          '✅ [NotificationService] iOS foreground presentation options configured',
+        );
+      }
 
       // Request permissions
       print('📱 [NotificationService] Requesting notification permissions...');
@@ -53,7 +77,9 @@ class NotificationService {
 
       // Note: Background message handler is set in main.dart BEFORE Firebase.initializeApp()
       // We don't set it here to avoid duplicate registration
-      print('✅ [NotificationService] Background handler already registered in main.dart');
+      print(
+        '✅ [NotificationService] Background handler already registered in main.dart',
+      );
 
       // Get initial message (if app was opened from a notification)
       print('📱 [NotificationService] Checking for initial message...');
@@ -66,7 +92,9 @@ class NotificationService {
       }
 
       _isInitialized = true;
-      print('✅ [NotificationService] Notification service initialized successfully');
+      print(
+        '✅ [NotificationService] Notification service initialized successfully',
+      );
       print('📱 [NotificationService] Ready to receive notifications');
     } catch (e, stackTrace) {
       print('❌ [NotificationService] Error initializing: $e');
@@ -77,7 +105,9 @@ class NotificationService {
 
   /// Initialize local notifications plugin
   Future<void> _initializeLocalNotifications() async {
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
@@ -105,21 +135,28 @@ class NotificationService {
         provisional: false,
       );
 
-      print('📱 [NotificationService] iOS Permission Status: ${settings.authorizationStatus}');
-      
+      print(
+        '📱 [NotificationService] iOS Permission Status: ${settings.authorizationStatus}',
+      );
+
       if (settings.authorizationStatus == AuthorizationStatus.authorized) {
         print('✅ [NotificationService] iOS notifications authorized');
-      } else if (settings.authorizationStatus == AuthorizationStatus.provisional) {
-        print('⚠️ [NotificationService] iOS notifications provisionally authorized');
+      } else if (settings.authorizationStatus ==
+          AuthorizationStatus.provisional) {
+        print(
+          '⚠️ [NotificationService] iOS notifications provisionally authorized',
+        );
       } else {
         print('❌ [NotificationService] iOS notifications not authorized');
       }
     } else if (Platform.isAndroid) {
       // Android 13+ requires runtime permission
-      final androidInfo = await _localNotifications
-          .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>();
-      
+      final androidInfo =
+          await _localNotifications
+              .resolvePlatformSpecificImplementation<
+                AndroidFlutterLocalNotificationsPlugin
+              >();
+
       if (androidInfo != null) {
         final granted = await androidInfo.requestNotificationsPermission();
         print('📱 [NotificationService] Android Permission Granted: $granted');
@@ -130,18 +167,20 @@ class NotificationService {
   /// Create notification channel for Android
   Future<void> _createNotificationChannel() async {
     const androidChannel = AndroidNotificationChannel(
-      'fixify_notifications', // id
-      'Fixify Notifications', // name
-      description: 'Notifications for Fixify Partner app',
+      channelId,
+      channelName,
+      description: channelDescription,
       importance: Importance.high,
       playSound: true,
       enableVibration: true,
-      sound: RawResourceAndroidNotificationSound('notification_sound'), // ← Add this
+      sound: RawResourceAndroidNotificationSound(androidSoundName),
     );
 
-    final androidInfo = _localNotifications
-        .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
+    final androidInfo =
+        _localNotifications
+            .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin
+            >();
 
     if (androidInfo != null) {
       await androidInfo.createNotificationChannel(androidChannel);
@@ -191,18 +230,21 @@ class NotificationService {
 
   /// Show local notification
   Future<void> _showLocalNotification(RemoteMessage message) async {
-    final notification = message.notification;
-    if (notification == null) return;
+    final title =
+        message.notification?.title ?? message.data['title'] as String?;
+    final body = message.notification?.body ?? message.data['body'] as String?;
+    if (title == null && body == null) return;
 
     final androidDetails = AndroidNotificationDetails(
-      'fixify_notifications',
-      'Fixify Notifications',
-      channelDescription: 'Notifications for Fixify Partner app',
+      channelId,
+      channelName,
+      channelDescription: channelDescription,
       importance: Importance.high,
       priority: Priority.high,
       showWhen: true,
       icon: '@mipmap/ic_launcher',
-      sound: RawResourceAndroidNotificationSound('notification_sound'), // ← Add this
+      playSound: true,
+      sound: RawResourceAndroidNotificationSound(androidSoundName),
     );
 
     const iosDetails = DarwinNotificationDetails(
@@ -218,11 +260,22 @@ class NotificationService {
 
     await _localNotifications.show(
       message.hashCode,
-      notification.title,
-      notification.body,
+      title,
+      body,
       details,
       payload: message.data.toString(),
     );
+  }
+
+  Future<void> showBackgroundNotification(RemoteMessage message) async {
+    if (Platform.isAndroid && message.notification != null) {
+      print(
+        'ℹ️ [NotificationService] Skipping Android background local notification because the OS will display the remote notification.',
+      );
+      return;
+    }
+
+    await _showLocalNotification(message);
   }
 
   /// Handle notification tap
@@ -239,7 +292,7 @@ class NotificationService {
   void _onNotificationTapped(NotificationResponse response) {
     print('👆 [NotificationService] Local notification tapped');
     print('📝 [NotificationService] Payload: ${response.payload}');
-    
+
     // Parse payload and navigate
     if (response.payload != null) {
       // You can parse the payload and navigate accordingly
@@ -302,7 +355,9 @@ class NotificationService {
           child: const NotificationsScreen(),
         ),
       );
-      print('✅ [NotificationService] Navigated to notifications screen (default)');
+      print(
+        '✅ [NotificationService] Navigated to notifications screen (default)',
+      );
     }
   }
 
@@ -312,7 +367,7 @@ class NotificationService {
   /// Create message stream
   void createMessageStream() {
     if (_messageStreamController != null) return;
-    
+
     _messageStreamController = StreamController<RemoteMessage>.broadcast();
     _messageStream = _messageStreamController!.stream;
   }
@@ -330,7 +385,9 @@ class NotificationService {
       print('📱 [NotificationService] Getting FCM token...');
       final token = await _firebaseMessaging.getToken();
       if (token != null) {
-        print('✅ [NotificationService] FCM Token retrieved: ${token.substring(0, 30)}...');
+        print(
+          '✅ [NotificationService] FCM Token retrieved: ${token.substring(0, 30)}...',
+        );
         print('📱 [NotificationService] Full token length: ${token.length}');
       } else {
         print('⚠️ [NotificationService] FCM Token is null');
@@ -348,18 +405,22 @@ class NotificationService {
     print('🔍 [NotificationService] === Notification Service Status ===');
     print('   Initialized: $_isInitialized');
     print('   Platform: ${Platform.operatingSystem}');
-    
+
     try {
       final token = await getToken();
-      print('   FCM Token: ${token != null ? "${token.substring(0, 30)}..." : "null"}');
+      print(
+        '   FCM Token: ${token != null ? "${token.substring(0, 30)}..." : "null"}',
+      );
     } catch (e) {
       print('   FCM Token: Error - $e');
     }
-    
+
     if (Platform.isAndroid) {
-      final androidInfo = _localNotifications
-          .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>();
+      final androidInfo =
+          _localNotifications
+              .resolvePlatformSpecificImplementation<
+                AndroidFlutterLocalNotificationsPlugin
+              >();
       if (androidInfo != null) {
         // Check if permissions are granted (Android 13+)
         final granted = await androidInfo.areNotificationsEnabled();
@@ -372,7 +433,7 @@ class NotificationService {
       print('   Badge Setting: ${settings.badge}');
       print('   Sound Setting: ${settings.sound}');
     }
-    
+
     print('🔍 [NotificationService] === End Status ===');
   }
 
@@ -406,4 +467,3 @@ class NotificationService {
     }
   }
 }
-

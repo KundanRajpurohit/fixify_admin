@@ -1,5 +1,5 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fixify_admin/services/translation_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class AppLocalizations {
   final WidgetRef ref;
@@ -14,7 +14,3 @@ class AppLocalizations {
 extension LocalizationExtension on WidgetRef {
   AppLocalizations get l10n => AppLocalizations(this);
 }
-
-
-
-
