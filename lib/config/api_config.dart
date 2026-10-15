@@ -17,7 +17,8 @@ class ApiConfig {
   static const String partnerUpdateNotification =
       '/partner/update-notification';
   static const String partnerAddDefaultAddress = '/partner/add-default-address';
-  static const String partnerUploadDocuments = '/partner/upload-documents';
+  static const String partnerUploadDocuments = '/partner/v4/upload-documents';
+  static const String partnerUpdateLocation = '/partner/v4/update-location';
   static const String partnerSendOtp = '/partner/send-otp';
   static const String partnerVerifyOtp = '/partner/verify-otp';
   static const String verifyOtp = '/partner/verify-otp';
@@ -31,23 +32,27 @@ class ApiConfig {
   static const String partnerBankDelete = '/partner/bank/delete';
 
   //Jobs endpoints
-  static const String partnerAllJobs = '/partner/all-jobs';
-  static const String partnerUpcomingJobs = '/partner/upcoming-jobs';
-  static const String partnerCancelledJobs = '/partner/cancelled-jobs';
-  static const String partnerOngoingJobs = '/partner/ongoing-jobs';
-  static const String partnerPastJobs = '/partner/past-jobs';
-  static const String partnerAssignUpcomingJobs =
-      '/partner/assign-upcoming-jobs';
+  static const String partnerAllJobs = '/partner/v4/all-jobs';
+  static const String partnerUpcomingJobs = '/partner/v4/upcoming-jobs';
+  static const String partnerCancelledJobs = '/partner/v4/cancelled-jobs';
+  static const String partnerOngoingJobs = '/partner/v4/all-ongoing-jobs';
+  static const String partnerPastJobs = '/partner/v4/all-completed-jobs';
+  static const String partnerAssignUpcomingJobs = '/partner/v4/all-assign-jobs';
   static const String partnerAcceptJob = '/partner/accept-job';
   static const String partnerAssignJob = '/partner/assign-job';
   static const String partnerVerifyJobOtp = '/partner/verify-job-otp';
   static const String partnerJobCompleted = '/partner/job-completed';
   static const String partnerSubmitJobReport = '/partner/submit-job-report';
+  static const String partnerPostPaymentQrCode =
+      '/partner/v4/post-payment/qr-code';
+  static const String partnerPostPaymentQrStatus =
+      '/partner/v4/post-payment/qr-status';
+  static const String partnerPostPaymentCash = '/partner/v4/post-payment/cash';
   static const String partnerRatingCustomer = '/partner/rating-customer';
   static const String call = '/call';
 
   static String partnerJobDetails(String token) =>
-      '/partner/single-job-details/$token';
+      '/partner/v4/single-job/$token';
 
   // Availability endpoints
   static const String partnerGetAvailability = '/partner/get-availability';

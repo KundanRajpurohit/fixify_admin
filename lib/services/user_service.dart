@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:fpdart/fpdart.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -15,6 +16,59 @@ class UserService {
   final Dio _dio;
 
   UserService(this._dio);
+
+  Future<({String latitude, String longitude})> _getDeviceLocation() async {
+    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      throw Exception('Location services are disabled');
+    }
+
+    var permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+
+    if (permission == LocationPermission.denied) {
+      throw Exception('Location permission denied');
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      throw Exception('Location permission permanently denied');
+    }
+
+    final position = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+      timeLimit: const Duration(seconds: 10),
+    );
+
+    return (
+      latitude: position.latitude.toStringAsFixed(15),
+      longitude: position.longitude.toStringAsFixed(15),
+    );
+  }
+
+  Map<String, String> _locationHeaders(
+    ({String latitude, String longitude}) location,
+  ) {
+    return {'Latitude': location.latitude, 'Longitude': location.longitude};
+  }
+
+  Future<Map<String, String>> _authenticatedLocationHeaders() async {
+    final authToken = await getAuthToken();
+    if (authToken == null) {
+      throw const UnauthorizedFailure();
+    }
+
+    final location = await _getDeviceLocation();
+    print(
+      '📍 [UserService] Device location: ${location.latitude}, ${location.longitude}',
+    );
+
+    return {
+      'Authorization': 'Bearer $authToken',
+      ..._locationHeaders(location),
+    };
+  }
 
   // Save user ID and token to SharedPreferences
   Future<void> _saveUserData(String userId, String userToken) async {
@@ -514,7 +568,16 @@ class UserService {
         '🔑 [UserService] Using authorization token: ${authToken.substring(0, 10)}...',
       );
 
+      final location = await _getDeviceLocation();
+      print(
+        '📍 [UserService] Device location: ${location.latitude}, ${location.longitude}',
+      );
+
       final formData = FormData();
+      formData.fields.addAll([
+        MapEntry('latitude', location.latitude),
+        MapEntry('longitude', location.longitude),
+      ]);
 
       if (nationalId != null) {
         formData.files.add(
@@ -556,7 +619,12 @@ class UserService {
       final response = await _dio.post(
         ApiConfig.partnerUploadDocuments,
         data: formData,
-        options: Options(headers: {'Authorization': 'Bearer $authToken'}),
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $authToken',
+            ..._locationHeaders(location),
+          },
+        ),
       );
 
       print('📥 [UserService] Partner Upload Documents Response received:');
@@ -582,6 +650,8 @@ class UserService {
           ),
         );
       }
+    } on UnauthorizedFailure catch (e) {
+      return left(e);
     } on DioException catch (e) {
       print('❌ [UserService] Partner Upload Documents DioException occurred:');
       print('   - Type: ${e.type}');
@@ -594,6 +664,90 @@ class UserService {
       print(
         '❌ [UserService] Partner Upload Documents Error type: ${e.runtimeType}',
       );
+      return left(UnknownFailure(e.toString()));
+    }
+  }
+
+  // Update Partner Location
+  Future<ApiResult<Map<String, dynamic>>> updatePartnerLocation() async {
+    try {
+      print('📍 [UserService] Starting updatePartnerLocation API call');
+      print(
+        '🌐 [UserService] API endpoint: ${ApiConfig.partnerUpdateLocation}',
+      );
+
+      final authToken = await getAuthToken();
+      if (authToken == null) {
+        print('❌ [UserService] No authorization token found');
+        return left(const UnauthorizedFailure());
+      }
+
+      final location = await _getDeviceLocation();
+      print(
+        '📍 [UserService] Device location: ${location.latitude}, ${location.longitude}',
+      );
+
+      final request = http.MultipartRequest(
+        'POST',
+        Uri.parse('${ApiConfig.baseUrl}${ApiConfig.partnerUpdateLocation}'),
+      );
+
+      request.fields.addAll({
+        'latitude': location.latitude,
+        'longitude': location.longitude,
+      });
+
+      request.headers.addAll({
+        'Authorization': 'Bearer $authToken',
+        ..._locationHeaders(location),
+      });
+
+      final streamedResponse = await request.send();
+      final responseBody = await streamedResponse.stream.bytesToString();
+
+      print('📥 [UserService] Update Location Response received:');
+      print('   - Status Code: ${streamedResponse.statusCode}');
+      print('   - Response Body: $responseBody');
+
+      Map<String, dynamic> decodedResponse = {};
+      if (responseBody.isNotEmpty) {
+        final decoded = json.decode(responseBody);
+        if (decoded is Map<String, dynamic>) {
+          decodedResponse = decoded;
+        }
+      }
+
+      if (streamedResponse.statusCode == 200 ||
+          streamedResponse.statusCode == 201) {
+        print('✅ [UserService] Partner location updated successfully');
+        return right(decodedResponse);
+      } else {
+        if (streamedResponse.statusCode == 401) {
+          return left(const UnauthorizedFailure());
+        }
+
+        return left(
+          ServerFailure(
+            decodedResponse['message']?.toString() ??
+                streamedResponse.reasonPhrase ??
+                'Failed to update location',
+            streamedResponse.statusCode,
+          ),
+        );
+      }
+    } on UnauthorizedFailure catch (e) {
+      return left(e);
+    } on DioException catch (e) {
+      print('❌ [UserService] Update Location DioException occurred');
+      return left(_handleDioError(e));
+    } on SocketException {
+      print('❌ [UserService] Update Location Network error');
+      return left(const NetworkFailure());
+    } on FormatException catch (e) {
+      print('❌ [UserService] Update Location Invalid JSON: $e');
+      return left(const ParseFailure());
+    } catch (e) {
+      print('❌ [UserService] Update Location Unexpected error: $e');
       return left(UnknownFailure(e.toString()));
     }
   }
@@ -628,6 +782,9 @@ class UserService {
           ),
         );
       }
+    } on UnauthorizedFailure catch (e) {
+      print('❌ [UserService] No authorization token found');
+      return left(e);
     } on DioException catch (e) {
       print('❌ [UserService] DioException occurred');
       return left(_handleDioError(e));
@@ -685,6 +842,9 @@ class UserService {
           ServerFailure('Failed to login', response.statusCode ?? 500),
         );
       }
+    } on UnauthorizedFailure catch (e) {
+      print('❌ [UserService] No authorization token found');
+      return left(e);
     } on DioException catch (e) {
       print('❌ [UserService] Partner Login DioException occurred:');
       print('   - Type: ${e.type}');
@@ -745,6 +905,8 @@ class UserService {
           ServerFailure('Failed to send OTP', response.statusCode ?? 500),
         );
       }
+    } on UnauthorizedFailure catch (e) {
+      return left(e);
     } on DioException catch (e) {
       print('❌ [UserService] Partner OTP DioException occurred:');
       print('   - Type: ${e.type}');
@@ -817,6 +979,8 @@ class UserService {
           ServerFailure('Failed to verify OTP', response.statusCode ?? 500),
         );
       }
+    } on UnauthorizedFailure catch (e) {
+      return left(e);
     } on DioException catch (e) {
       print('❌ [UserService] Partner OTP Verification DioException occurred:');
       print('   - Type: ${e.type}');
@@ -875,6 +1039,8 @@ class UserService {
           ServerFailure('Failed to get profile', response.statusCode ?? 500),
         );
       }
+    } on UnauthorizedFailure catch (e) {
+      return left(e);
     } on DioException catch (e) {
       print('❌ [UserService] Partner Profile DioException occurred:');
       print('   - Type: ${e.type}');
@@ -942,6 +1108,8 @@ class UserService {
           ServerFailure('Failed to update profile', response.statusCode ?? 500),
         );
       }
+    } on UnauthorizedFailure catch (e) {
+      return left(e);
     } on DioException catch (e) {
       return left(_handleDioError(e));
     } catch (e) {
@@ -980,6 +1148,8 @@ class UserService {
           ServerFailure('Failed to update mobile', response.statusCode ?? 500),
         );
       }
+    } on UnauthorizedFailure catch (e) {
+      return left(e);
     } on DioException catch (e) {
       return left(_handleDioError(e));
     } catch (e) {
@@ -1226,15 +1396,11 @@ class UserService {
       print('📦 [UserService] Starting getAllJobs API call');
       print('🌐 [UserService] API endpoint: ${ApiConfig.partnerAllJobs}');
 
-      final authToken = await getAuthToken();
-      if (authToken == null) {
-        print('❌ [UserService] No authorization token found');
-        return left(const UnauthorizedFailure());
-      }
+      final headers = await _authenticatedLocationHeaders();
 
       final response = await _dio.get(
         ApiConfig.partnerAllJobs,
-        options: Options(headers: {'Authorization': 'Bearer $authToken'}),
+        options: Options(headers: headers),
       );
 
       print('📥 [UserService] API Response Status: ${response.statusCode}');
@@ -1250,6 +1416,9 @@ class UserService {
           ServerFailure('Failed to fetch jobs', response.statusCode ?? 500),
         );
       }
+    } on UnauthorizedFailure catch (e) {
+      print('❌ [UserService] No authorization token found');
+      return left(e);
     } on DioException catch (e) {
       print('❌ [UserService] DioException occurred');
       return left(_handleDioError(e));
@@ -1268,15 +1437,11 @@ class UserService {
         '🌐 [UserService] API endpoint: ${ApiConfig.partnerJobDetails(token)}',
       );
 
-      final authToken = await getAuthToken();
-      if (authToken == null) {
-        print('❌ [UserService] No authorization token found');
-        return left(const UnauthorizedFailure());
-      }
+      final headers = await _authenticatedLocationHeaders();
 
       final response = await _dio.get(
         ApiConfig.partnerJobDetails(token),
-        options: Options(headers: {'Authorization': 'Bearer $authToken'}),
+        options: Options(headers: headers),
       );
 
       print('📥 [UserService] Response Status: ${response.statusCode}');
@@ -1293,6 +1458,9 @@ class UserService {
           ),
         );
       }
+    } on UnauthorizedFailure catch (e) {
+      print('❌ [UserService] No authorization token found');
+      return left(e);
     } on DioException catch (e) {
       print('❌ [UserService] DioException occurred: ${e.message}');
       return left(_handleDioError(e));
@@ -1306,14 +1474,11 @@ class UserService {
   Future<ApiResult<Map<String, dynamic>>> getUpcomingJobs() async {
     try {
       print('📦 [UserService] Starting getUpcomingJobs API call');
-      final authToken = await getAuthToken();
-      if (authToken == null) {
-        return left(const UnauthorizedFailure());
-      }
+      final headers = await _authenticatedLocationHeaders();
 
       final response = await _dio.get(
         ApiConfig.partnerUpcomingJobs,
-        options: Options(headers: {'Authorization': 'Bearer $authToken'}),
+        options: Options(headers: headers),
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -1326,6 +1491,8 @@ class UserService {
           ),
         );
       }
+    } on UnauthorizedFailure catch (e) {
+      return left(e);
     } on DioException catch (e) {
       return left(_handleDioError(e));
     } catch (e) {
@@ -1337,14 +1504,11 @@ class UserService {
   Future<ApiResult<Map<String, dynamic>>> getCancelledJobs() async {
     try {
       print('📦 [UserService] Starting getCancelledJobs API call');
-      final authToken = await getAuthToken();
-      if (authToken == null) {
-        return left(const UnauthorizedFailure());
-      }
+      final headers = await _authenticatedLocationHeaders();
 
       final response = await _dio.get(
         ApiConfig.partnerCancelledJobs,
-        options: Options(headers: {'Authorization': 'Bearer $authToken'}),
+        options: Options(headers: headers),
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -1357,6 +1521,8 @@ class UserService {
           ),
         );
       }
+    } on UnauthorizedFailure catch (e) {
+      return left(e);
     } on DioException catch (e) {
       return left(_handleDioError(e));
     } catch (e) {
@@ -1368,14 +1534,11 @@ class UserService {
   Future<ApiResult<Map<String, dynamic>>> getOngoingJobs() async {
     try {
       print('📦 [UserService] Starting getOngoingJobs API call');
-      final authToken = await getAuthToken();
-      if (authToken == null) {
-        return left(const UnauthorizedFailure());
-      }
+      final headers = await _authenticatedLocationHeaders();
 
       final response = await _dio.get(
         ApiConfig.partnerOngoingJobs,
-        options: Options(headers: {'Authorization': 'Bearer $authToken'}),
+        options: Options(headers: headers),
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -1388,6 +1551,8 @@ class UserService {
           ),
         );
       }
+    } on UnauthorizedFailure catch (e) {
+      return left(e);
     } on DioException catch (e) {
       return left(_handleDioError(e));
     } catch (e) {
@@ -1399,14 +1564,11 @@ class UserService {
   Future<ApiResult<Map<String, dynamic>>> getPastJobs() async {
     try {
       print('📦 [UserService] Starting getPastJobs API call');
-      final authToken = await getAuthToken();
-      if (authToken == null) {
-        return left(const UnauthorizedFailure());
-      }
+      final headers = await _authenticatedLocationHeaders();
 
       final response = await _dio.get(
         ApiConfig.partnerPastJobs,
-        options: Options(headers: {'Authorization': 'Bearer $authToken'}),
+        options: Options(headers: headers),
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -1419,6 +1581,8 @@ class UserService {
           ),
         );
       }
+    } on UnauthorizedFailure catch (e) {
+      return left(e);
     } on DioException catch (e) {
       return left(_handleDioError(e));
     } catch (e) {
@@ -1430,14 +1594,11 @@ class UserService {
   Future<ApiResult<Map<String, dynamic>>> getAssignUpcomingJobs() async {
     try {
       print('📦 [UserService] Starting getAssignUpcomingJobs API call');
-      final authToken = await getAuthToken();
-      if (authToken == null) {
-        return left(const UnauthorizedFailure());
-      }
+      final headers = await _authenticatedLocationHeaders();
 
       final response = await _dio.get(
         ApiConfig.partnerAssignUpcomingJobs,
-        options: Options(headers: {'Authorization': 'Bearer $authToken'}),
+        options: Options(headers: headers),
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -1450,6 +1611,8 @@ class UserService {
           ),
         );
       }
+    } on UnauthorizedFailure catch (e) {
+      return left(e);
     } on DioException catch (e) {
       return left(_handleDioError(e));
     } catch (e) {
@@ -1630,6 +1793,108 @@ class UserService {
     } catch (e) {
       return left(UnknownFailure(e.toString()));
     }
+  }
+
+  Future<ApiResult<Map<String, dynamic>>> generatePaymentQrCode({
+    required String groupToken,
+  }) async {
+    try {
+      final authToken = await getAuthToken();
+      if (authToken == null) {
+        return left(const UnauthorizedFailure());
+      }
+
+      final response = await _dio.post(
+        ApiConfig.partnerPostPaymentQrCode,
+        data: FormData.fromMap({'group_token': groupToken}),
+        options: Options(headers: {'Authorization': 'Bearer $authToken'}),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return right(_responseAsMap(response.data));
+      }
+
+      return left(
+        ServerFailure(
+          'Failed to generate payment QR code',
+          response.statusCode ?? 500,
+        ),
+      );
+    } on DioException catch (e) {
+      return left(_handleDioError(e));
+    } catch (e) {
+      return left(UnknownFailure(e.toString()));
+    }
+  }
+
+  Future<ApiResult<Map<String, dynamic>>> checkPaymentQrStatus({
+    required String groupToken,
+  }) async {
+    try {
+      final authToken = await getAuthToken();
+      if (authToken == null) {
+        return left(const UnauthorizedFailure());
+      }
+
+      final response = await _dio.post(
+        ApiConfig.partnerPostPaymentQrStatus,
+        data: FormData.fromMap({'group_token': groupToken}),
+        options: Options(headers: {'Authorization': 'Bearer $authToken'}),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return right(_responseAsMap(response.data));
+      }
+
+      return left(
+        ServerFailure(
+          'Payment has not been received yet',
+          response.statusCode ?? 500,
+        ),
+      );
+    } on DioException catch (e) {
+      return left(_handleDioError(e));
+    } catch (e) {
+      return left(UnknownFailure(e.toString()));
+    }
+  }
+
+  Future<ApiResult<Map<String, dynamic>>> confirmCashPayment({
+    required String groupToken,
+  }) async {
+    try {
+      final authToken = await getAuthToken();
+      if (authToken == null) {
+        return left(const UnauthorizedFailure());
+      }
+
+      final response = await _dio.post(
+        ApiConfig.partnerPostPaymentCash,
+        data: FormData.fromMap({'group_token': groupToken}),
+        options: Options(headers: {'Authorization': 'Bearer $authToken'}),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return right(_responseAsMap(response.data));
+      }
+
+      return left(
+        ServerFailure(
+          'Failed to confirm cash payment',
+          response.statusCode ?? 500,
+        ),
+      );
+    } on DioException catch (e) {
+      return left(_handleDioError(e));
+    } catch (e) {
+      return left(UnknownFailure(e.toString()));
+    }
+  }
+
+  Map<String, dynamic> _responseAsMap(dynamic data) {
+    if (data is Map<String, dynamic>) return data;
+    if (data is Map) return Map<String, dynamic>.from(data);
+    return {'data': data};
   }
 
   // Submit Job Report

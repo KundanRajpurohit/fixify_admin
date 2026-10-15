@@ -1,14 +1,18 @@
 import 'package:fixify_admin/config/app_colors.dart';
 import 'package:fixify_admin/helpers/translate_helper.dart';
 import 'package:fixify_admin/models/bank_model.dart';
+import 'package:fixify_admin/providers/auth_provider.dart';
 import 'package:fixify_admin/providers/location_provider.dart';
+import 'package:fixify_admin/screens/auth/account_pending_screen.dart';
 import 'package:fixify_admin/screens/dashboard/add_edit_bank_account_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:page_transition/page_transition.dart';
 
 class BankAccountsScreen extends ConsumerStatefulWidget {
-  const BankAccountsScreen({super.key});
+  final bool isOnboarding;
+
+  const BankAccountsScreen({super.key, this.isOnboarding = false});
 
   @override
   ConsumerState<BankAccountsScreen> createState() => _BankAccountsScreenState();
@@ -142,6 +146,20 @@ class _BankAccountsScreenState extends ConsumerState<BankAccountsScreen> {
     }
   }
 
+  Future<void> _completeOnboardingBankSetup() async {
+    await ref.read(authProvider.notifier).markBankSetupComplete();
+    if (!mounted) return;
+
+    Navigator.pushReplacement(
+      context,
+      PageTransition(
+        type: PageTransitionType.fade,
+        duration: const Duration(milliseconds: 500),
+        child: const AccountPendingScreen(),
+      ),
+    );
+  }
+
   static const Color _lightGreen = Color(0xFFE6F6E7);
 
   @override
@@ -149,7 +167,8 @@ class _BankAccountsScreenState extends ConsumerState<BankAccountsScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: _lightGreen,
-        title: Text(ref.t('profile.my_bank_account')),
+        automaticallyImplyLeading: !widget.isOnboarding,
+        title: Text(ref.t('profile.bank_accounts')),
       ),
       backgroundColor: const Color(0xFFF5F7F8),
       body: SafeArea(
@@ -207,7 +226,7 @@ class _BankAccountsScreenState extends ConsumerState<BankAccountsScreen> {
                 color: Colors.white,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, -2),
                   ),
@@ -218,6 +237,11 @@ class _BankAccountsScreenState extends ConsumerState<BankAccountsScreen> {
                 height: 48,
                 child: ElevatedButton(
                   onPressed: () {
+                    if (widget.isOnboarding && _bankAccounts.isNotEmpty) {
+                      _completeOnboardingBankSetup();
+                      return;
+                    }
+
                     Navigator.push(
                       context,
                       PageTransition(
@@ -227,7 +251,11 @@ class _BankAccountsScreenState extends ConsumerState<BankAccountsScreen> {
                       ),
                     ).then((result) {
                       if (result == true) {
-                        _loadBankAccounts(); // Reload list after adding
+                        if (widget.isOnboarding) {
+                          _completeOnboardingBankSetup();
+                        } else {
+                          _loadBankAccounts(); // Reload list after adding
+                        }
                       }
                     });
                   },
@@ -238,8 +266,10 @@ class _BankAccountsScreenState extends ConsumerState<BankAccountsScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text(
-                    'Add New Bank Account',
+                  child: Text(
+                    _bankAccounts.isNotEmpty && widget.isOnboarding
+                        ? ref.t('common.continue')
+                        : ref.t('profile.add_new_bank_account'),
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 ),
@@ -262,7 +292,7 @@ class _BankAccountsScreenState extends ConsumerState<BankAccountsScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -332,7 +362,7 @@ class _BankAccountsScreenState extends ConsumerState<BankAccountsScreen> {
                 icon: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppColors.secondary.withOpacity(0.2),
+                    color: AppColors.secondary.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(

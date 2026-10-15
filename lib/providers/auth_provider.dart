@@ -39,6 +39,11 @@ class PhoneVerificationState {
   final String? userId;
   final String? userToken;
   final String? authToken;
+  final String? accountStatus;
+  final bool? isPartnerVerified;
+  final bool hasCompletedLocationSetup;
+  final bool hasCompletedBankSetup;
+  final bool hasSubmittedDocuments;
 
   PhoneVerificationState({
     this.phoneNumber,
@@ -51,7 +56,44 @@ class PhoneVerificationState {
     this.userId,
     this.userToken,
     this.authToken,
+    this.accountStatus,
+    this.isPartnerVerified,
+    this.hasCompletedLocationSetup = false,
+    this.hasCompletedBankSetup = false,
+    this.hasSubmittedDocuments = false,
   });
+
+  AuthRouteTarget get routeTarget {
+    if (authToken == null || authToken!.isEmpty) {
+      if (userToken != null && userToken!.isNotEmpty) {
+        return AuthRouteTarget.phoneVerification;
+      }
+      return AuthRouteTarget.onboarding;
+    }
+
+    // Active accounts can sign in even when OTP responses omit is_verified.
+    if (accountStatus?.toLowerCase() == 'active') {
+      return AuthRouteTarget.dashboard;
+    }
+
+    if (hasSubmittedDocuments) {
+      return AuthRouteTarget.accountPending;
+    }
+
+    if (accountStatus?.toLowerCase() != 'active') {
+      if (!hasCompletedLocationSetup) {
+        return AuthRouteTarget.locationSetup;
+      }
+      if (!hasCompletedBankSetup) {
+        return AuthRouteTarget.bankSetup;
+      }
+      return AuthRouteTarget.accountPending;
+    }
+
+    return AuthRouteTarget.documentUpload;
+  }
+
+  bool get canOpenDashboard => routeTarget == AuthRouteTarget.dashboard;
 
   PhoneVerificationState copyWith({
     String? phoneNumber,
@@ -64,6 +106,11 @@ class PhoneVerificationState {
     String? userId,
     String? userToken,
     String? authToken,
+    String? accountStatus,
+    bool? isPartnerVerified,
+    bool? hasCompletedLocationSetup,
+    bool? hasCompletedBankSetup,
+    bool? hasSubmittedDocuments,
   }) {
     return PhoneVerificationState(
       phoneNumber: phoneNumber ?? this.phoneNumber,
@@ -76,8 +123,26 @@ class PhoneVerificationState {
       userId: userId ?? this.userId,
       userToken: userToken ?? this.userToken,
       authToken: authToken ?? this.authToken,
+      accountStatus: accountStatus ?? this.accountStatus,
+      isPartnerVerified: isPartnerVerified ?? this.isPartnerVerified,
+      hasCompletedLocationSetup:
+          hasCompletedLocationSetup ?? this.hasCompletedLocationSetup,
+      hasCompletedBankSetup:
+          hasCompletedBankSetup ?? this.hasCompletedBankSetup,
+      hasSubmittedDocuments:
+          hasSubmittedDocuments ?? this.hasSubmittedDocuments,
     );
   }
+}
+
+enum AuthRouteTarget {
+  onboarding,
+  phoneVerification,
+  locationSetup,
+  bankSetup,
+  documentUpload,
+  accountPending,
+  dashboard,
 }
 
 // Auth Provider
@@ -96,6 +161,12 @@ class AuthNotifier extends StateNotifier<PhoneVerificationState> {
   static const String _userTokenKey = 'user_token';
   static const String _authTokenKey = 'authorization_token';
   static const String _refreshTokenKey = 'refresh_token';
+  static const String _accountStatusKey = 'account_status';
+  static const String _isPartnerVerifiedKey = 'is_partner_verified';
+  static const String _hasCompletedLocationSetupKey =
+      'has_completed_location_setup';
+  static const String _hasCompletedBankSetupKey = 'has_completed_bank_setup';
+  static const String _hasSubmittedDocumentsKey = 'has_submitted_documents';
 
   Future<void> checkLoginStatus() async {
     try {
@@ -116,6 +187,14 @@ class AuthNotifier extends StateNotifier<PhoneVerificationState> {
       final savedUserId = prefs.getString(_userIdKey) ?? '';
       final savedUserToken = prefs.getString(_userTokenKey) ?? '';
       final savedAuthToken = prefs.getString(_authTokenKey) ?? '';
+      final savedAccountStatus = prefs.getString(_accountStatusKey);
+      final savedIsPartnerVerified = prefs.getBool(_isPartnerVerifiedKey);
+      final savedHasCompletedLocationSetup =
+          prefs.getBool(_hasCompletedLocationSetupKey) ?? false;
+      final savedHasCompletedBankSetup =
+          prefs.getBool(_hasCompletedBankSetupKey) ?? false;
+      final savedHasSubmittedDocuments =
+          prefs.getBool(_hasSubmittedDocumentsKey) ?? false;
 
       print(
         'Auth Check - isLoggedIn: $isLoggedIn, phoneNumber: $savedPhoneNumber',
@@ -131,8 +210,15 @@ class AuthNotifier extends StateNotifier<PhoneVerificationState> {
           userId: savedUserId,
           userToken: savedUserToken,
           authToken: savedAuthToken,
+          accountStatus: savedAccountStatus,
+          isPartnerVerified: savedIsPartnerVerified,
+          hasCompletedLocationSetup: savedHasCompletedLocationSetup,
+          hasCompletedBankSetup: savedHasCompletedBankSetup,
+          hasSubmittedDocuments: savedHasSubmittedDocuments,
         );
-        print('Auth Check - User is verified and logged in');
+        print(
+          'Auth Check - User restored with route target: ${state.routeTarget}',
+        );
       } else {
         print('Auth Check - User is not logged in');
       }
@@ -151,6 +237,8 @@ class AuthNotifier extends StateNotifier<PhoneVerificationState> {
     String userToken,
     String authToken,
     String refreshToken,
+    String? accountStatus,
+    bool? isPartnerVerified,
   ) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -165,6 +253,12 @@ class AuthNotifier extends StateNotifier<PhoneVerificationState> {
       }
       await prefs.setString(_authTokenKey, authToken);
       await prefs.setString(_refreshTokenKey, refreshToken);
+      if (accountStatus != null) {
+        await prefs.setString(_accountStatusKey, accountStatus);
+      }
+      if (isPartnerVerified != null) {
+        await prefs.setBool(_isPartnerVerifiedKey, isPartnerVerified);
+      }
       print(
         'Login status saved - phoneNumber: $phoneNumber, countryCode: $countryCode, userId: $userId, userToken: $userToken , refreshtoken: $refreshToken',
       );
@@ -182,9 +276,89 @@ class AuthNotifier extends StateNotifier<PhoneVerificationState> {
       await prefs.remove(_userIdKey);
       await prefs.remove(_userTokenKey);
       await prefs.remove(_authTokenKey);
+      await prefs.remove(_refreshTokenKey);
+      await prefs.remove(_accountStatusKey);
+      await prefs.remove(_isPartnerVerifiedKey);
+      await prefs.remove(_hasCompletedLocationSetupKey);
+      await prefs.remove(_hasCompletedBankSetupKey);
+      await prefs.remove(_hasSubmittedDocumentsKey);
     } catch (e) {
       print('Error clearing login status: $e');
     }
+  }
+
+  Future<void> savePartnerOtpSession(Map<String, dynamic> data) async {
+    final token = data['token']?.toString() ?? '';
+    final refreshToken = data['refresh_token']?.toString() ?? '';
+    final accountStatus =
+        data['account_status']?.toString() ??
+        data['Account_status']?.toString();
+    final isPartnerVerified = _readBool(data['is_verified']);
+    final phoneNumber = state.phoneNumber ?? data['mobile']?.toString() ?? '';
+    final countryCode = state.countryCode ?? '+91';
+
+    if (token.isNotEmpty) {
+      await _saveLoginStatus(
+        phoneNumber,
+        countryCode,
+        state.userId ?? data['data']?['id']?.toString() ?? '',
+        state.userToken ?? data['data']?['partnerid']?.toString() ?? '',
+        token,
+        refreshToken,
+        accountStatus,
+        isPartnerVerified,
+      );
+    }
+
+    state = state.copyWith(
+      isLoading: false,
+      isVerified: token.isNotEmpty,
+      authToken: token.isNotEmpty ? token : state.authToken,
+      accountStatus: accountStatus,
+      isPartnerVerified: isPartnerVerified,
+      error: null,
+    );
+  }
+
+  void setPhoneOtpSession({
+    required String phoneNumber,
+    required String countryCode,
+    String? otp,
+  }) {
+    state = state.copyWith(
+      phoneNumber: phoneNumber,
+      countryCode: countryCode,
+      otp: otp,
+    );
+  }
+
+  void setOtp(String otp) {
+    state = state.copyWith(otp: otp);
+  }
+
+  Future<void> markLocationSetupComplete() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_hasCompletedLocationSetupKey, true);
+    state = state.copyWith(hasCompletedLocationSetup: true);
+  }
+
+  Future<void> markBankSetupComplete() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_hasCompletedBankSetupKey, true);
+    state = state.copyWith(hasCompletedBankSetup: true);
+  }
+
+  Future<void> markDocumentsSubmitted() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_hasSubmittedDocumentsKey, true);
+    state = state.copyWith(hasSubmittedDocuments: true);
+  }
+
+  bool _readBool(dynamic value) {
+    if (value is bool) return value;
+    if (value is num) return value != 0;
+    if (value is String) return value.toLowerCase() == 'true' || value == '1';
+    return false;
   }
 
   Future<bool> verifyOTP(String otp) async {
@@ -239,6 +413,9 @@ class AuthNotifier extends StateNotifier<PhoneVerificationState> {
             userToken,
             data['token'],
             data['refresh_token'] ?? '',
+            data['account_status']?.toString() ??
+                data['Account_status']?.toString(),
+            _readBool(data['is_verified']),
           );
           print('✅ [AuthProvider] Login status saved');
 
@@ -246,6 +423,10 @@ class AuthNotifier extends StateNotifier<PhoneVerificationState> {
             isLoading: false,
             isVerified: true,
             authToken: data['token'],
+            accountStatus:
+                data['account_status']?.toString() ??
+                data['Account_status']?.toString(),
+            isPartnerVerified: _readBool(data['is_verified']),
             userId: userId.isNotEmpty ? userId : state.userId,
             userToken: userToken.isNotEmpty ? userToken : state.userToken,
             error: null,

@@ -45,6 +45,10 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Fixify Partner needs camera access to capture completed job photos.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Fixify Partner needs photo library access to upload completed job photos.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>

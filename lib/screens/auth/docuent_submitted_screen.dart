@@ -1,5 +1,5 @@
 import 'package:fixify_admin/helpers/translate_helper.dart';
-import 'package:fixify_admin/screens/dashboard/dashboard_screen.dart';
+import 'package:fixify_admin/screens/auth/account_pending_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:page_transition/page_transition.dart';
@@ -30,83 +30,84 @@ class DocumentsSubmittedScreen extends ConsumerWidget {
           ),
         ),
       ),
-      body: Column(
-        children: [
-          Container(height: 24, width: double.infinity, color: _lightGreen),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 40, 20, 24),
-              child: Column(
-                children: [
-                  const SizedBox(height: 10),
-                  Container(
-                    width: 90,
-                    height: 90,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: _green.withOpacity(0.12),
-                    ),
-                    child: const Icon(
-                      Icons.check_circle,
-                      color: _green,
-                      size: 64,
-                    ),
-                  ),
-                  const SizedBox(height: 28),
-                  Text(
-                    ref.t('auth.documents_successfully_submitted'),
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    ref.t('auth.documents_received'),
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      height: 1.5,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const Spacer(),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 54,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        // go back or navigate to home/dashboard – adjust as needed
-                        Navigator.pushReplacement(
-                          context,
-                          PageTransition(
-                            type: PageTransitionType.fade,
-                            duration: const Duration(milliseconds: 500),
-                            child: const HomePageScreen(),
-                          ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _green,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        textStyle: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                        ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Container(height: 24, width: double.infinity, color: _lightGreen),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 40, 20, 24),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 10),
+                    Container(
+                      width: 90,
+                      height: 90,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: _green.withValues(alpha: 0.12),
                       ),
-                      child: Text(ref.t('common.continue')),
+                      child: const Icon(
+                        Icons.check_circle,
+                        color: _green,
+                        size: 64,
+                      ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 28),
+                    Text(
+                      ref.t('auth.documents_successfully_submitted'),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      ref.t('auth.documents_received'),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        height: 1.5,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const Spacer(),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 54,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.pushReplacement(
+                            context,
+                            PageTransition(
+                              type: PageTransitionType.fade,
+                              duration: const Duration(milliseconds: 500),
+                              child: const AccountPendingScreen(),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _green,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          textStyle: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        child: Text(ref.t('common.continue')),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -18,6 +18,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // Global navigator key for handling 401 redirects
@@ -126,6 +128,8 @@ void main() async {
         '/partner/update-notification',
         '/partner/add-default-address',
         '/partner/upload-documents',
+        '/partner/v4/upload-documents',
+        '/partner/v4/update-location',
         '/partner/bank/all',
         '/partner/bank/store',
         '/partner/bank/update',
@@ -139,11 +143,17 @@ void main() async {
         '/partner/availability/sat',
         '/partner/availability/sun',
         '/partner/all-jobs',
+        '/partner/v4/all-jobs',
         '/partner/upcoming-jobs',
+        '/partner/v4/upcoming-jobs',
         '/partner/cancelled-jobs',
+        '/partner/v4/cancelled-jobs',
         '/partner/ongoing-jobs',
+        '/partner/v4/all-ongoing-jobs',
         '/partner/past-jobs',
+        '/partner/v4/all-completed-jobs',
         '/partner/assign-upcoming-jobs',
+        '/partner/v4/all-assign-jobs',
         '/partner/accept-job',
         '/partner/assign-job',
         '/partner/verify-job-otp',
@@ -151,6 +161,7 @@ void main() async {
         '/partner/submit-job-report',
         '/partner/rating-customer',
         '/partner/single-job-details',
+        '/partner/v4/single-job',
         '/partner/deshbord',
         '/partner/go-online',
         '/partner/get-go-online',
@@ -236,11 +247,251 @@ class MyApp extends ConsumerWidget {
               GlobalCupertinoLocalizations.delegate,
             ],
 
-            home: const AuthWrapper(),
+            home: const LocationAccessGate(child: AuthWrapper()),
             debugShowCheckedModeBanner: false,
           ),
         );
       },
+    );
+  }
+}
+
+class LocationAccessGate extends ConsumerStatefulWidget {
+  final Widget child;
+
+  const LocationAccessGate({super.key, required this.child});
+
+  @override
+  ConsumerState<LocationAccessGate> createState() => _LocationAccessGateState();
+}
+
+class _LocationAccessGateState extends ConsumerState<LocationAccessGate>
+    with WidgetsBindingObserver {
+  bool _isCheckingPermission = true;
+  bool _isUpdatingLocationOnResume = false;
+  PermissionStatus? _permissionStatus;
+  bool _isLocationServiceEnabled = false;
+
+  bool get _canAccessApp =>
+      _permissionStatus?.isGranted == true && _isLocationServiceEnabled;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkLocationPermission(requestIfNeeded: true);
+    });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkLocationPermission(updateLocationIfAuthenticated: true);
+    }
+  }
+
+  Future<void> _checkLocationPermission({
+    bool requestIfNeeded = false,
+    bool updateLocationIfAuthenticated = false,
+  }) async {
+    if (!mounted) return;
+
+    setState(() {
+      _isCheckingPermission = true;
+    });
+
+    final isLocationServiceEnabled =
+        await Geolocator.isLocationServiceEnabled();
+    var status = await Permission.location.status;
+    if (isLocationServiceEnabled && requestIfNeeded && status.isDenied) {
+      status = await Permission.location.request();
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _permissionStatus = status;
+      _isLocationServiceEnabled = isLocationServiceEnabled;
+      _isCheckingPermission = false;
+    });
+
+    if (updateLocationIfAuthenticated &&
+        status.isGranted &&
+        isLocationServiceEnabled) {
+      await _updateLocationIfAuthenticated();
+    }
+  }
+
+  Future<void> _updateLocationIfAuthenticated() async {
+    if (_isUpdatingLocationOnResume) return;
+
+    final authToken = ref.read(authProvider).authToken;
+    if (authToken == null || authToken.isEmpty) return;
+
+    _isUpdatingLocationOnResume = true;
+    final result = await ref.read(userServiceProvider).updatePartnerLocation();
+    _isUpdatingLocationOnResume = false;
+
+    result.fold(
+      (failure) {
+        print(
+          '❌ [LocationAccessGate] Failed to update partner location on resume: ${failure.message}',
+        );
+      },
+      (_) {
+        print('✅ [LocationAccessGate] Partner location updated on resume');
+      },
+    );
+  }
+
+  Future<void> _requestPermission() async {
+    final isLocationServiceEnabled =
+        await Geolocator.isLocationServiceEnabled();
+
+    if (!isLocationServiceEnabled) {
+      await Geolocator.openLocationSettings();
+      await _checkLocationPermission(requestIfNeeded: true);
+      return;
+    }
+
+    final currentStatus = await Permission.location.status;
+
+    if (currentStatus.isPermanentlyDenied || currentStatus.isRestricted) {
+      await openAppSettings();
+      await _checkLocationPermission();
+      return;
+    }
+
+    await _checkLocationPermission(requestIfNeeded: true);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isCheckingPermission) {
+      return const LocationBlockedScreen(isChecking: true);
+    }
+
+    if (_canAccessApp) {
+      return widget.child;
+    }
+
+    return LocationBlockedScreen(
+      isLocationServiceDisabled: !_isLocationServiceEnabled,
+      isPermanentlyDenied:
+          _permissionStatus?.isPermanentlyDenied == true ||
+          _permissionStatus?.isRestricted == true,
+      onEnableLocation: _requestPermission,
+    );
+  }
+}
+
+class LocationBlockedScreen extends StatelessWidget {
+  final bool isChecking;
+  final bool isLocationServiceDisabled;
+  final bool isPermanentlyDenied;
+  final VoidCallback? onEnableLocation;
+
+  const LocationBlockedScreen({
+    super.key,
+    this.isChecking = false,
+    this.isLocationServiceDisabled = false,
+    this.isPermanentlyDenied = false,
+    this.onEnableLocation,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        width: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFFBCD4C6), Color(0xFFF7F8F7)],
+          ),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset(
+                  'assets/images/Group 2.png',
+                  height: 220,
+                  fit: BoxFit.contain,
+                ),
+                const SizedBox(height: 32),
+                Text(
+                  isChecking
+                      ? 'Checking location permission'
+                      : isLocationServiceDisabled
+                      ? 'Turn On Location'
+                      : 'Location Permission Required',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.black,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  isChecking
+                      ? 'Please wait while we verify access.'
+                      : isLocationServiceDisabled
+                      ? 'Device location is turned off. Please turn on location services to continue using the app.'
+                      : isPermanentlyDenied
+                      ? 'Location access is blocked from settings. Please enable location permission to continue using the app.'
+                      : 'This app needs location permission to work. Please allow location access to continue.',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    height: 1.5,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 30),
+                if (isChecking)
+                  const CircularProgressIndicator(color: Color(0xFF217043))
+                else
+                  SizedBox(
+                    width: double.infinity,
+                    height: 54,
+                    child: ElevatedButton(
+                      onPressed: onEnableLocation,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF217043),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(27),
+                        ),
+                      ),
+                      child: Text(
+                        isLocationServiceDisabled
+                            ? 'Turn On Location'
+                            : isPermanentlyDenied
+                            ? 'Open App Settings'
+                            : 'Allow Location',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

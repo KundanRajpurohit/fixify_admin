@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:fixify_admin/config/app_colors.dart';
 import 'package:fixify_admin/dio/resulr.dart';
@@ -24,6 +26,12 @@ class _CompleteJobScreenState extends ConsumerState<CompleteJobScreen> {
   final List<File> _selectedImages = [];
   final ImagePicker _picker = ImagePicker();
   bool _isSubmitting = false;
+  bool _isReportSubmitted = false;
+
+  String get _groupToken {
+    final groupToken = widget.job['group_token'] ?? widget.job['groupToken'];
+    return (groupToken ?? widget.job['token'] ?? '').toString();
+  }
 
   @override
   void dispose() {
@@ -31,7 +39,7 @@ class _CompleteJobScreenState extends ConsumerState<CompleteJobScreen> {
     super.dispose();
   }
 
-  Future<void> _pickImages() async {
+  Future<void> _pickImagesFromGallery() async {
     try {
       final List<XFile> images = await _picker.pickMultiImage();
       if (images.isNotEmpty) {
@@ -49,6 +57,66 @@ class _CompleteJobScreenState extends ConsumerState<CompleteJobScreen> {
         );
       }
     }
+  }
+
+  Future<void> _pickImageFromCamera() async {
+    try {
+      final image = await _picker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 80,
+      );
+      if (image != null) {
+        setState(() {
+          _selectedImages.add(File(image.path));
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error taking photo: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _showPhotoSourceOptions() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.photo_camera_outlined),
+                  title: Text(ref.t('auth.take_a_photo')),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickImageFromCamera();
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.photo_library_outlined),
+                  title: Text(ref.t('auth.choose_from_gallery')),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickImagesFromGallery();
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _removeImage(int index) async {
@@ -78,45 +146,507 @@ class _CompleteJobScreenState extends ConsumerState<CompleteJobScreen> {
 
     try {
       final userService = ref.read(userServiceProvider);
-      // 1️⃣ Submit Job Report (notes + images)
-      final reportResult = await userService.submitJobReport(
-        jobToken: widget.job['token'],
-        prNotes: _notesController.text.trim(),
-        prWorkImgs: _selectedImages,
-      );
+      if (!_isReportSubmitted) {
+        final reportResult = await userService.submitJobReport(
+          jobToken: widget.job['token'],
+          prNotes: _notesController.text.trim(),
+          prWorkImgs: _selectedImages,
+        );
+
+        if (!mounted) return;
+
+        await reportResult.fold((failure) async => throw failure, (_) async {
+          _isReportSubmitted = true;
+        });
+      }
 
       if (!mounted) return;
-
-      await reportResult.fold(
-        (failure) async {
-          throw failure;
-        },
-        (_) async {
-          // 2️⃣ Mark Job as Completed
-          final completeResult = await userService.jobCompleted(
-            widget.job['token'],
-          );
-
-          await completeResult.fold(
-            (failure) async {
-              throw failure;
-            },
-            (_) async {
-              // 3️⃣ Navigate to Rate Customer screen
-              if (!mounted) return;
-
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(
-                  builder: (_) => RateCustomerScreen(job: widget.job),
-                ),
-              );
-            },
-          );
-        },
-      );
+      await _showPaymentOptions();
     } catch (e) {
       if (!mounted) return;
 
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            e is ApiFailure ? e.message : ref.t('common.try_again'),
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _showPaymentOptions() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        var isLoading = false;
+
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            Future<void> runPaymentAction(
+              Future<void> Function() action,
+            ) async {
+              setSheetState(() => isLoading = true);
+              try {
+                await action();
+              } catch (e) {
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      e is ApiFailure ? e.message : ref.t('common.try_again'),
+                    ),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              } finally {
+                if (context.mounted) {
+                  setSheetState(() => isLoading = false);
+                }
+              }
+            }
+
+            return SafeArea(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  16,
+                  16,
+                  16 + MediaQuery.of(context).viewInsets.bottom,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 44,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(100),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    Text(
+                      ref.t('dashboard.collect_payment'),
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      ref.t('dashboard.collect_payment_before_complete'),
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey.shade600,
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    _buildPaymentActionTile(
+                      icon: Icons.qr_code_2,
+                      title: ref.t('dashboard.generate_qr_code_for_payment'),
+                      subtitle: ref.t('dashboard.generate_qr_code_subtitle'),
+                      enabled: !isLoading,
+                      onTap:
+                          () =>
+                              runPaymentAction(() => _handleQrPayment(context)),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildPaymentActionTile(
+                      icon: Icons.payments_outlined,
+                      title: ref.t('dashboard.i_have_received_cash'),
+                      subtitle: ref.t('dashboard.cash_received_subtitle'),
+                      enabled: !isLoading,
+                      onTap:
+                          () => runPaymentAction(
+                            () => _handleCashPayment(context),
+                          ),
+                    ),
+                    if (isLoading) ...[
+                      const SizedBox(height: 16),
+                      const Center(child: CircularProgressIndicator()),
+                    ],
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildPaymentActionTile({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required bool enabled,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: enabled ? onTap : null,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade200),
+          borderRadius: BorderRadius.circular(12),
+          color: enabled ? Colors.white : Colors.grey.shade100,
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: AppColors.primary),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade600,
+                      height: 1.3,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: Colors.grey.shade500),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _handleQrPayment(BuildContext sheetContext) async {
+    final userService = ref.read(userServiceProvider);
+    final qrResult = await userService.generatePaymentQrCode(
+      groupToken: _groupToken,
+    );
+
+    final qrData = await qrResult.fold(
+      (failure) async => throw failure,
+      (data) async => data,
+    );
+
+    if (!mounted || !sheetContext.mounted) return;
+    Navigator.of(sheetContext).pop();
+    await _showQrCodeDialog(qrData);
+  }
+
+  Future<void> _handleCashPayment(BuildContext sheetContext) async {
+    final userService = ref.read(userServiceProvider);
+    final cashResult = await userService.confirmCashPayment(
+      groupToken: _groupToken,
+    );
+
+    await cashResult.fold((failure) async => throw failure, (_) async {});
+    if (!mounted || !sheetContext.mounted) return;
+    Navigator.of(sheetContext).pop();
+    await _completeJobAfterPayment();
+  }
+
+  Future<void> _showQrCodeDialog(Map<String, dynamic> qrData) async {
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        var isChecking = false;
+        final qrValue = _extractQrValue(qrData);
+
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            Future<void> checkStatus() async {
+              setDialogState(() => isChecking = true);
+              try {
+                final userService = ref.read(userServiceProvider);
+                final statusResult = await userService.checkPaymentQrStatus(
+                  groupToken: _groupToken,
+                );
+
+                final statusData = await statusResult.fold(
+                  (failure) async => throw failure,
+                  (data) async => data,
+                );
+
+                if (!_isPaymentConfirmed(statusData)) {
+                  throw ServerFailure(
+                    ref.t('dashboard.payment_not_received_yet'),
+                    200,
+                  );
+                }
+
+                if (!mounted || !dialogContext.mounted) return;
+                Navigator.of(dialogContext).pop();
+                await _completeJobAfterPayment();
+              } catch (e) {
+                if (!dialogContext.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      e is ApiFailure ? e.message : ref.t('common.try_again'),
+                    ),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              } finally {
+                if (dialogContext.mounted) {
+                  setDialogState(() => isChecking = false);
+                }
+              }
+            }
+
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              title: Text(ref.t('dashboard.scan_to_pay')),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildQrPreview(qrValue),
+                  const SizedBox(height: 12),
+                  Text(
+                    ref.t('dashboard.ask_customer_to_scan'),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.grey.shade700),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed:
+                      isChecking ? null : () => Navigator.of(context).pop(),
+                  child: Text(ref.t('common.close')),
+                ),
+                ElevatedButton.icon(
+                  onPressed: isChecking ? null : checkStatus,
+                  icon:
+                      isChecking
+                          ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                          : const Icon(Icons.verified_outlined),
+                  label: Text(ref.t('dashboard.check_payment_status')),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildQrPreview(String? qrValue) {
+    if (qrValue == null || qrValue.isEmpty) {
+      return Text(
+        ref.t('dashboard.qr_code_generated'),
+        style: const TextStyle(fontWeight: FontWeight.w600),
+      );
+    }
+
+    if (qrValue.startsWith('http')) {
+      return Image.network(
+        qrValue,
+        height: 220,
+        fit: BoxFit.contain,
+        errorBuilder:
+            (_, __, ___) =>
+                SelectableText(qrValue, textAlign: TextAlign.center),
+      );
+    }
+
+    final imageBytes = _decodeBase64Image(qrValue);
+    if (imageBytes != null) {
+      return Image.memory(imageBytes, height: 220, fit: BoxFit.contain);
+    }
+
+    return SelectableText(qrValue, textAlign: TextAlign.center);
+  }
+
+  Uint8List? _decodeBase64Image(String value) {
+    try {
+      final normalized =
+          value.contains(',') ? value.split(',').last.trim() : value.trim();
+      return base64Decode(normalized);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  String? _extractQrValue(Map<String, dynamic> data) {
+    final possibleKeys = [
+      'qr_code',
+      'qrCode',
+      'qr',
+      'qr_image',
+      'qrImage',
+      'image',
+      'url',
+      'payment_url',
+      'paymentUrl',
+    ];
+
+    for (final key in possibleKeys) {
+      final value = _findValueByKey(data, key);
+      if (value != null && value.toString().trim().isNotEmpty) {
+        return value.toString();
+      }
+    }
+
+    return data['data']?.toString();
+  }
+
+  Object? _findValueByKey(Object? value, String key) {
+    if (value is Map) {
+      for (final entry in value.entries) {
+        if (entry.key.toString() == key) return entry.value;
+        final nestedValue = _findValueByKey(entry.value, key);
+        if (nestedValue != null) return nestedValue;
+      }
+    } else if (value is List) {
+      for (final item in value) {
+        final nestedValue = _findValueByKey(item, key);
+        if (nestedValue != null) return nestedValue;
+      }
+    }
+
+    return null;
+  }
+
+  bool _isPaymentConfirmed(Map<String, dynamic> data) {
+    final statusValues =
+        _findValuesByKeys(data, {
+          'status',
+          'payment_status',
+          'paymentStatus',
+          'paid',
+          'success',
+          'is_paid',
+          'isPaid',
+        }).map((value) => value.toString().toLowerCase()).toList();
+
+    if (statusValues.any(_isNegativePaymentValue)) return false;
+    if (statusValues.any(_isPositivePaymentValue)) return true;
+
+    final values =
+        _flattenValues(data).map((value) => value.toLowerCase()).toList();
+    if (values.any(
+      (value) =>
+          value.contains('pending') ||
+          value.contains('unpaid') ||
+          value.contains('failed'),
+    )) {
+      return false;
+    }
+
+    return values.any(_isPositivePaymentValue);
+  }
+
+  bool _isPositivePaymentValue(String value) {
+    return value == 'true' ||
+        value.contains('paid') ||
+        value.contains('success') ||
+        value.contains('completed') ||
+        value.contains('received');
+  }
+
+  bool _isNegativePaymentValue(String value) {
+    return value == 'false' ||
+        value.contains('pending') ||
+        value.contains('unpaid') ||
+        value.contains('failed');
+  }
+
+  Iterable<Object?> _findValuesByKeys(Object? value, Set<String> keys) sync* {
+    if (value is Map) {
+      for (final entry in value.entries) {
+        if (keys.contains(entry.key.toString())) {
+          yield entry.value;
+        }
+        yield* _findValuesByKeys(entry.value, keys);
+      }
+    } else if (value is List) {
+      for (final item in value) {
+        yield* _findValuesByKeys(item, keys);
+      }
+    }
+  }
+
+  Iterable<String> _flattenValues(Object? value) sync* {
+    if (value is Map) {
+      for (final nestedValue in value.values) {
+        yield* _flattenValues(nestedValue);
+      }
+    } else if (value is List) {
+      for (final nestedValue in value) {
+        yield* _flattenValues(nestedValue);
+      }
+    } else if (value != null) {
+      yield value.toString();
+    }
+  }
+
+  Future<void> _completeJobAfterPayment() async {
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    try {
+      final userService = ref.read(userServiceProvider);
+      final completeResult = await userService.jobCompleted(
+        widget.job['token'],
+      );
+
+      await completeResult.fold((failure) async => throw failure, (_) async {});
+
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => RateCustomerScreen(job: widget.job)),
+      );
+    } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -250,7 +780,9 @@ class _CompleteJobScreenState extends ConsumerState<CompleteJobScreen> {
                             ),
                           )
                           : Text(
-                            ref.t('common.submit'),
+                            _isReportSubmitted
+                                ? ref.t('dashboard.continue_to_payment')
+                                : ref.t('common.submit'),
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -411,7 +943,7 @@ class _CompleteJobScreenState extends ConsumerState<CompleteJobScreen> {
           const SizedBox(height: 12),
           // Add Photo Button
           GestureDetector(
-            onTap: _pickImages,
+            onTap: _showPhotoSourceOptions,
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: Container(

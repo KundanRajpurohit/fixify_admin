@@ -350,6 +350,23 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen>
     );
   }
 
+  String _formatDistance(num distanceKm) {
+    if (distanceKm >= 100) {
+      return '${distanceKm.toStringAsFixed(0)} km';
+    }
+    if (distanceKm >= 10) {
+      return '${distanceKm.toStringAsFixed(1)} km';
+    }
+    return '${distanceKm.toStringAsFixed(2)} km';
+  }
+
+  String _formatPrice(double? price) {
+    if (price == null) return '₹--';
+    return price % 1 == 0
+        ? '₹${price.toInt()}'
+        : '₹${price.toStringAsFixed(2)}';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -590,7 +607,7 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    job.username,
+                    isNewJob ? 'New booking request' : job.username,
                     style: const TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.bold,
@@ -613,7 +630,7 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen>
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
-                          job.address,
+                          isNewJob ? 'Available after acceptance' : job.address,
                           style: TextStyle(
                             fontSize: 15,
                             color: Color(0xff4B5563),
@@ -624,6 +641,27 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen>
                       ),
                     ],
                   ),
+                  if (job.distanceKm != null) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.near_me,
+                          size: 16,
+                          color: Color(0xff4B5563),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          _formatDistance(job.distanceKm!),
+                          style: const TextStyle(
+                            fontSize: 15,
+                            color: Color(0xff4B5563),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                   const SizedBox(height: 8),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -651,7 +689,7 @@ class _MyJobsScreenState extends ConsumerState<MyJobsScreen>
                         ),
                       ),
                       Text(
-                        job.price == null ? '₹--' : '₹${job.price}',
+                        _formatPrice(job.price),
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,

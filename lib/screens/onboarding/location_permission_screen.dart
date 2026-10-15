@@ -122,18 +122,9 @@ class _LocationPermissionScreenState
                       ).animate().scale(duration: 600.ms, delay: 400.ms),
                       const SizedBox(height: 15),
                       TextButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            PageTransition(
-                              type: PageTransitionType.fade,
-                              duration: const Duration(milliseconds: 500),
-                              child: const MapScreen(),
-                            ),
-                          );
-                        },
+                        onPressed: _requestLocationPermission,
                         child: Text(
-                          ref.t('onboarding.select_location_manually'),
+                          ref.t('onboarding.allow_location'),
                           style: const TextStyle(
                             color: Color(0xFF217043),
                             fontSize: 18,
@@ -187,20 +178,6 @@ class _LocationPermissionScreenState
                 Navigator.of(context).pop();
               },
               child: Text(ref.t('common.cancel')),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                Navigator.push(
-                  context,
-                  PageTransition(
-                    type: PageTransitionType.fade,
-                    duration: const Duration(milliseconds: 500),
-                    child: const MapScreen(),
-                  ),
-                );
-              },
-              child: Text(ref.t('onboarding.select_manually')),
             ),
             TextButton(
               onPressed: () {

@@ -314,6 +314,7 @@ class _AddEditBankAccountScreenState
                           keyboardType: TextInputType.number,
                           inputFormatters: [
                             FilteringTextInputFormatter.digitsOnly,
+                            LengthLimitingTextInputFormatter(18),
                           ],
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {

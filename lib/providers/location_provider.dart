@@ -126,13 +126,11 @@ class LocationNotifier extends StateNotifier<LocationState> {
           error:
               'Location permission is permanently denied. Please enable it in app settings.',
         );
-        _useDefaultLocation();
       } else {
         state = state.copyWith(
           isLoading: false,
-          error: 'Location permission denied. Using default location.',
+          error: 'Location permission denied. Please allow location access.',
         );
-        _useDefaultLocation();
       }
     } catch (e) {
       print('Error getting current location: $e');
@@ -140,7 +138,6 @@ class LocationNotifier extends StateNotifier<LocationState> {
         isLoading: false,
         error: 'Failed to get location: ${e.toString()}',
       );
-      _useDefaultLocation();
     }
   }
 

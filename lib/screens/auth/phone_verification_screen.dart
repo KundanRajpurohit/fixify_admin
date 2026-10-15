@@ -1,6 +1,11 @@
 import 'package:fixify_admin/config/app_colors.dart';
 import 'package:fixify_admin/helpers/translate_helper.dart';
+import 'package:fixify_admin/screens/auth/account_pending_screen.dart';
+import 'package:fixify_admin/screens/auth/map_screen.dart';
+import 'package:fixify_admin/screens/auth/upload_document_screen.dart';
+import 'package:fixify_admin/screens/dashboard/bank_accounts_screen.dart';
 import 'package:fixify_admin/screens/dashboard/dashboard_screen.dart';
+import 'package:fixify_admin/screens/onboarding/onboarding_screen.dart';
 import 'package:fixify_admin/services/device_info_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -39,7 +44,7 @@ class _PhoneVerificationScreenState
     final authState = ref.read(authProvider);
     if (authState.authToken != null && authState.authToken!.isNotEmpty) {
       print(
-        '✅ [PhoneVerificationScreen] Token exists, navigating to dashboard',
+        '✅ [PhoneVerificationScreen] Token exists, route target: ${authState.routeTarget}',
       );
       if (mounted) {
         Navigator.pushReplacement(
@@ -47,10 +52,29 @@ class _PhoneVerificationScreenState
           PageTransition(
             type: PageTransitionType.fade,
             duration: const Duration(milliseconds: 500),
-            child: const HomePageScreen(),
+            child: _screenForAuthTarget(authState.routeTarget),
           ),
         );
       }
+    }
+  }
+
+  Widget _screenForAuthTarget(AuthRouteTarget target) {
+    switch (target) {
+      case AuthRouteTarget.locationSetup:
+        return const MapScreen();
+      case AuthRouteTarget.bankSetup:
+        return const BankAccountsScreen(isOnboarding: true);
+      case AuthRouteTarget.documentUpload:
+        return const UploadDocumentsScreen();
+      case AuthRouteTarget.accountPending:
+        return const AccountPendingScreen();
+      case AuthRouteTarget.dashboard:
+        return const HomePageScreen();
+      case AuthRouteTarget.phoneVerification:
+        return const PhoneVerificationScreen();
+      case AuthRouteTarget.onboarding:
+        return const OnboardingScreen();
     }
   }
 
@@ -86,7 +110,7 @@ class _PhoneVerificationScreenState
       print('📱 [PhoneVerificationScreen] Calling partner login API');
       print('📝 [PhoneVerificationScreen] Phone: $phoneNumber');
       print(
-        '📱 [PhoneVerificationScreen] Device Token: ${deviceToken != null ? "${deviceToken}..." : "null"}',
+        '📱 [PhoneVerificationScreen] Device Token: ${deviceToken != null ? "$deviceToken..." : "null"}',
       );
       print('📱 [PhoneVerificationScreen] Platform: $platform');
 
@@ -126,12 +150,13 @@ class _PhoneVerificationScreenState
             print('✅ [PhoneVerificationScreen] OTP sent successfully');
 
             // Update auth state with phone number and OTP
-            final authState = ref.read(authProvider);
-            ref.read(authProvider.notifier).state = authState.copyWith(
-              phoneNumber: data['mobile']?.toString() ?? phoneNumber,
-              countryCode: selectedCountry.dialCode,
-              otp: data['otp']?.toString(),
-            );
+            ref
+                .read(authProvider.notifier)
+                .setPhoneOtpSession(
+                  phoneNumber: data['mobile']?.toString() ?? phoneNumber,
+                  countryCode: selectedCountry.dialCode,
+                  otp: data['otp']?.toString(),
+                );
 
             // Navigate to OTP verification screen
             Navigator.push(

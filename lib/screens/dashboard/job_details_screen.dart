@@ -130,12 +130,25 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
         : '₹${value.toStringAsFixed(2)}';
   }
 
+  String _formattedDistance(dynamic distanceKm) {
+    final value =
+        distanceKm is num
+            ? distanceKm
+            : num.tryParse(distanceKm?.toString() ?? '');
+    if (value == null) return '';
+    if (value >= 100) return '${value.toStringAsFixed(0)} km';
+    if (value >= 10) return '${value.toStringAsFixed(1)} km';
+    return '${value.toStringAsFixed(2)} km';
+  }
+
   bool get _isPaymentUnpaid {
     return _valueAsString(jobDetails?['payment_status']).toLowerCase() ==
         'unpaid';
   }
 
   bool get _canUseCustomerActions {
+    if (widget.isNewJob) return false;
+
     final status = _valueAsString(jobDetails?['work_status']).toLowerCase();
     return status != 'past' &&
         status != 'completed' &&
@@ -1198,6 +1211,14 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
             label: ref.t('dashboard.time_date'),
             value: jobDetails?['date_time'],
           ),
+          if (_formattedDistance(jobDetails?['distance_km']).isNotEmpty) ...[
+            const Divider(height: 24),
+            _buildIconDetailRow(
+              icon: Icons.near_me,
+              label: 'Distance',
+              value: _formattedDistance(jobDetails?['distance_km']),
+            ),
+          ],
           const Divider(height: 24),
           _buildDetailRow(
             icon: 'assets/images/payment.png',
@@ -1262,6 +1283,8 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
   }
 
   Widget _buildCustomerDetailsCard() {
+    final canViewCustomerDetails = !widget.isNewJob;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -1287,33 +1310,53 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          _buildDetailRow(
-            icon: 'assets/images/person.png',
-            label: ref.t('dashboard.name'),
-            value: jobDetails?['UserName'] ?? "Customer Name",
-          ),
-          const Divider(height: 24),
-          _buildDetailRowWithAction(
-            icon: Icons.phone,
-            label: ref.t('dashboard.contact_number'),
-            value: _valueAsString(
-              jobDetails?['showcontact'],
-              fallback: 'Not Available',
+          if (!canViewCustomerDetails)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF7F8FA),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: const Text(
+                'Customer contact and address will be available after accepting this booking.',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Color(0xff4B5563),
+                  height: 1.4,
+                ),
+              ),
+            )
+          else ...[
+            _buildDetailRow(
+              icon: 'assets/images/person.png',
+              label: ref.t('dashboard.name'),
+              value: jobDetails?['UserName'] ?? "Customer Name",
             ),
-            actionText: ref.t('dashboard.call_now'),
-            onAction: _canUseCustomerActions ? _initiateMaskedCall : null,
-          ),
-          const Divider(height: 24),
-          _buildDetailRowWithAction(
-            icon: Icons.location_on,
-            label: ref.t('dashboard.address'),
-            value: _valueAsString(
-              jobDetails?['UserAddress'],
-              fallback: 'Not Available',
+            const Divider(height: 24),
+            _buildDetailRowWithAction(
+              icon: Icons.phone,
+              label: ref.t('dashboard.contact_number'),
+              value: _valueAsString(
+                jobDetails?['showcontact'],
+                fallback: 'Not Available',
+              ),
+              actionText: ref.t('dashboard.call_now'),
+              onAction: _canUseCustomerActions ? _initiateMaskedCall : null,
             ),
-            actionText: ref.t('dashboard.view_map'),
-            onAction: _canUseCustomerActions ? _openCustomerMap : null,
-          ),
+            const Divider(height: 24),
+            _buildDetailRowWithAction(
+              icon: Icons.location_on,
+              label: ref.t('dashboard.address'),
+              value: _valueAsString(
+                jobDetails?['UserAddress'],
+                fallback: 'Not Available',
+              ),
+              actionText: ref.t('dashboard.view_map'),
+              onAction: _canUseCustomerActions ? _openCustomerMap : null,
+            ),
+          ],
         ],
       ),
     );
@@ -1391,6 +1434,52 @@ class _JobDetailsScreenState extends ConsumerState<JobDetailsScreen> {
               Text(
                 label,
                 style: TextStyle(
+                  fontSize: 17,
+                  color: Colors.black,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w400,
+                  color: Color(0xff6B7280),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildIconDetailRow({
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: AppColors.secondary.withOpacity(1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, color: AppColors.primary, size: 20),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: const TextStyle(
                   fontSize: 17,
                   color: Colors.black,
                   fontWeight: FontWeight.w600,

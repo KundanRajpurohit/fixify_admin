@@ -1,8 +1,12 @@
 import 'dart:async';
 
 import 'package:fixify_admin/helpers/translate_helper.dart';
+import 'package:fixify_admin/screens/auth/account_pending_screen.dart';
 import 'package:fixify_admin/screens/auth/map_screen.dart';
+import 'package:fixify_admin/screens/auth/upload_document_screen.dart';
+import 'package:fixify_admin/screens/dashboard/bank_accounts_screen.dart';
 import 'package:fixify_admin/screens/dashboard/terms_of_service_screen.dart';
+import 'package:fixify_admin/screens/onboarding/onboarding_screen.dart';
 import 'package:fixify_admin/services/device_info_service.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -14,7 +18,7 @@ import '../../providers/location_provider.dart' show userServiceProvider;
 import '../dashboard/dashboard_screen.dart';
 
 class OTPVerificationScreen extends ConsumerStatefulWidget {
-  final isCreateAccount;
+  final bool isCreateAccount;
 
   const OTPVerificationScreen({super.key, this.isCreateAccount = false});
 
@@ -73,9 +77,7 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
           (data) {
             print('✅ [OTPVerificationScreen] OTP sent successfully');
             if (data['otp'] != null) {
-              ref.read(authProvider.notifier).state = authState.copyWith(
-                otp: data['otp'].toString(),
-              );
+              ref.read(authProvider.notifier).setOtp(data['otp'].toString());
               _prefillOTP(data['otp'].toString());
             }
           },
@@ -171,9 +173,7 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
         (data) {
           // Update auth state with OTP if available
           if (data['otp'] != null) {
-            ref.read(authProvider.notifier).state = authState.copyWith(
-              otp: data['otp'].toString(),
-            );
+            ref.read(authProvider.notifier).setOtp(data['otp'].toString());
             // Pre-fill OTP if available
             _prefillOTP(data['otp'].toString());
           }
@@ -217,9 +217,7 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
           if (status == true) {
             // OTP sent successfully
             if (data['otp'] != null) {
-              ref.read(authProvider.notifier).state = authState.copyWith(
-                otp: data['otp'].toString(),
-              );
+              ref.read(authProvider.notifier).setOtp(data['otp'].toString());
               // Pre-fill OTP if available
               _prefillOTP(data['otp'].toString());
             }
@@ -280,6 +278,7 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
     }
   }
 
+  // ignore: unused_element
   void _onBackspacePressed(int index) {
     if (_otpControllers[index].text.isEmpty && index > 0) {
       _focusNodes[index - 1].requestFocus();
@@ -325,6 +324,7 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
       context: context,
       barrierDismissible: false,
       builder:
+          // ignore: deprecated_member_use
           (context) => WillPopScope(
             onWillPop: () async => false, // Prevent back button
             child: const Center(
@@ -363,27 +363,20 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
         otp: otp,
       );
 
-      result.fold(
-        (failure) {
+      await result.fold(
+        (failure) async {
           isSuccess = false;
           errorMessage = failure.message;
           print(
             '❌ [OTPVerificationScreen] Verification failed: ${failure.message}',
           );
         },
-        (data) {
+        (data) async {
           isSuccess = true;
-          // Update auth state with token if available
-          // The token is already saved to SharedPreferences by partnerVerifyOtp method
-          if (data['token'] != null) {
-            ref.read(authProvider.notifier).state = authState.copyWith(
-              authToken: data['token'],
-              isVerified: true,
-            );
-            print(
-              '✅ [OTPVerificationScreen] Token saved to state (already saved to SharedPreferences by service)',
-            );
-          }
+          await ref.read(authProvider.notifier).savePartnerOtpSession(data);
+          print(
+            '✅ [OTPVerificationScreen] Partner session saved with route target: ${ref.read(authProvider).routeTarget}',
+          );
         },
       );
     } else {
@@ -402,6 +395,10 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
     }
 
     print('📥 [OTPVerificationScreen] verifyOTP result: $isSuccess');
+
+    if (isSuccess && ref.read(authProvider).canOpenDashboard) {
+      await _updatePartnerLocationAfterLogin();
+    }
 
     // IMPORTANT: Check if widget is still mounted before popping
     if (!mounted) {
@@ -428,6 +425,7 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
       context: context,
       barrierDismissible: false,
       builder:
+          // ignore: deprecated_member_use
           (dialogContext) => WillPopScope(
             onWillPop: () async => false, // Prevent back button on dialog
             child: AlertDialog(
@@ -440,6 +438,24 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
                       : _buildFailureDialog(dialogContext, errorMessage),
             ),
           ),
+    );
+  }
+
+  Future<void> _updatePartnerLocationAfterLogin() async {
+    print('📍 [OTPVerificationScreen] Updating partner location after login');
+
+    final userService = ref.read(userServiceProvider);
+    final result = await userService.updatePartnerLocation();
+
+    result.fold(
+      (failure) {
+        print(
+          '❌ [OTPVerificationScreen] Failed to update partner location: ${failure.message}',
+        );
+      },
+      (_) {
+        print('✅ [OTPVerificationScreen] Partner location updated after login');
+      },
     );
   }
 
@@ -483,10 +499,9 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
                 PageTransition(
                   type: PageTransitionType.fade,
                   duration: const Duration(milliseconds: 500),
-                  child:
-                      widget.isCreateAccount
-                          ? MapScreen()
-                          : const HomePageScreen(),
+                  child: _screenForAuthTarget(
+                    ref.read(authProvider).routeTarget,
+                  ),
                 ),
               );
             },
@@ -505,6 +520,25 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
         ),
       ],
     );
+  }
+
+  Widget _screenForAuthTarget(AuthRouteTarget target) {
+    switch (target) {
+      case AuthRouteTarget.locationSetup:
+        return const MapScreen();
+      case AuthRouteTarget.bankSetup:
+        return const BankAccountsScreen(isOnboarding: true);
+      case AuthRouteTarget.documentUpload:
+        return const UploadDocumentsScreen();
+      case AuthRouteTarget.accountPending:
+        return const AccountPendingScreen();
+      case AuthRouteTarget.dashboard:
+        return const HomePageScreen();
+      case AuthRouteTarget.phoneVerification:
+        return const OTPVerificationScreen();
+      case AuthRouteTarget.onboarding:
+        return const OnboardingScreen();
+    }
   }
 
   Widget _buildFailureDialog(BuildContext dialogContext, String? errorMessage) {
@@ -727,6 +761,7 @@ class _OTPVerificationScreenState extends ConsumerState<OTPVerificationScreen> {
     );
   }
 
+  // ignore: unused_element
   Widget _buildKeypadButton(
     String text, {
     bool isSpecial = false,

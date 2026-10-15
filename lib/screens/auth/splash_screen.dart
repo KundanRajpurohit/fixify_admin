@@ -1,9 +1,15 @@
 import 'package:fixify_admin/providers/auth_provider.dart';
 import 'package:fixify_admin/providers/language_provider.dart';
+import 'package:fixify_admin/providers/location_provider.dart'
+    show userServiceProvider;
+import 'package:fixify_admin/screens/auth/account_pending_screen.dart';
+import 'package:fixify_admin/screens/auth/map_screen.dart';
 import 'package:fixify_admin/screens/auth/initial_language_selection_screen.dart';
 import 'package:fixify_admin/screens/auth/phone_verification_screen.dart';
 import 'package:fixify_admin/screens/dashboard/dashboard_screen.dart';
+import 'package:fixify_admin/screens/dashboard/bank_accounts_screen.dart';
 import 'package:fixify_admin/screens/onboarding/onboarding_screen.dart';
+import 'package:fixify_admin/screens/auth/upload_document_screen.dart';
 import 'package:fixify_admin/services/device_info_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -95,10 +101,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       '🌐 [SplashScreen] Language already selected - Skipping language selection screen',
     );
     print('🌐 [SplashScreen] Proceeding with auth-based navigation');
-    _navigateBasedOnAuthState();
+    await _navigateBasedOnAuthState();
   }
 
-  void _navigateBasedOnAuthState() {
+  Future<void> _navigateBasedOnAuthState() async {
     final authState = ref.read(authProvider);
 
     print('🚀 [SplashScreen] Checking authentication state...');
@@ -106,12 +112,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     print('👤 [SplashScreen] User token: ${authState.userToken}');
     print('📱 [SplashScreen] Phone number: ${authState.phoneNumber}');
     print('✅ [SplashScreen] Is verified: ${authState.isVerified}');
+    print('🧭 [SplashScreen] Route target: ${authState.routeTarget}');
 
-    // Case 1: Authorization token exists - User is fully authenticated
-    if (authState.authToken != null && authState.authToken!.isNotEmpty) {
+    if (authState.routeTarget == AuthRouteTarget.dashboard) {
       print(
-        '✅ [SplashScreen] Authorization token found - User is fully authenticated',
+        '✅ [SplashScreen] Dashboard access allowed - user is active and verified',
       );
+      await _updatePartnerLocationOnAppOpen();
+      if (!mounted) return;
       print('🎯 [SplashScreen] Navigating to MainAppScreen');
 
       Navigator.pushReplacement(
@@ -122,9 +130,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
           child: const HomePageScreen(),
         ),
       );
-    }
-    // Case 2: Only user token exists - User saved location but didn't complete OTP verification
-    else if (authState.userToken != null && authState.userToken!.isNotEmpty) {
+    } else if (authState.routeTarget == AuthRouteTarget.phoneVerification) {
       print(
         '📍 [SplashScreen] Only user token found - User saved location but needs OTP verification',
       );
@@ -138,9 +144,19 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
           child: const PhoneVerificationScreen(),
         ),
       );
-    }
-    // Case 3: No tokens exist - User needs to start from beginning
-    else {
+    } else if (authState.authToken != null && authState.authToken!.isNotEmpty) {
+      final nextScreen = _screenForAuthenticatedTarget(authState.routeTarget);
+      print('🎯 [SplashScreen] Navigating to ${authState.routeTarget}');
+
+      Navigator.pushReplacement(
+        context,
+        PageTransition(
+          type: PageTransitionType.fade,
+          duration: const Duration(milliseconds: 500),
+          child: nextScreen,
+        ),
+      );
+    } else {
       print(
         '🆕 [SplashScreen] No tokens found - User needs to start from beginning',
       );
@@ -155,6 +171,43 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         ),
       );
     }
+  }
+
+  Widget _screenForAuthenticatedTarget(AuthRouteTarget target) {
+    switch (target) {
+      case AuthRouteTarget.locationSetup:
+        return const MapScreen();
+      case AuthRouteTarget.bankSetup:
+        return const BankAccountsScreen(isOnboarding: true);
+      case AuthRouteTarget.documentUpload:
+        return const UploadDocumentsScreen();
+      case AuthRouteTarget.accountPending:
+        return const AccountPendingScreen();
+      case AuthRouteTarget.dashboard:
+        return const HomePageScreen();
+      case AuthRouteTarget.phoneVerification:
+        return const PhoneVerificationScreen();
+      case AuthRouteTarget.onboarding:
+        return const OnboardingScreen();
+    }
+  }
+
+  Future<void> _updatePartnerLocationOnAppOpen() async {
+    print('📍 [SplashScreen] Updating partner location on app open');
+
+    final userService = ref.read(userServiceProvider);
+    final result = await userService.updatePartnerLocation();
+
+    result.fold(
+      (failure) {
+        print(
+          '❌ [SplashScreen] Failed to update partner location: ${failure.message}',
+        );
+      },
+      (_) {
+        print('✅ [SplashScreen] Partner location updated on app open');
+      },
+    );
   }
 
   @override

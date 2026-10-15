@@ -3,6 +3,7 @@ import 'package:fixify_admin/dio/resulr.dart';
 import 'package:fixify_admin/helpers/translate_helper.dart';
 import 'package:fixify_admin/providers/location_provider.dart';
 import 'package:fixify_admin/screens/auth/upload_document_screen.dart';
+import 'package:fixify_admin/screens/dashboard/bank_accounts_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -67,7 +68,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: Text(ref.t('auth.continue_without')),
+              child: Text(ref.t('common.cancel')),
             ),
             if (isPermanentlyDenied)
               TextButton(
@@ -142,7 +143,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       await _savePartnerLocation(locationState);
     } else {
       final result = await ref.read(locationProvider.notifier).saveLocation();
-      _handleSaveResult(result);
+      await _handleSaveResult(result);
     }
   }
 
@@ -160,9 +161,10 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         pincode: locationState.addressDetails['pincode'] ?? '',
       );
 
-      _handleSaveResult(result);
+      await _handleSaveResult(result);
     } catch (e) {
       print('❌ [MapScreen] Error saving partner location: $e');
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error: ${e.toString()}'),
@@ -172,19 +174,20 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     }
   }
 
-  void _handleSaveResult(ApiResult<Map<String, dynamic>> result) {
+  Future<void> _handleSaveResult(ApiResult<Map<String, dynamic>> result) async {
     print('📥 [MapScreen] Save result received');
 
-    result.fold(
-      (failure) {
+    await result.fold(
+      (failure) async {
         print('❌ [MapScreen] Save failed: ${failure.message}');
         print('❌ [MapScreen] Failure type: ${failure.runtimeType}');
 
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(failure.message), backgroundColor: Colors.red),
         );
       },
-      (success) {
+      (success) async {
         print('✅ [MapScreen] Save successful');
         print('📊 [MapScreen] Success data: $success');
 
@@ -211,12 +214,19 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         // Navigate to document upload screen
         print('🚀 [MapScreen] Navigating to UploadDocumentsScreen');
         if (widget.isFromProfile == false) {
+          await ref.read(authProvider.notifier).markLocationSetupComplete();
+          if (!mounted) return;
+          final routeTarget = ref.read(authProvider).routeTarget;
+
           Navigator.pushReplacement(
             context,
             PageTransition(
               type: PageTransitionType.fade,
               duration: const Duration(milliseconds: 500),
-              child: const UploadDocumentsScreen(),
+              child:
+                  routeTarget == AuthRouteTarget.bankSetup
+                      ? const BankAccountsScreen(isOnboarding: true)
+                      : const UploadDocumentsScreen(),
             ),
           );
         } else {
@@ -341,7 +351,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                           border: Border.all(color: Colors.grey.shade300),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.15),
+                              color: Colors.black.withValues(alpha: 0.15),
                               blurRadius: 8,
                               offset: const Offset(0, 4),
                             ),
@@ -432,7 +442,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                     border: Border.all(color: Colors.grey.shade300),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
+                        color: Colors.black.withValues(alpha: 0.05),
                         blurRadius: 10,
                         offset: const Offset(0, 2),
                       ),

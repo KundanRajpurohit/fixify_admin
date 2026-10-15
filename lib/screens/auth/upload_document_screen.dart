@@ -1,10 +1,11 @@
 import 'dart:io';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:fixify_admin/helpers/translate_helper.dart';
+import 'package:fixify_admin/providers/auth_provider.dart';
 import 'package:fixify_admin/screens/auth/docuent_submitted_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../providers/location_provider.dart';
 
@@ -23,28 +24,66 @@ class _UploadDocumentsScreenState extends ConsumerState<UploadDocumentsScreen> {
   File? _licenseFile;
 
   bool _isSubmitting = false;
+  final ImagePicker _imagePicker = ImagePicker();
 
   static const Color _green = Color(0xFF2F6F3E);
   static const Color _lightGreen = Color(0xFFE6F6E7);
 
-  Future<void> _pickFileFor(String type) async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'],
+  Future<void> _showUploadOptions(String type) async {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
+          title: const Text('Upload document'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.photo_library_outlined),
+                title: Text(ref.t('auth.choose_from_gallery')),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _pickImageFor(type, ImageSource.gallery);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_camera_outlined),
+                title: Text(ref.t('auth.take_a_photo')),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _pickImageFor(type, ImageSource.camera);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _pickImageFor(String type, ImageSource source) async {
+    final image = await _imagePicker.pickImage(
+      source: source,
+      imageQuality: 85,
+      maxWidth: 1600,
     );
 
-    if (result == null || result.files.isEmpty) return;
+    if (image == null) return;
 
-    final filePath = result.files.single.path;
-    if (filePath == null) return;
+    _setDocumentFile(type, File(image.path));
+  }
 
+  void _setDocumentFile(String type, File file) {
     setState(() {
       if (type == 'aadhaar') {
-        _aadhaarFile = File(filePath);
+        _aadhaarFile = file;
       } else if (type == 'address') {
-        _addressFile = File(filePath);
+        _addressFile = file;
       } else if (type == 'license') {
-        _licenseFile = File(filePath);
+        _licenseFile = file;
       }
     });
   }
@@ -81,8 +120,8 @@ class _UploadDocumentsScreenState extends ConsumerState<UploadDocumentsScreen> {
 
       if (!mounted) return;
 
-      result.fold(
-        (failure) {
+      await result.fold(
+        (failure) async {
           setState(() => _isSubmitting = false);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -91,13 +130,16 @@ class _UploadDocumentsScreenState extends ConsumerState<UploadDocumentsScreen> {
             ),
           );
         },
-        (data) {
+        (data) async {
           setState(() => _isSubmitting = false);
 
           print('✅ [UploadDocuments] Documents uploaded successfully');
           print('📊 [UploadDocuments] Response: $data');
 
-          Navigator.push(
+          await ref.read(authProvider.notifier).markDocumentsSubmitted();
+          if (!mounted) return;
+
+          Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (_) => const DocumentsSubmittedScreen()),
           );
@@ -147,23 +189,23 @@ class _UploadDocumentsScreenState extends ConsumerState<UploadDocumentsScreen> {
                   const SizedBox(height: 20),
                   _buildDocumentSection(
                     title: ref.t('auth.aadhaar_card'),
-                    hint: 'JPG, PNG, PDF',
+                    hint: 'JPG, PNG',
                     selectedFile: _aadhaarFile?.path.split('/').last,
-                    onUpload: () => _pickFileFor('aadhaar'),
+                    onUpload: () => _showUploadOptions('aadhaar'),
                   ),
                   const SizedBox(height: 12),
                   _buildDocumentSection(
                     title: ref.t('auth.address_proof'),
-                    hint: 'JPG, PNG, PDF',
+                    hint: 'JPG, PNG',
                     selectedFile: _addressFile?.path.split('/').last,
-                    onUpload: () => _pickFileFor('address'),
+                    onUpload: () => _showUploadOptions('address'),
                   ),
                   const SizedBox(height: 12),
                   _buildDocumentSection(
                     title: ref.t('auth.service_license_if_applicable'),
-                    hint: 'JPG, PNG, PDF',
+                    hint: 'JPG, PNG',
                     selectedFile: _licenseFile?.path.split('/').last,
-                    onUpload: () => _pickFileFor('license'),
+                    onUpload: () => _showUploadOptions('license'),
                   ),
                   const SizedBox(height: 32),
                   SizedBox(
@@ -173,7 +215,7 @@ class _UploadDocumentsScreenState extends ConsumerState<UploadDocumentsScreen> {
                       onPressed: _isSubmitting ? null : _submit,
                       style: ElevatedButton.styleFrom(
                         backgroundColor:
-                            _canSubmit ? _green : _green.withOpacity(0.5),
+                            _canSubmit ? _green : _green.withValues(alpha: 0.5),
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(30),
@@ -216,7 +258,7 @@ class _UploadDocumentsScreenState extends ConsumerState<UploadDocumentsScreen> {
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -273,7 +315,7 @@ class _UploadDocumentsScreenState extends ConsumerState<UploadDocumentsScreen> {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.03),
+                color: Colors.black.withValues(alpha: 0.03),
                 blurRadius: 8,
                 offset: const Offset(0, 3),
               ),

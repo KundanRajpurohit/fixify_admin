@@ -534,23 +534,28 @@ class BankValidationRules {
   }
 
   static bool validateIFSC(String ifsc) {
-    if (ifsc.length != ifscLength) return false;
+    final normalizedIfsc = ifsc.trim().toUpperCase();
+    if (normalizedIfsc.length != ifscLength) return false;
     final regex = RegExp(ifscRegex);
-    return regex.hasMatch(ifsc.toUpperCase());
+    return regex.hasMatch(normalizedIfsc);
   }
 
   static String? validateAccountNumber(String accountNumber, String bankName) {
-    final bank = getBankByName(bankName);
-    if (bank == null) {
-      return 'Bank not found. Please select a valid bank.';
+    final cleanAccountNumber = accountNumber.trim().replaceAll(
+      RegExp(r'[\s-]'),
+      '',
+    );
+
+    if (!RegExp(r'^\d+$').hasMatch(cleanAccountNumber)) {
+      return 'Enter a valid account number';
     }
 
-    // Remove spaces and non-digits
-    final cleanAccountNumber = accountNumber.replaceAll(RegExp(r'[^\d]'), '');
+    if (cleanAccountNumber.length < 9 || cleanAccountNumber.length > 18) {
+      return 'Account number should be 9-18 digits.';
+    }
 
-    if (cleanAccountNumber.length < bank.accountValidation.minLength ||
-        cleanAccountNumber.length > bank.accountValidation.maxLength) {
-      return 'Account number for ${bank.bankName} should be ${bank.accountValidation.minLength}-${bank.accountValidation.maxLength} digits.';
+    if (RegExp(r'^0+$').hasMatch(cleanAccountNumber)) {
+      return 'Enter a valid account number';
     }
 
     return null;
@@ -559,16 +564,6 @@ class BankValidationRules {
   static String? validateIFSCForBank(String ifsc, String bankName) {
     if (!validateIFSC(ifsc)) {
       return 'IFSC code must be 11 characters in format: AAAA0XXXXXX (4 letters, 0, 6 alphanumeric)';
-    }
-
-    final bank = getBankByName(bankName);
-    if (bank == null) {
-      return null; // Bank validation already handled
-    }
-
-    final ifscUpper = ifsc.toUpperCase();
-    if (!ifscUpper.startsWith(bank.ifscPrefix)) {
-      return 'IFSC code should start with ${bank.ifscPrefix} for ${bank.bankName}';
     }
 
     return null;
