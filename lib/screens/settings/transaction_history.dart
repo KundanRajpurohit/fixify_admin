@@ -1,4 +1,5 @@
 import 'package:fixify_admin/components/custom_app_bar.dart';
+import 'package:fixify_admin/helpers/payment_display.dart';
 import 'package:fixify_admin/helpers/translate_helper.dart';
 import 'package:fixify_admin/models/earnings_model.dart';
 import 'package:fixify_admin/providers/location_provider.dart';
@@ -364,7 +365,7 @@ class _TransactionCard extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    item.txnId,
+                    paymentReferenceLabel(item.txnId),
                     style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,

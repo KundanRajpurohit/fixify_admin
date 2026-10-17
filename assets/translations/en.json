@@ -257,6 +257,7 @@
     "check_payment_status": "Check Status",
     "payment_not_received_yet": "Payment has not been received yet",
     "qr_code_generated": "QR code generated",
+    "qr_code_unavailable": "Unable to load the QR code. Please close and generate it again.",
     "upload_job_photos": "Upload Job Photos",
     "add_clear_photos": "Add clear photos of the completed work.",
     "add_photo": "Add Photo",

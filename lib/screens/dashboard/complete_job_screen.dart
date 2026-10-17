@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:fixify_admin/config/app_colors.dart';
 import 'package:fixify_admin/dio/resulr.dart';
+import 'package:fixify_admin/helpers/payment_display.dart';
 import 'package:fixify_admin/helpers/translate_helper.dart';
 import 'package:fixify_admin/providers/location_provider.dart';
 import 'package:fixify_admin/screens/dashboard/rate_customer_screen.dart';
@@ -387,7 +388,7 @@ class _CompleteJobScreenState extends ConsumerState<CompleteJobScreen> {
       barrierDismissible: false,
       builder: (dialogContext) {
         var isChecking = false;
-        final qrValue = _extractQrValue(qrData);
+        final qrValue = paymentQrImageValue(qrData);
 
         return StatefulBuilder(
           builder: (context, setDialogState) {
@@ -436,17 +437,19 @@ class _CompleteJobScreenState extends ConsumerState<CompleteJobScreen> {
                 borderRadius: BorderRadius.circular(16),
               ),
               title: Text(ref.t('dashboard.scan_to_pay')),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildQrPreview(qrValue),
-                  const SizedBox(height: 12),
-                  Text(
-                    ref.t('dashboard.ask_customer_to_scan'),
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey.shade700),
-                  ),
-                ],
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildQrPreview(qrValue),
+                    const SizedBox(height: 12),
+                    Text(
+                      ref.t('dashboard.ask_customer_to_scan'),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.grey.shade700),
+                    ),
+                  ],
+                ),
               ),
               actions: [
                 TextButton(
@@ -481,28 +484,55 @@ class _CompleteJobScreenState extends ConsumerState<CompleteJobScreen> {
   Widget _buildQrPreview(String? qrValue) {
     if (qrValue == null || qrValue.isEmpty) {
       return Text(
-        ref.t('dashboard.qr_code_generated'),
+        ref.t('dashboard.qr_code_unavailable'),
         style: const TextStyle(fontWeight: FontWeight.w600),
       );
     }
 
-    if (qrValue.startsWith('http')) {
+    final uri = Uri.tryParse(qrValue);
+    if (uri != null &&
+        (uri.scheme == 'https' || uri.scheme == 'http') &&
+        uri.host.isNotEmpty) {
       return Image.network(
         qrValue,
         height: 220,
+        width: 220,
         fit: BoxFit.contain,
+        loadingBuilder: (context, child, progress) {
+          if (progress == null) return child;
+          return const SizedBox(
+            height: 220,
+            width: 220,
+            child: Center(child: CircularProgressIndicator()),
+          );
+        },
         errorBuilder:
-            (_, __, ___) =>
-                SelectableText(qrValue, textAlign: TextAlign.center),
+            (_, __, ___) => Text(
+              ref.t('dashboard.qr_code_unavailable'),
+              textAlign: TextAlign.center,
+            ),
       );
     }
 
     final imageBytes = _decodeBase64Image(qrValue);
     if (imageBytes != null) {
-      return Image.memory(imageBytes, height: 220, fit: BoxFit.contain);
+      return Image.memory(
+        imageBytes,
+        height: 220,
+        width: 220,
+        fit: BoxFit.contain,
+        errorBuilder:
+            (_, __, ___) => Text(
+              ref.t('dashboard.qr_code_unavailable'),
+              textAlign: TextAlign.center,
+            ),
+      );
     }
 
-    return SelectableText(qrValue, textAlign: TextAlign.center);
+    return Text(
+      ref.t('dashboard.qr_code_unavailable'),
+      textAlign: TextAlign.center,
+    );
   }
 
   Uint8List? _decodeBase64Image(String value) {
@@ -513,46 +543,6 @@ class _CompleteJobScreenState extends ConsumerState<CompleteJobScreen> {
     } catch (_) {
       return null;
     }
-  }
-
-  String? _extractQrValue(Map<String, dynamic> data) {
-    final possibleKeys = [
-      'qr_code',
-      'qrCode',
-      'qr',
-      'qr_image',
-      'qrImage',
-      'image',
-      'url',
-      'payment_url',
-      'paymentUrl',
-    ];
-
-    for (final key in possibleKeys) {
-      final value = _findValueByKey(data, key);
-      if (value != null && value.toString().trim().isNotEmpty) {
-        return value.toString();
-      }
-    }
-
-    return data['data']?.toString();
-  }
-
-  Object? _findValueByKey(Object? value, String key) {
-    if (value is Map) {
-      for (final entry in value.entries) {
-        if (entry.key.toString() == key) return entry.value;
-        final nestedValue = _findValueByKey(entry.value, key);
-        if (nestedValue != null) return nestedValue;
-      }
-    } else if (value is List) {
-      for (final item in value) {
-        final nestedValue = _findValueByKey(item, key);
-        if (nestedValue != null) return nestedValue;
-      }
-    }
-
-    return null;
   }
 
   bool _isPaymentConfirmed(Map<String, dynamic> data) {

@@ -257,6 +257,7 @@
     "check_payment_status": "स्थिति जांचें",
     "payment_not_received_yet": "भुगतान अभी प्राप्त नहीं हुआ है",
     "qr_code_generated": "QR कोड बन गया है",
+    "qr_code_unavailable": "QR कोड लोड नहीं हो पाया। कृपया बंद करके दोबारा बनाएं।",
     "upload_job_photos": "काम की फोटो अपलोड करें",
     "add_clear_photos": "पूर्ण किए गए काम की स्पष्ट फोटो जोड़ें।",
     "add_photo": "फोटो जोड़ें",
